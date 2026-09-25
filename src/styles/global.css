@@ -5,18 +5,66 @@
   --font-sans: "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
   --font-display: "SF Pro Display", ui-sans-serif, system-ui, sans-serif;
 
+  --color-ink-50: #f3f8f9;
+  --color-ink-100: #e9f0f2;
+  --color-ink-200: #d7e0e2;
+  --color-ink-300: #bfc9cd;
+  --color-ink-400: #9ba7ab;
+  --color-ink-500: #7c898d;
+  --color-ink-600: #5e6c70;
+  --color-ink-700: #45565b;
+  --color-ink-800: #2c4147;
+  --color-ink-900: #152f37;
+  --color-ink-950: #02242d;
+
+  --color-teal-50: #edf9fd;
+  --color-teal-100: #d9f2f9;
+  --color-teal-200: #b5e4f1;
+  --color-teal-300: #84d0e4;
+  --color-teal-400: #2fb5cc;
+  --color-teal-500: #079cb8;
+  --color-teal-600: #017d94;
+  --color-teal-700: #05677a;
+  --color-teal-800: #024f5e;
+  --color-teal-900: #013a45;
+  --color-teal-950: #002831;
+
+  --color-sun-50: #fff6ec;
+  --color-sun-100: #feedd8;
+  --color-sun-200: #ffddb1;
+  --color-sun-300: #fec87f;
+  --color-sun-400: #fbac29;
+  --color-sun-500: #dd9305;
+  --color-sun-600: #b97a00;
+  --color-sun-700: #966302;
+  --color-sun-800: #754b00;
+  --color-sun-900: #583801;
+  --color-sun-950: #3a2300;
+
   --color-background: #ffffff;
-  --color-surface: #f4f4f5;
+  --color-surface: var(--color-ink-50);
+  --color-sand: var(--color-sun-50);
 
-  --color-primary: #02242d;
-  --color-secondary: #3f3f46;
-  --color-accent: #017d94;
-  --color-accent-strong: #015f71;
-  --color-sun: #fbac29;
+  --color-primary: var(--color-ink-950);
+  --color-secondary: var(--color-ink-800);
+  --color-muted: var(--color-ink-600);
+  --color-subtle: var(--color-ink-500);
 
-  --color-muted: #71717a;
-  --color-subtle: #a1a1aa;
-  --color-border: #d4d4d8;
+  --color-border: var(--color-ink-200);
+  --color-border-strong: var(--color-ink-500);
+
+  --color-accent: var(--color-teal-600);
+  --color-accent-strong: var(--color-teal-700);
+  --color-accent-soft: var(--color-teal-50);
+  --color-accent-on-dark: var(--color-teal-400);
+
+  --color-sun: var(--color-sun-400);
+  --color-sun-strong: var(--color-sun-700);
+  --color-sun-soft: var(--color-sun-100);
+
+  --color-muted-on-dark: var(--color-ink-300);
+
+  --color-success: #0b7643;
   --color-error: #b3261e;
 
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
