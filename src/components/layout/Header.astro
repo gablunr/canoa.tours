@@ -1,68 +1,129 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../../assets/images/brand/logo.svg';
+import { Sailboat } from '@lucide/astro';
+import logo from '../../assets/images/brand/logo-dark.svg';
 import { company } from '../../data/company';
-import { mainLinks } from '../../data/navigation';
+import { catalogLink, mainLinks } from '../../data/navigation';
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isCurrent = (href: string) => currentPath === href;
 ---
 
-<header class="sticky top-0 z-50 border-b border-border/60 bg-background/90 px-4 backdrop-blur sm:px-6">
-	<nav class="mx-auto flex h-16 max-w-6xl items-center justify-between" aria-label="Principal">
-		<a href="/" class="flex items-center transition-opacity duration-300 ease-smooth hover:opacity-70">
-			<Image src={logo} alt={company.brandName} loading="eager" class="h-9 w-auto" />
-		</a>
+<header class="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3">
+	<div class="notch pointer-events-auto relative w-full max-w-md rounded-b-[1.375rem] bg-notch text-white lg:w-auto lg:max-w-none">
+		<nav class="flex h-14 items-center justify-between gap-8 pr-2 pl-5 lg:pr-2.5 lg:pl-6" aria-label="Principal">
+			<a href="/" class="flex shrink-0 items-center transition-opacity duration-300 ease-smooth hover:opacity-75">
+				<Image src={logo} alt={company.brandName} loading="eager" class="h-6 w-auto" />
+			</a>
 
-		{mainLinks.length > 0 && (
-			<ul class="hidden items-center gap-7 text-sm text-secondary md:flex">
+			<ul class="hidden items-center gap-6 text-[13px] lg:flex">
 				{mainLinks.map((link) => (
 					<li>
-						<a href={link.href} class="transition-colors duration-300 ease-smooth hover:text-primary">{link.label}</a>
+						<a
+							href={link.href}
+							aria-current={isCurrent(link.href) ? 'page' : undefined}
+							class="text-muted-on-dark transition-colors duration-300 ease-smooth hover:text-white aria-[current=page]:text-white"
+						>
+							{link.label}
+						</a>
 					</li>
 				))}
 			</ul>
-		)}
 
-		{mainLinks.length > 0 && (
+			<a
+				href={catalogLink.href}
+				class="hidden h-9 shrink-0 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-medium text-primary transition duration-300 ease-smooth hover:bg-ink-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-notch focus-visible:outline-none active:scale-[0.97] lg:inline-flex"
+			>
+				<Sailboat size={16} stroke-width={1.75} aria-hidden="true" />
+				{catalogLink.label}
+			</a>
+
 			<button
 				type="button"
-				class="flex size-9 items-center justify-center text-primary md:hidden"
+				class="group/burger relative flex size-10 items-center justify-center text-white lg:hidden"
 				aria-label="Abrir menú"
 				aria-expanded="false"
-				aria-controls="mobile-menu"
+				aria-controls="notch-menu"
 				data-menu-toggle
 			>
-				<svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
-					<path d="M4 8h16M4 16h16" />
-				</svg>
+				<span class="absolute h-[1.5px] w-4 -translate-y-[4px] rounded-full bg-current transition duration-500 ease-smooth group-aria-expanded/burger:translate-y-0 group-aria-expanded/burger:rotate-45"></span>
+				<span class="absolute h-[1.5px] w-4 translate-y-[4px] rounded-full bg-current transition duration-500 ease-smooth group-aria-expanded/burger:translate-y-0 group-aria-expanded/burger:-rotate-45"></span>
 			</button>
-		)}
-	</nav>
+		</nav>
 
-	{mainLinks.length > 0 && (
-		<div id="mobile-menu" class="hidden pb-4 data-open:block md:hidden">
-			<ul class="text-sm text-secondary">
-				{mainLinks.map((link) => (
-					<li>
-						<a href={link.href} class="block rounded-lg px-2 py-3 transition-colors duration-300 ease-smooth hover:bg-surface hover:text-primary">{link.label}</a>
-					</li>
-				))}
-			</ul>
+		<div id="notch-menu" inert class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-smooth data-open:grid-rows-[1fr] lg:hidden">
+			<div class="overflow-hidden">
+				<ul class="border-t border-white/10 px-3 pt-2 text-[15px]">
+					{mainLinks.map((link) => (
+						<li>
+							<a
+								href={link.href}
+								aria-current={isCurrent(link.href) ? 'page' : undefined}
+								class="block rounded-xl px-3 py-3 text-muted-on-dark transition-colors duration-300 ease-smooth hover:bg-white/5 hover:text-white aria-[current=page]:text-white"
+							>
+								{link.label}
+							</a>
+						</li>
+					))}
+				</ul>
+				<div class="p-3 pb-4">
+					<a
+						href={catalogLink.href}
+						class="flex h-12 items-center justify-center gap-2 rounded-2xl bg-white text-sm font-medium text-primary transition duration-300 ease-smooth hover:bg-ink-100 active:scale-[0.98]"
+					>
+						<Sailboat size={16} stroke-width={1.75} aria-hidden="true" />
+						{catalogLink.label}
+					</a>
+				</div>
+			</div>
 		</div>
-	)}
+	</div>
 </header>
+
+<style>
+	.notch {
+		--ear: 1rem;
+	}
+
+	.notch::before,
+	.notch::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		width: var(--ear);
+		height: var(--ear);
+		pointer-events: none;
+	}
+
+	.notch::before {
+		right: 100%;
+		background: radial-gradient(circle at 0 100%, transparent calc(var(--ear) - 0.5px), var(--color-notch) var(--ear));
+	}
+
+	.notch::after {
+		left: 100%;
+		background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear) - 0.5px), var(--color-notch) var(--ear));
+	}
+</style>
 
 <script>
 	const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
-	const menu = document.getElementById('mobile-menu');
+	const menu = document.getElementById('notch-menu');
 
 	function setMenu(open: boolean) {
 		toggle?.setAttribute('aria-expanded', String(open));
 		toggle?.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
 		menu?.toggleAttribute('data-open', open);
+		menu?.toggleAttribute('inert', !open);
 	}
 
 	toggle?.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
 
 	document.addEventListener('keydown', (event) => {
 		if (event.key === 'Escape') setMenu(false);
+	});
+
+	document.addEventListener('click', (event) => {
+		if (!(event.target as Element).closest('.notch')) setMenu(false);
 	});
 </script>

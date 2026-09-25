@@ -64,6 +64,8 @@
 
   --color-muted-on-dark: var(--color-ink-300);
 
+  --color-notch: #000000;
+
   --color-success: #0b7643;
   --color-error: #b3261e;
 
