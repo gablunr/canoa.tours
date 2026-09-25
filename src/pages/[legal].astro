@@ -1,0 +1,34 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Layout from '../layouts/Layout.astro';
+import LegalHeader from '../components/sections/legal/LegalHeader.astro';
+import LegalBody from '../components/sections/legal/LegalBody.astro';
+import { getLegalDocuments, legalHref, type LegalDocument } from '../data/legal';
+
+export const getStaticPaths = (async () => {
+	const legalDocuments = await getLegalDocuments();
+
+	return legalDocuments.map((legalDocument) => ({
+		params: { legal: legalDocument.id },
+		props: { legalDocument },
+	}));
+}) satisfies GetStaticPaths;
+
+interface Props {
+	legalDocument: LegalDocument;
+}
+
+const { legalDocument } = Astro.props;
+---
+
+<Layout
+	title={legalDocument.data.title}
+	description={legalDocument.data.description}
+	breadcrumbs={[{ name: legalDocument.data.title, path: legalHref(legalDocument) }]}
+	modifiedAt={legalDocument.data.updatedAt}
+>
+	<article data-legal-document>
+		<LegalHeader legalDocument={legalDocument} />
+		<LegalBody legalDocument={legalDocument} />
+	</article>
+</Layout>
