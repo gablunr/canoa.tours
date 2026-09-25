@@ -1,0 +1,100 @@
+---
+import { getImage } from 'astro:assets';
+import logo from '../../assets/images/brand/logo.png';
+import { company } from '../../data/company';
+import {
+	absoluteUrl,
+	canonicalUrl,
+	defaultSocialImage,
+	openGraphLocale,
+	pageTitle,
+	socialImage,
+	type Breadcrumb,
+	type SeoImage,
+} from '../../lib/seo';
+import {
+	breadcrumbSchema,
+	organizationSchema,
+	primaryImageSchema,
+	webPageSchema,
+	websiteSchema,
+	type PageType,
+	type SchemaNode,
+} from '../../lib/structured-data';
+
+export interface Props {
+	title: string;
+	description: string;
+	image?: SeoImage;
+	pageType?: PageType;
+	breadcrumbs?: Breadcrumb[];
+	mainEntity?: SchemaNode | SchemaNode[];
+	article?: { publishedAt: Date };
+	modifiedAt?: Date;
+	noindex?: boolean;
+}
+
+const {
+	title,
+	description,
+	image = defaultSocialImage,
+	pageType = 'WebPage',
+	breadcrumbs = [],
+	mainEntity,
+	article,
+	modifiedAt = article?.publishedAt,
+	noindex = false,
+} = Astro.props;
+
+const url = canonicalUrl(Astro.url.pathname);
+const shareImage = await socialImage(image);
+const organizationImage = image === defaultSocialImage ? shareImage : await socialImage(defaultSocialImage);
+const logoImage = await getImage({ src: logo, format: 'png' });
+const trail = breadcrumbs.length > 0 ? [{ name: 'Inicio', path: '/' }, ...breadcrumbs] : [];
+const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+
+const structuredData = {
+	'@context': 'https://schema.org',
+	'@graph': [
+		organizationSchema({ url: absoluteUrl(logoImage.src), width: logo.width, height: logo.height }, organizationImage),
+		websiteSchema(),
+		webPageSchema({
+			url,
+			type: pageType,
+			name: title,
+			description,
+			hasBreadcrumbs: trail.length > 0,
+			mainEntity,
+			datePublished: article?.publishedAt,
+			dateModified: modifiedAt,
+		}),
+		primaryImageSchema(url, shareImage),
+		...(trail.length > 0 ? [breadcrumbSchema(url, trail)] : []),
+	],
+};
+
+const structuredDataJson = JSON.stringify(structuredData).replaceAll('<', '\\u003c');
+---
+
+<title>{pageTitle(title)}</title>
+<meta name="description" content={description} />
+<meta name="robots" content={robots} />
+{!noindex && <link rel="canonical" href={url} />}
+
+<meta property="og:locale" content={openGraphLocale} />
+<meta property="og:site_name" content={company.brandName} />
+<meta property="og:type" content={article ? 'article' : 'website'} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{!noindex && <meta property="og:url" content={url} />}
+<meta property="og:image" content={shareImage.url} />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content={String(shareImage.width)} />
+<meta property="og:image:height" content={String(shareImage.height)} />
+<meta property="og:image:alt" content={shareImage.alt} />
+{article && <meta property="article:published_time" content={article.publishedAt.toISOString()} />}
+{article && modifiedAt && <meta property="article:modified_time" content={modifiedAt.toISOString()} />}
+<meta name="twitter:card" content="summary_large_image" />
+
+{!noindex && <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />}
+{!noindex && <script type="application/ld+json" is:inline set:html={structuredDataJson} />}
