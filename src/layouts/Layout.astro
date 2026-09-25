@@ -6,12 +6,24 @@ import Seo, { type Props as SeoProps } from '../components/layout/Seo.astro';
 import { siteLanguage } from '../lib/seo';
 
 type Props = SeoProps;
+
+const criticalFonts = [
+	'SF-Pro-Display-Light',
+	'SF-Pro-Display-Regular',
+	'SF-Pro-Display-Medium',
+	'SF-Pro-Text-Regular',
+	'SF-Pro-Text-Medium',
+];
 ---
 
 <html lang={siteLanguage}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{criticalFonts.map((font) => (
+			<link rel="preload" href={`/fonts/sf-pro/${font}.woff2`} as="font" type="font/woff2" crossorigin />
+		))}
+		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -30,6 +42,23 @@ type Props = SeoProps;
 			import { initReveal } from '../scripts/reveal';
 
 			initReveal();
+		</script>
+		<script is:inline>
+			(function () {
+				var root = document.documentElement;
+				var reveal = function () {
+					root.classList.remove('fonts-loading');
+				};
+				if (!document.fonts || !document.fonts.load) return reveal();
+				Promise.all([
+					document.fonts.load('300 1em "SF Pro Display"'),
+					document.fonts.load('400 1em "SF Pro Display"'),
+					document.fonts.load('500 1em "SF Pro Display"'),
+					document.fonts.load('400 1em "SF Pro Text"'),
+					document.fonts.load('500 1em "SF Pro Text"'),
+				]).then(reveal, reveal);
+				setTimeout(reveal, 1500);
+			})();
 		</script>
 	</body>
 </html>

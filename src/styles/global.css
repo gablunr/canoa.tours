@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
-  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "SF Pro Display", ui-sans-serif, system-ui, sans-serif;
 
   --color-background: #ffffff;
   --color-surface: #f4f4f5;
@@ -48,6 +49,10 @@
     opacity: 1;
     translate: 0 0;
   }
+}
+
+.fonts-loading .animate-fade-up {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {
