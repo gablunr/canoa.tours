@@ -20,7 +20,7 @@ const describedBy = hint ? `${hintId} ${errorId}` : errorId;
 <div data-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
 	<label for={inputId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
 		{label}
-		{!required && <span class="text-xs font-normal text-subtle">Opcional</span>}
+		{!required && <span class="text-xs font-normal text-muted">Opcional</span>}
 	</label>
 	<input
 		{...attributes}
@@ -28,7 +28,7 @@ const describedBy = hint ? `${hintId} ${errorId}` : errorId;
 		name={name}
 		required={required}
 		aria-describedby={describedBy}
-		class="mt-2 block h-12 w-full rounded-2xl border border-border bg-background px-4 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
+		class="mt-2 block h-12 w-full rounded-2xl border border-border-strong bg-background px-4 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
 	/>
 	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
 	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
