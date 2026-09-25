@@ -30,7 +30,7 @@ const socialImageMaxWidth = 1200;
 
 export const defaultSocialImage: SeoImage = {
 	src: shareImage,
-	alt: company.brandName,
+	alt: `Logotipo de ${company.brandName}`,
 };
 
 export const absoluteUrl = (path: string) => new URL(path, import.meta.env.SITE).href;
