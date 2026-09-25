@@ -1,3 +1,4 @@
+import { paymentMethodLabels } from '../data/brand-icons';
 import { company, type Office } from '../data/company';
 import { absoluteUrl, siteLanguage, type Breadcrumb, type SocialImage } from './seo';
 
@@ -58,7 +59,8 @@ const geoCoordinates = ({ latitude, longitude }: Office) =>
 export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaNode {
 	const { office, openingHours, phone } = company;
 	const geo = office && geoCoordinates(office);
-	const sameAs = [...company.socialProfiles, ...(office?.mapsUrl ? [office.mapsUrl] : [])];
+	const sameAs = [...company.socialProfiles.map((profile) => profile.url), ...(office?.mapsUrl ? [office.mapsUrl] : [])];
+	const paymentAccepted = company.paymentMethods.map((method) => paymentMethodLabels[method]).join(', ');
 
 	return {
 		'@type': company.schemaType,
@@ -71,6 +73,7 @@ export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaN
 		image: image.url,
 		email: company.email,
 		...(phone && { telephone: phone.number }),
+		...(paymentAccepted && { paymentAccepted }),
 		...(office && { address: postalAddress(office) }),
 		...(geo && { geo }),
 		...(office?.mapsUrl && { hasMap: office.mapsUrl }),

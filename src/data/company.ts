@@ -27,6 +27,16 @@ export interface OpeningHours {
 	closes: string;
 }
 
+export type SocialNetwork = 'instagram' | 'tiktok' | 'facebook';
+
+export interface SocialProfile {
+	network: SocialNetwork;
+	label: string;
+	url: string;
+}
+
+export type PaymentMethod = 'visa' | 'mastercard' | 'paypal';
+
 export interface Company {
 	name: string;
 	brandName: string;
@@ -34,13 +44,17 @@ export interface Company {
 	description: string;
 	email: string;
 	phone?: Phone;
+	whatsapp?: Phone;
 	office?: Office;
 	openingHours?: OpeningHours;
 	serviceAreas: ServiceArea[];
-	socialProfiles: string[];
+	socialProfiles: SocialProfile[];
+	paymentMethods: PaymentMethod[];
 }
 
 export const phoneFrom = (label: string, number: string): Phone => ({ label, number, href: `tel:${number}` });
+
+export const whatsappFrom = (label: string, number: string): Phone => ({ label, number, href: `https://wa.me/${number.replace(/\D/g, '')}` });
 
 export const officeAddress = (office: Office) =>
 	`${office.streetAddress}, ${office.postalCode} ${office.locality}, ${office.regionAbbreviation}`;
@@ -49,8 +63,10 @@ export const company: Company = {
 	name: 'Canoa Tours',
 	brandName: 'Canoa Tours',
 	schemaType: 'TravelAgency',
-	description: 'Tours y experiencias en canoa con Canoa Tours.',
+	description:
+		'Canoa Tours es una agencia local de excursiones en Punta Cana. Organizamos nuestros propios tours, sin intermediarios, y te recogemos en el hotel.',
 	email: 'hola@canoatours.com',
-	serviceAreas: [],
+	serviceAreas: [{ name: 'Punta Cana', kind: 'City' }],
 	socialProfiles: [],
+	paymentMethods: ['visa', 'mastercard', 'paypal'],
 };

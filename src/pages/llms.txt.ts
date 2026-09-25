@@ -12,13 +12,15 @@ const section = (title: string, lines: string[]) => (lines.length > 0 ? [`## ${t
 
 export const GET: APIRoute = async () => {
 	const legalDocuments = await getLegalDocuments();
-	const { office, phone, serviceAreas } = company;
+	const { office, phone, whatsapp, serviceAreas, socialProfiles } = company;
 
 	const contactLines = [
 		...(office ? [`- Oficina: ${officeAddress(office)}`] : []),
 		...(phone ? [`- Teléfono: ${phone.label} (${phone.number})`] : []),
+		...(whatsapp ? [`- WhatsApp: ${whatsapp.label} (${whatsapp.href})`] : []),
 		`- Correo: ${company.email}`,
 		...(serviceAreas.length > 0 ? [`- Zonas de servicio: ${listFormat.format(serviceAreas.map((area) => area.name))}`] : []),
+		...socialProfiles.map((profile) => `- ${profile.label}: ${profile.url}`),
 	];
 
 	const body = [
