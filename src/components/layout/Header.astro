@@ -10,7 +10,7 @@ const isCurrent = (href: string) => currentPath === href;
 ---
 
 <header class="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3">
-	<div class="notch pointer-events-auto relative w-full max-w-md rounded-b-[1.375rem] bg-notch text-white lg:w-auto lg:max-w-none">
+	<div class="notch notch-ears pointer-events-auto relative w-full max-w-md rounded-b-[1.375rem] bg-notch text-white lg:w-auto lg:max-w-none">
 		<nav class="flex h-14 items-center gap-3 pr-2 pl-4 sm:pl-5 lg:gap-8 lg:pr-2 lg:pl-6" aria-label="Principal">
 			<a href="/" class="mr-auto flex shrink-0 items-center transition-opacity duration-300 ease-smooth hover:opacity-75">
 				<Image src={logo} alt={company.brandName} loading="eager" class="h-6 w-auto" />
@@ -71,32 +71,6 @@ const isCurrent = (href: string) => currentPath === href;
 		</div>
 	</div>
 </header>
-
-<style>
-	.notch {
-		--ear: 1rem;
-	}
-
-	.notch::before,
-	.notch::after {
-		content: '';
-		position: absolute;
-		top: 0;
-		width: var(--ear);
-		height: var(--ear);
-		pointer-events: none;
-	}
-
-	.notch::before {
-		right: 100%;
-		background: radial-gradient(circle at 0 100%, transparent calc(var(--ear) - 0.5px), var(--color-notch) var(--ear));
-	}
-
-	.notch::after {
-		left: 100%;
-		background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear) - 0.5px), var(--color-notch) var(--ear));
-	}
-</style>
 
 <script>
 	const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');

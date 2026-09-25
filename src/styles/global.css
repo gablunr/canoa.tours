@@ -116,6 +116,33 @@
   }
 }
 
+@layer components {
+  .notch-ears {
+    --ear: 1rem;
+    --ear-color: var(--color-notch);
+  }
+
+  .notch-ears::before,
+  .notch-ears::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: var(--ear);
+    height: var(--ear);
+    pointer-events: none;
+  }
+
+  .notch-ears::before {
+    right: 100%;
+    background: radial-gradient(circle at 0 100%, transparent calc(var(--ear) - 0.5px), var(--ear-color) var(--ear));
+  }
+
+  .notch-ears::after {
+    left: 100%;
+    background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear) - 0.5px), var(--ear-color) var(--ear));
+  }
+}
+
 @layer base {
   body {
     @apply bg-background font-sans text-primary antialiased;
