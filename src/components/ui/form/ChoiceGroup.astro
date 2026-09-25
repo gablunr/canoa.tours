@@ -1,0 +1,43 @@
+---
+interface ChoiceOption {
+	value: string;
+	label: string;
+}
+
+interface Props {
+	name: string;
+	options: ChoiceOption[];
+	requiredMessage?: string;
+}
+
+const { name, options, requiredMessage } = Astro.props;
+
+const errorId = `field-${name}-error`;
+const shortcutFor = (index: number) => String.fromCharCode(65 + index);
+---
+
+<div data-field data-required-message={requiredMessage}>
+	<div class="grid gap-2.5 sm:grid-cols-2">
+		{options.map((option, index) => (
+			<label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-background p-3 pr-4 transition-colors duration-300 ease-smooth hover:border-muted has-checked:border-primary has-checked:bg-surface has-focus-visible:ring-2 has-focus-visible:ring-primary has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-background">
+				<input
+					type="radio"
+					name={name}
+					value={option.value}
+					required
+					aria-describedby={errorId}
+					data-shortcut={shortcutFor(index)}
+					class="peer sr-only"
+				/>
+				<span
+					class="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border font-display text-xs text-muted transition-colors duration-300 ease-smooth peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white"
+					aria-hidden="true"
+				>
+					{shortcutFor(index)}
+				</span>
+				<span class="text-sm text-primary">{option.label}</span>
+			</label>
+		))}
+	</div>
+	<p id={errorId} data-field-error class="mt-3 text-xs text-error" hidden></p>
+</div>

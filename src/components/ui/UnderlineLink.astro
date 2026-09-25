@@ -1,0 +1,39 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'a'> {
+	tone?: 'muted' | 'accent';
+}
+
+const { class: className, tone = 'muted', ...attributes } = Astro.props;
+
+const tones = {
+	muted: {
+		text: 'font-light text-muted hover:text-primary focus-visible:text-primary',
+		line: 'bg-border',
+		activeLine: 'bg-primary',
+	},
+	accent: {
+		text: 'font-normal text-accent-strong',
+		line: 'bg-accent/40',
+		activeLine: 'bg-accent-strong',
+	},
+};
+
+const t = tones[tone];
+---
+
+<a
+	{...attributes}
+	class:list={['group relative pb-1 font-display text-sm transition-colors duration-500 ease-smooth', t.text, className]}
+>
+	<slot />
+	<span class:list={['absolute inset-x-0 bottom-0 h-px', t.line]} aria-hidden="true"></span>
+	<span
+		class:list={[
+			'absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 transition-transform duration-700 ease-smooth group-hover:scale-x-100 group-focus-visible:scale-x-100',
+			t.activeLine,
+		]}
+		aria-hidden="true"
+	></span>
+</a>

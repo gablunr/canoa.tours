@@ -1,0 +1,31 @@
+---
+interface Props {
+	name: string;
+	value?: string;
+	required?: boolean;
+	requiredMessage?: string;
+}
+
+const { name, value = 'Sí', required, requiredMessage } = Astro.props;
+
+const inputId = `field-${name}`;
+const errorId = `${inputId}-error`;
+---
+
+<div data-field data-required-message={requiredMessage}>
+	<div class="flex items-start gap-3">
+		<input
+			id={inputId}
+			type="checkbox"
+			name={name}
+			value={value}
+			required={required}
+			aria-describedby={errorId}
+			class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary"
+		/>
+		<label for={inputId} class="cursor-pointer text-sm leading-relaxed text-muted">
+			<slot />
+		</label>
+	</div>
+	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+</div>

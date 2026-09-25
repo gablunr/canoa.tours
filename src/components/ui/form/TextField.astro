@@ -1,0 +1,35 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'input'>, 'id' | 'class' | 'name'> {
+	label: string;
+	name: string;
+	hint?: string;
+	requiredMessage?: string;
+	invalidMessage?: string;
+}
+
+const { label, name, hint, requiredMessage, invalidMessage, required, ...attributes } = Astro.props;
+
+const inputId = `field-${name}`;
+const hintId = `${inputId}-hint`;
+const errorId = `${inputId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+---
+
+<div data-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
+	<label for={inputId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
+		{label}
+		{!required && <span class="text-xs font-normal text-subtle">Opcional</span>}
+	</label>
+	<input
+		{...attributes}
+		id={inputId}
+		name={name}
+		required={required}
+		aria-describedby={describedBy}
+		class="mt-2 block h-12 w-full rounded-2xl border border-border bg-background px-4 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
+	/>
+	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
+	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+</div>
