@@ -1,41 +1,112 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../../assets/images/brand/logo.svg';
+import { Mail } from '@lucide/astro';
+import logo from '../../assets/images/brand/logo-dark.svg';
 import { company } from '../../data/company';
-import { legalLinks, mainLinks } from '../../data/navigation';
+import { paymentIcons, paymentMethodLabels, socialIcons, whatsappIcon as WhatsAppIcon } from '../../data/brand-icons';
+import { footerGroups, legalLinks } from '../../data/navigation';
+import { siteHost } from '../../lib/seo';
 
 const currentYear = new Date().getFullYear();
+const { whatsapp, email, socialProfiles, paymentMethods } = company;
 ---
 
-<footer class="px-4 pt-16 pb-8 sm:px-6">
-	<div class="mx-auto max-w-6xl">
-		<div class="flex flex-col items-center gap-8 md:flex-row md:justify-between">
-			<a href="/" class="flex w-fit items-center transition-opacity duration-300 ease-smooth hover:opacity-70">
-				<Image src={logo} alt={company.brandName} class="h-9 w-auto" />
-			</a>
+<footer class="mt-24 bg-notch text-white">
+	<div class="px-4 sm:px-6">
+		<div class="notch-ears relative mx-auto h-8 max-w-5xl rounded-b-[1.375rem] bg-background [--ear-color:var(--color-background)] md:h-10" aria-hidden="true"></div>
+	</div>
 
-			{mainLinks.length > 0 && (
-				<nav aria-label="Pie de página">
-					<ul class="flex flex-wrap justify-center gap-x-7 gap-y-3 text-sm text-secondary md:justify-start">
-						{mainLinks.map((link) => (
-							<li>
-								<a href={link.href} class="transition-colors duration-300 ease-smooth hover:text-primary">{link.label}</a>
-							</li>
-						))}
+	<div class="mx-auto max-w-6xl px-4 pt-16 pb-10 sm:px-6 md:pt-20">
+		<div class="grid gap-14 lg:grid-cols-12 lg:gap-8">
+			<div class="lg:col-span-4">
+				<a href="/" class="inline-flex transition-opacity duration-300 ease-smooth hover:opacity-75">
+					<Image src={logo} alt={company.brandName} class="h-9 w-auto" />
+				</a>
+				<p class="mt-6 max-w-sm text-sm leading-relaxed text-muted-on-dark">{company.description}</p>
+
+				<ul class="mt-6 grid gap-3 text-sm">
+					{whatsapp && (
+						<li>
+							<a href={whatsapp.href} class="group inline-flex items-center gap-3 text-ink-100 transition-colors duration-300 ease-smooth hover:text-white">
+								<span class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-colors duration-300 ease-smooth group-hover:bg-white/20">
+									<WhatsAppIcon class="size-4" aria-hidden="true" />
+								</span>
+								{whatsapp.label}
+							</a>
+						</li>
+					)}
+					<li>
+						<a href={`mailto:${email}`} class="group inline-flex items-center gap-3 text-ink-100 transition-colors duration-300 ease-smooth hover:text-white">
+							<span class="flex size-8 items-center justify-center rounded-full bg-white/10 transition-colors duration-300 ease-smooth group-hover:bg-white/20">
+								<Mail size={16} stroke-width={1.75} aria-hidden="true" />
+							</span>
+							{email}
+						</a>
+					</li>
+				</ul>
+
+				{socialProfiles.length > 0 && (
+					<ul class="mt-8 flex gap-2" aria-label="Redes sociales">
+						{socialProfiles.map((profile) => {
+							const Icon = socialIcons[profile.network];
+							return (
+								<li>
+									<a
+										href={profile.url}
+										rel="me noopener"
+										target="_blank"
+										aria-label={profile.label}
+										class="flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors duration-300 ease-smooth hover:bg-white/20"
+									>
+										<Icon class="size-4" aria-hidden="true" />
+									</a>
+								</li>
+							);
+						})}
 					</ul>
-				</nav>
-			)}
+				)}
+			</div>
+
+			<nav class="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4 lg:col-span-8" aria-label="Pie de página">
+				{footerGroups.map((group) => (
+					<div>
+						<h2 class="text-sm font-medium text-ink-400">{group.title}</h2>
+						<ul class="mt-5 grid gap-3 text-sm">
+							{group.links.map((link) => (
+								<li>
+									<a href={link.href} class="text-ink-100 transition-colors duration-300 ease-smooth hover:text-white">{link.label}</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				))}
+			</nav>
 		</div>
 
-		<div class="mt-10 flex flex-col items-center gap-4 border-t border-border/50 pt-6 text-center text-xs text-muted md:flex-row md:justify-between md:text-left">
-			<p>© {currentYear} {company.brandName}. Todos los derechos reservados.</p>
-			<ul class="flex flex-wrap justify-center gap-x-6 gap-y-2">
-				{legalLinks.map((link) => (
-					<li>
-						<a href={link.href} class="transition-colors duration-300 ease-smooth hover:text-primary">{link.label}</a>
-					</li>
-				))}
-			</ul>
+		<div class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-8 text-xs text-ink-400 md:flex-row md:items-center md:justify-between">
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
+				<p>© {currentYear} {siteHost}</p>
+				<ul class="flex flex-wrap gap-x-6 gap-y-2">
+					{legalLinks.map((link) => (
+						<li>
+							<a href={link.href} class="transition-colors duration-300 ease-smooth hover:text-white">{link.label}</a>
+						</li>
+					))}
+				</ul>
+			</div>
+
+			{paymentMethods.length > 0 && (
+				<ul class="flex flex-wrap gap-2" aria-label="Métodos de pago">
+					{paymentMethods.map((method) => {
+						const Icon = paymentIcons[method];
+						return (
+							<li class="flex h-8 w-12 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-ink-200">
+								<Icon class="size-6" role="img" aria-label={paymentMethodLabels[method]} />
+							</li>
+						);
+					})}
+				</ul>
+			)}
 		</div>
 	</div>
 </footer>

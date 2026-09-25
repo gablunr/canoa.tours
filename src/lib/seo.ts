@@ -43,6 +43,8 @@ const publicPath = (pathname: string) =>
 
 export const canonicalUrl = (pathname: string) => absoluteUrl(publicPath(pathname));
 
+export const siteHost = new URL(import.meta.env.SITE).host;
+
 export const pageTitle = (title: string) => `${title} | ${company.brandName}`;
 
 export async function socialImage({ src, alt }: SeoImage): Promise<SocialImage> {

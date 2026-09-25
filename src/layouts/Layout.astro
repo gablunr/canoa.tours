@@ -32,9 +32,9 @@ const criticalFonts = [
 		<meta name="generator" content={Astro.generator} />
 		<Seo {...Astro.props} />
 	</head>
-	<body>
+	<body class="flex min-h-dvh flex-col">
 		<Header />
-		<main class="pt-14">
+		<main class="flex-1 pt-14">
 			<slot />
 		</main>
 		<Footer />
