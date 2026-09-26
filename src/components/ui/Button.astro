@@ -3,9 +3,11 @@ import type { HTMLAttributes } from 'astro/types';
 
 interface Props extends Omit<HTMLAttributes<'button'>, 'class' | 'type'> {
 	href?: string;
+	target?: HTMLAttributes<'a'>['target'];
+	rel?: string;
 	type?: 'button' | 'submit';
-	variant?: 'solid' | 'outline';
-	size?: 'sm' | 'md';
+	variant?: 'solid' | 'outline' | 'outline-on-dark';
+	size?: 'sm' | 'md' | 'lg';
 	class?: string;
 }
 
@@ -15,11 +17,13 @@ const Element = href ? 'a' : 'button';
 const variants = {
 	solid: 'bg-accent text-white hover:bg-accent-strong',
 	outline: 'border border-border text-primary hover:border-primary',
+	'outline-on-dark': 'border border-white/35 text-white hover:border-white hover:bg-white/10',
 };
 
 const sizes = {
 	sm: 'h-10 px-5 text-[13px]',
 	md: 'h-12 px-6 text-sm',
+	lg: 'h-14 px-7 text-sm',
 };
 ---
 

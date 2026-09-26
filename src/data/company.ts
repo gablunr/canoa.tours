@@ -56,6 +56,8 @@ export const phoneFrom = (label: string, number: string): Phone => ({ label, num
 
 export const whatsappFrom = (label: string, number: string): Phone => ({ label, number, href: `https://wa.me/${number.replace(/\D/g, '')}` });
 
+export const whatsappMessageHref = (whatsapp: Phone, message: string) => `${whatsapp.href}?text=${encodeURIComponent(message)}`;
+
 export const officeAddress = (office: Office) =>
 	`${office.streetAddress}, ${office.postalCode} ${office.locality}, ${office.regionAbbreviation}`;
 

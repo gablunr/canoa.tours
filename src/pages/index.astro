@@ -7,6 +7,7 @@ import BookingBenefits from '../components/sections/home/BookingBenefits.astro';
 import Reviews from '../components/sections/home/Reviews.astro';
 import HowToBook from '../components/sections/home/HowToBook.astro';
 import Faq from '../components/sections/home/Faq.astro';
+import BookingCta from '../components/sections/home/BookingCta.astro';
 import { faqs } from '../data/faq';
 import { faqSchema } from '../lib/structured-data';
 ---
@@ -16,6 +17,7 @@ import { faqSchema } from '../lib/structured-data';
 	description="Tours en canoa con Canoa Tours. Muy pronto encontrarás aquí nuestras rutas, los horarios de salida y la forma de reservar tu lugar."
 	pageType="FAQPage"
 	mainEntity={faqSchema(faqs)}
+	footerOverlapsPhoto
 >
 	<Hero />
 	<Destinations />
@@ -24,4 +26,5 @@ import { faqSchema } from '../lib/structured-data';
 	<Reviews />
 	<HowToBook />
 	<Faq />
+	<BookingCta />
 </Layout>

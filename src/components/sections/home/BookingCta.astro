@@ -1,0 +1,68 @@
+---
+import { Picture } from 'astro:assets';
+import ArrowButton from '../../ui/ArrowButton.astro';
+import Button from '../../ui/Button.astro';
+import FluidBackground from '../../ui/FluidBackground.astro';
+import pierBeach from '../../../assets/images/home/turquoise-pier-beach.jpg';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/company';
+import { catalogLink } from '../../../data/navigation';
+
+const { whatsapp } = company;
+const recommendationRequest = 'Hola, estoy en Punta Cana del [fecha] al [fecha] y no sé qué excursión elegir';
+---
+
+<section
+	aria-labelledby="booking-cta-title"
+	class="relative isolate mt-10 px-4 pt-32 pb-40 sm:px-6 lg:mt-14 lg:pt-40 lg:pb-48"
+>
+	<div class="pointer-events-none absolute inset-x-0 -top-40 bottom-0 -z-10 lg:-top-56">
+		<FluidBackground class="text-accent/50" />
+	</div>
+
+	<div
+		data-reveal
+		class="liquid-glass relative mx-auto max-w-5xl overflow-hidden rounded-[1.75rem] px-6 py-20 text-center backdrop-blur-2xl backdrop-saturate-150 after:opacity-70 sm:px-12 sm:py-24 lg:rounded-[2.5rem] lg:px-16 lg:py-28"
+	>
+		<Picture
+			src={pierBeach}
+			alt=""
+			formats={['avif', 'webp']}
+			widths={[640, 960, 1280, 1920, 2560, 3200]}
+			sizes="100vw"
+			quality={85}
+			pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
+			class="size-full object-cover object-[72%_60%] saturate-110"
+		/>
+		<div class="film-grain absolute inset-0 -z-20 opacity-70" aria-hidden="true"></div>
+
+		<div class="relative z-10">
+			<h2
+				id="booking-cta-title"
+				class="bg-linear-to-b from-white from-30% to-ink-200 bg-clip-text pb-1 text-4xl leading-[1.05] font-semibold tracking-[-0.03em] text-balance text-transparent md:text-5xl"
+			>
+				Reserva tu excursión en Punta Cana
+			</h2>
+			<p class="mx-auto mt-5 max-w-xl font-display text-base leading-[1.45] tracking-[-0.01em] text-balance text-white/85 sm:text-lg">
+				Te recogemos en tu hotel de Punta Cana o Bayahibe. Si no sabes cuál elegir, escríbenos con tus fechas y tu presupuesto y te
+				recomendamos una.
+			</p>
+			<div class="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+				<ArrowButton href={catalogLink.href} class="focus-visible:ring-white focus-visible:ring-offset-primary">
+					Ver excursiones y precios
+				</ArrowButton>
+				{whatsapp && (
+					<Button
+						href={whatsappMessageHref(whatsapp, recommendationRequest)}
+						variant="outline-on-dark"
+						size="lg"
+						class="gap-2.5 focus-visible:ring-white focus-visible:ring-offset-primary"
+					>
+						<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+						Escríbenos por WhatsApp
+					</Button>
+				)}
+			</div>
+		</div>
+	</div>
+</section>

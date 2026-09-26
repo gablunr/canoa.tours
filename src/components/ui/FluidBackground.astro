@@ -1,0 +1,97 @@
+---
+interface Props {
+	class?: string;
+	full?: boolean;
+}
+
+const { class: className, full } = Astro.props;
+---
+
+<canvas
+	data-fluid
+	data-full={full || undefined}
+	class:list={['pointer-events-none absolute inset-0 -z-10 size-full mask-y-from-75%', className]}
+	aria-hidden="true"
+></canvas>
+
+<script>
+	const settings = { size: 13, speed: 0.5, reach: 0.22, fill: 0.3, cover: 0.6, characters: ' .:-=+*#%@' };
+
+	function smooth(edge: number, value: number) {
+		const amount = Math.min(Math.max(1 - value / edge, 0), 1);
+		return amount * amount * (3 - 2 * amount);
+	}
+
+	const desktop = matchMedia('(min-width: 768px)');
+
+	function edge(x: number) {
+		if (!desktop.matches) return settings.fill;
+		return smooth(settings.reach, Math.min(x, 1 - x));
+	}
+
+	function field(x: number, y: number, time: number) {
+		const flow = Math.sin(x * 0.09 + time + Math.sin(y * 0.07 - time * 0.7) * 2.2);
+		const swirl = Math.sin(y * 0.08 - time * 0.8 + Math.sin(x * 0.05 + time * 0.5) * 2.4);
+		return (flow + swirl + 2) / 4;
+	}
+
+	function mount(canvas: HTMLCanvasElement) {
+		const context = canvas.getContext('2d');
+		if (!context) return;
+
+		const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const full = canvas.hasAttribute('data-full');
+		const last = settings.characters.length - 1;
+		let scale = 1;
+		let frame = 0;
+
+		const draw = (seconds: number) => {
+			const width = canvas.width;
+			const height = canvas.height;
+			const step = settings.size * scale;
+			const columns = Math.ceil(width / step);
+			const rows = Math.ceil(height / step);
+			const time = seconds * settings.speed;
+
+			context.clearRect(0, 0, width, height);
+			context.font = `${step}px ui-monospace, monospace`;
+			context.textBaseline = 'top';
+			context.fillStyle = getComputedStyle(canvas).color;
+
+			for (let row = 0; row < rows; row++) {
+				for (let column = 0; column < columns; column++) {
+					const weight = full ? settings.cover : edge((column + 0.5) / columns);
+					if (weight < 0.02) continue;
+
+					const value = field(column, row, time) * weight;
+					const index = Math.round(value * last);
+					if (index === 0) continue;
+
+					context.globalAlpha = Math.min(value * 1.2, 0.8);
+					context.fillText(settings.characters[index], column * step, row * step);
+				}
+			}
+		};
+
+		const tick = (now: number) => {
+			draw(now / 1000);
+			frame = requestAnimationFrame(tick);
+		};
+
+		new ResizeObserver(() => {
+			scale = Math.min(devicePixelRatio, 1.5);
+			canvas.width = Math.round(canvas.clientWidth * scale);
+			canvas.height = Math.round(canvas.clientHeight * scale);
+			draw(still ? 20 : performance.now() / 1000);
+		}).observe(canvas);
+
+		if (!still) {
+			new IntersectionObserver(([entry]) => {
+				cancelAnimationFrame(frame);
+				if (entry.isIntersecting) frame = requestAnimationFrame(tick);
+			}).observe(canvas);
+		}
+	}
+
+	document.querySelectorAll<HTMLCanvasElement>('[data-fluid]').forEach(mount);
+</script>
