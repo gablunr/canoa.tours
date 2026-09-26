@@ -1,4 +1,6 @@
 import { company } from './company';
+import { destinationHref, destinations } from './destinations';
+import { mostBookedHref, mostBookedTours } from './most-booked';
 
 export interface NavLink {
 	label: string;
@@ -10,28 +12,26 @@ export interface NavGroup {
 	links: NavLink[];
 }
 
-export const mainLinks: NavLink[] = [
-	{ label: 'Isla Saona', href: '/isla-saona' },
-	{ label: 'Samaná', href: '/samana' },
-	{ label: 'Santo Domingo', href: '/santo-domingo' },
-	{ label: 'Isla Catalina', href: '/isla-catalina' },
-	{ label: 'Aventura', href: '/aventura-punta-cana' },
-	{ label: 'Fiesta', href: '/fiesta-punta-cana' },
-];
+export const mainLinks: NavLink[] = destinations.map((destination) => ({
+	label: destination.name,
+	href: destinationHref(destination),
+}));
 
 export const catalogLink: NavLink = { label: 'Ver excursiones', href: '/excursiones' };
 
-export const mostBookedLinks: NavLink[] = [
-	{ label: 'Saona en catamarán', href: '/isla-saona/catamaran' },
-	{ label: 'Saona VIP', href: '/isla-saona/vip' },
-	{ label: 'Samaná 3 Maravillas', href: '/samana/3-maravillas' },
-	{ label: 'Buggies', href: '/aventura-punta-cana/buggies' },
-];
+export const mostBookedLinks: NavLink[] = mostBookedTours.map((item) => ({
+	label: item.title,
+	href: mostBookedHref(item),
+}));
+
+export const howToBookLink: NavLink = { label: 'Cómo reservar', href: '/como-reservar' };
+
+export const pickupZonesLink: NavLink = { label: 'Zonas de recogida', href: '/zonas-de-recogida' };
 
 export const helpLinks: NavLink[] = [
-	{ label: 'Cómo reservar', href: '/como-reservar' },
+	howToBookLink,
 	{ label: 'Preguntas frecuentes', href: '/preguntas-frecuentes' },
-	{ label: 'Zonas de recogida', href: '/zonas-de-recogida' },
+	pickupZonesLink,
 	{ label: 'Cancelaciones y cambios', href: '/cancelaciones' },
 	{ label: 'Contacto', href: '/contacto' },
 ];
