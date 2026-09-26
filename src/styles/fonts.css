@@ -1,286 +1,286 @@
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Ultralight.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Thin.woff2") format("woff2");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-UltralightItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-ThinItalic.woff2") format("woff2");
   font-weight: 100;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Thin.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-ExtraLight.woff2") format("woff2");
   font-weight: 200;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-ThinItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-ExtraLightItalic.woff2") format("woff2");
   font-weight: 200;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Light.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Light.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-LightItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-LightItalic.woff2") format("woff2");
   font-weight: 300;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Regular.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-RegularItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Medium.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-MediumItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-MediumItalic.woff2") format("woff2");
   font-weight: 500;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Semibold.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-SemiBold.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-SemiboldItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-SemiBoldItalic.woff2") format("woff2");
   font-weight: 600;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Bold.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-BoldItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-BoldItalic.woff2") format("woff2");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Heavy.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-ExtraBold.woff2") format("woff2");
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-HeavyItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-ExtraBoldItalic.woff2") format("woff2");
   font-weight: 800;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-Black.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Black.woff2") format("woff2");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/sf-pro/SF-Pro-Text-BlackItalic.woff2") format("woff2");
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-BlackItalic.woff2") format("woff2");
   font-weight: 900;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Ultralight.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Thin.woff2") format("woff2");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-UltralightItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-ThinItalic.woff2") format("woff2");
   font-weight: 100;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Thin.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-ExtraLight.woff2") format("woff2");
   font-weight: 200;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-ThinItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-ExtraLightItalic.woff2") format("woff2");
   font-weight: 200;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Light.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Light.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-LightItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-LightItalic.woff2") format("woff2");
   font-weight: 300;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Regular.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-RegularItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Medium.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-MediumItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-MediumItalic.woff2") format("woff2");
   font-weight: 500;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Semibold.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-SemiBold.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-SemiboldItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-SemiBoldItalic.woff2") format("woff2");
   font-weight: 600;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Bold.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-BoldItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-BoldItalic.woff2") format("woff2");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Heavy.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-ExtraBold.woff2") format("woff2");
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-HeavyItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-ExtraBoldItalic.woff2") format("woff2");
   font-weight: 800;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-Black.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-Black.woff2") format("woff2");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/sf-pro/SF-Pro-Display-BlackItalic.woff2") format("woff2");
+  font-family: "Inter Display";
+  src: url("/fonts/inter/InterDisplay-BlackItalic.woff2") format("woff2");
   font-weight: 900;
   font-style: italic;
   font-display: swap;

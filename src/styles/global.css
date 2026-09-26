@@ -2,8 +2,8 @@
 @import "./fonts.css";
 
 @theme {
-  --font-sans: "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "SF Pro Display", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Display", ui-sans-serif, system-ui, sans-serif;
 
   --color-ink-50: #f3f8f9;
   --color-ink-100: #e9f0f2;
