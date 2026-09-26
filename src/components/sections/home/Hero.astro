@@ -1,14 +1,65 @@
 ---
+import { Picture } from 'astro:assets';
+import { MapPin } from '@lucide/astro';
+import GlassButton from '../../ui/GlassButton.astro';
+import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
 import { company } from '../../../data/company';
+import { catalogLink } from '../../../data/navigation';
+
+const [mainArea] = company.serviceAreas;
+import GlassBadge from '../../ui/GlassBadge.astro';
 ---
 
-<section class="px-4 pt-24 pb-24 sm:px-6 md:pt-32 md:pb-32">
-	<div class="mx-auto max-w-3xl text-center">
-		<h1 class="animate-fade-up text-4xl leading-[1.05] font-medium tracking-tight text-balance md:text-6xl">
-			{company.brandName}
+<section class="relative isolate -mt-14 flex min-h-[max(36rem,70svh)] flex-col justify-center overflow-hidden bg-primary">
+	<Picture
+		src={palmBeach}
+		alt="Playa caribeña de arena blanca con palmeras y mar turquesa bajo un cielo azul despejado"
+		formats={['avif', 'webp']}
+		widths={[640, 960, 1280, 1920, 2560, 3344]}
+		sizes="(max-aspect-ratio: 3/2) 146vh, 100vw"
+		quality={90}
+		priority
+		pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
+		class="size-full object-cover object-[center_65%] brightness-85 saturate-110 contrast-105"
+	/>
+	<div class="film-grain absolute inset-0 -z-20 opacity-90" aria-hidden="true"></div>
+	<div
+		class="absolute inset-0 -z-10 bg-linear-to-b from-primary/70 via-primary/25 via-35% to-transparent to-60%"
+		aria-hidden="true"
+	></div>
+	<div
+		class="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-background via-background/60 to-transparent"
+		aria-hidden="true"
+	></div>
+
+	<div class="mx-auto flex max-w-4xl flex-col items-center px-4 pt-(--hero-space) pb-[calc(3.5rem+var(--hero-space))] text-center text-white [--hero-space:calc(3.125rem+max(8vw,13svh))] sm:px-6 md:[--hero-space:calc(3.625rem+max(8vw,13svh))]">
+		{mainArea && (
+			<GlassBadge class="animate-fade-up" style="animation-delay: 550ms">
+				<MapPin size={13} stroke-width={2.25} aria-hidden="true" />
+				{mainArea.name}
+			</GlassBadge>
+		)}
+		<h1
+			class="mt-5 animate-fade-up text-5xl leading-[0.98] font-semibold tracking-[-0.04em] text-balance sm:text-6xl lg:text-7xl"
+			style="animation-delay: 630ms"
+		>
+			<span class="bg-linear-to-b from-white from-30% to-ink-200 bg-clip-text text-transparent drop-shadow-md">
+				Excursiones en Punta Cana con recogida en tu hotel
+			</span>
 		</h1>
-		<p class="mt-6 animate-fade-up text-lg leading-relaxed text-muted" style="animation-delay: 80ms">
-			{company.description}
+		<p
+			class="mt-8 max-w-2xl animate-fade-up font-display text-base leading-[1.4] tracking-[-0.01em] text-balance sm:text-lg md:text-xl"
+			style="animation-delay: 710ms"
+		>
+			Isla Saona, Samaná, Santo Domingo, Isla Catalina, buggies y Coco Bongo. Salidas desde Punta Cana y Bayahibe,
+			desde US$40 por persona.
 		</p>
+		<GlassButton
+			href={catalogLink.href}
+			class="mt-10 animate-fade-up focus-visible:ring-white focus-visible:ring-offset-primary"
+			style="animation-delay: 790ms"
+		>
+			Ver excursiones y precios
+		</GlassButton>
 	</div>
 </section>
