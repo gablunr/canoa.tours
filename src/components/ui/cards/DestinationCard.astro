@@ -1,0 +1,65 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import ArrowCircle from '../ArrowCircle.astro';
+import GlassBadge from '../GlassBadge.astro';
+
+interface Props {
+	href: string;
+	name: string;
+	badge: string;
+	fromPrice: string;
+	details: string;
+	links: { label: string; href: string }[];
+	image?: ImageMetadata;
+	class?: string;
+}
+
+const { href, name, badge, fromPrice, details, links, image, class: className } = Astro.props;
+---
+
+<article class:list={['group flex flex-col', className]}>
+	<div class="relative isolate aspect-[4/3] overflow-hidden rounded-[1.75rem] bg-primary has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-accent has-[a:focus-visible]:ring-offset-2">
+		{image && (
+			<Picture
+				src={image}
+				alt=""
+				formats={['avif', 'webp']}
+				quality={90}
+				widths={[480, 720, 960, 1280, 1600]}
+				pictureAttributes={{ class: 'absolute inset-0 -z-10' }}
+				sizes="(min-width: 1152px) 23rem, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+				class="size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105"
+			/>
+		)}
+		<div class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></div>
+		<GlassBadge overPhoto class="absolute top-4 left-4">{badge}</GlassBadge>
+
+		<div class="liquid-glass absolute inset-x-3 bottom-3 flex items-center justify-between gap-4 rounded-[1.25rem] bg-primary/40 py-3.5 pr-3.5 pl-5 text-white backdrop-blur-xl backdrop-saturate-150">
+			<div>
+				<h3 class="text-2xl leading-none font-semibold tracking-[-0.03em]">
+					<a href={href} class="outline-none after:absolute after:-inset-[100vmax] after:z-10">{name}</a>
+				</h3>
+				<p class="mt-1.5 text-sm text-white/85">
+					Desde <span class="font-semibold text-white">{fromPrice}</span> por persona
+				</p>
+			</div>
+			<ArrowCircle />
+		</div>
+	</div>
+
+	<p class="mt-4 px-1 text-[15px] leading-snug text-secondary">{details}</p>
+
+	<ul aria-label={`Excursiones en ${name}`} class="mt-4 flex flex-wrap gap-2 px-1">
+		{links.map((link) => (
+			<li>
+				<a
+					href={link.href}
+					class="inline-flex rounded-full bg-chip px-3 py-1.5 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-primary hover:text-white"
+				>
+					{link.label}
+				</a>
+			</li>
+		))}
+	</ul>
+</article>

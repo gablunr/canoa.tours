@@ -1,0 +1,40 @@
+---
+import DestinationCard from '../../ui/cards/DestinationCard.astro';
+import {
+	destinationHref,
+	destinationImage,
+	destinations,
+	formatPrice,
+	tourCountLabel,
+	tourHref,
+} from '../../../data/destinations';
+---
+
+<section aria-labelledby="destinations-title" class="px-4 pt-20 sm:px-6 lg:pt-28">
+	<div class="mx-auto max-w-6xl">
+		<div data-reveal class="mx-auto max-w-2xl text-center">
+			<h2 id="destinations-title" class="bg-linear-to-b from-primary to-muted bg-clip-text text-transparent text-4xl leading-[1.05] font-semibold tracking-[-0.03em] text-balance md:text-5xl">
+				Tours en Punta Cana por destino
+			</h2>
+			<p class="mt-4 font-display text-lg leading-[1.4] tracking-[-0.01em] text-balance text-muted md:text-xl">
+				Elige destino y te mostramos todas las excursiones, con precio y días de salida.
+			</p>
+		</div>
+
+		<ul class="mt-10 grid gap-x-6 gap-y-10 max-sm:px-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3 lg:gap-y-12">
+			{destinations.map((destination) => (
+				<li data-reveal>
+					<DestinationCard
+						href={destinationHref(destination)}
+						name={destination.name}
+						badge={tourCountLabel(destination)}
+						fromPrice={formatPrice(destination.fromPrice)}
+						details={destination.details}
+						links={destination.tours.map((tour) => ({ label: tour.name, href: tourHref(destination, tour) }))}
+						image={destinationImage(destination)}
+					/>
+				</li>
+			))}
+		</ul>
+	</div>
+</section>

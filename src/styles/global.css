@@ -44,6 +44,7 @@
   --color-background: #ffffff;
   --color-surface: var(--color-ink-50);
   --color-sand: var(--color-sun-50);
+  --color-chip: #f7f7f7;
 
   --color-primary: var(--color-ink-950);
   --color-secondary: var(--color-ink-800);
