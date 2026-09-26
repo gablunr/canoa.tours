@@ -134,6 +134,59 @@
 }
 
 @layer components {
+  .film-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+    background-size: 200px;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .liquid-glass {
+    --glass-shine: color-mix(in oklab, var(--color-white) 90%, transparent);
+    --glass-soft-shine: color-mix(in oklab, var(--color-white) 55%, transparent);
+    position: relative;
+    isolation: isolate;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in oklab, var(--color-white) 18%, transparent);
+    background: color-mix(in oklab, var(--color-white) 10%, transparent);
+    backdrop-filter: blur(8px) saturate(1.5);
+    box-shadow:
+      inset 2px -2px 1px -1px var(--glass-shine),
+      inset -2px 2px 1px -1px var(--glass-shine),
+      inset 6px -6px 1px -6px var(--glass-soft-shine),
+      inset -6px 6px 1px -6px var(--glass-soft-shine),
+      inset 0 0 2px color-mix(in oklab, var(--color-black) 45%, transparent),
+      0 4px 12px color-mix(in oklab, var(--color-black) 18%, transparent);
+  }
+
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    border-radius: inherit;
+    border: 1px solid color-mix(in oklab, var(--color-white) 20%, transparent);
+    filter: blur(1px);
+    pointer-events: none;
+  }
+
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      color-mix(in oklab, var(--color-white) 55%, transparent) 0%,
+      transparent 18%,
+      transparent 82%,
+      color-mix(in oklab, var(--color-white) 55%, transparent) 100%
+    );
+    filter: blur(6px);
+    pointer-events: none;
+  }
+
   .tab-corners {
     --corner: 1.375rem;
   }

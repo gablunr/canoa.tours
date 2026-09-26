@@ -1,0 +1,20 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'p'> {
+	overPhoto?: boolean;
+}
+
+const { overPhoto = false, class: className, ...attributes } = Astro.props;
+---
+
+<p
+	{...attributes}
+	class:list={[
+		'liquid-glass inline-flex items-center gap-1.5 px-3 py-1 font-display text-xs font-medium text-white',
+		overPhoto && 'pointer-events-none bg-primary/30 backdrop-blur-md',
+		className,
+	]}
+>
+	<slot />
+</p>
