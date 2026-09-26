@@ -25,6 +25,11 @@ const criticalFonts = [
 			<link rel="preload" href={`/fonts/inter/${font}.woff2`} as="font" type="font/woff2" crossorigin />
 		))}
 		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
+		<script is:inline>
+			window.addEventListener('pagereveal', (event) => {
+				if (event.viewTransition) document.documentElement.classList.add('page-transition');
+			});
+		</script>
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
