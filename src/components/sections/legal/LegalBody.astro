@@ -19,8 +19,8 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 ---
 
 <div class="px-4 pt-12 pb-24 sm:px-6 md:pt-16 md:pb-32">
-	<div data-reveal class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-20">
-		<aside class="lg:sticky lg:top-36 lg:self-start">
+	<div data-reveal class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[15rem_minmax(0,48rem)] lg:justify-center lg:gap-20">
+		<aside class="mx-auto w-full max-w-3xl lg:sticky lg:top-36 lg:mx-0 lg:self-start">
 			<nav
 				aria-labelledby="legal-contents-title"
 				class="rounded-3xl border border-border/50 bg-surface/60 p-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0"
@@ -58,7 +58,7 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 			)}
 		</aside>
 
-		<div class="max-w-3xl">
+		<div class="mx-auto w-full max-w-3xl lg:mx-0">
 			{summary && (
 				<div class="mb-14 rounded-3xl bg-surface p-6 sm:p-8">
 					<p class="text-sm font-medium text-accent-strong">Lo esencial</p>
