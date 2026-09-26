@@ -5,7 +5,11 @@ import Footer from '../components/layout/Footer.astro';
 import Seo, { type Props as SeoProps } from '../components/layout/Seo.astro';
 import { siteLanguage } from '../lib/seo';
 
-type Props = SeoProps;
+type Props = SeoProps & {
+	footerOverlapsPhoto?: boolean;
+};
+
+const { footerOverlapsPhoto, ...seo } = Astro.props;
 
 const criticalFonts = [
 	'InterDisplay-Light',
@@ -36,14 +40,14 @@ const criticalFonts = [
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="theme-color" content="#ffffff" />
 		<meta name="generator" content={Astro.generator} />
-		<Seo {...Astro.props} />
+		<Seo {...seo} />
 	</head>
 	<body class="flex min-h-dvh flex-col">
 		<Header />
 		<main class="flex-1 pt-14">
 			<slot />
 		</main>
-		<Footer />
+		<Footer overlapsPhoto={footerOverlapsPhoto} />
 		<script>
 			import { initReveal } from '../scripts/reveal';
 

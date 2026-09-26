@@ -134,6 +134,30 @@
 }
 
 @layer components {
+  .tab-corners {
+    --corner: 1.375rem;
+  }
+
+  .tab-corners::before,
+  .tab-corners::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: var(--corner);
+    height: var(--corner);
+    pointer-events: none;
+  }
+
+  .tab-corners::before {
+    left: 0;
+    background: radial-gradient(circle at 100% 0, transparent calc(var(--corner) - 0.5px), var(--color-notch) var(--corner));
+  }
+
+  .tab-corners::after {
+    right: 0;
+    background: radial-gradient(circle at 0 0, transparent calc(var(--corner) - 0.5px), var(--color-notch) var(--corner));
+  }
+
   .notch-ears {
     --ear: 1rem;
     --ear-color: var(--color-notch);
