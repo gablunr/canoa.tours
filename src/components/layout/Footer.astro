@@ -26,13 +26,13 @@ const { whatsapp, email, socialProfiles, paymentMethods } = company;
 	<div class="bg-notch">
 		<div class="mx-auto max-w-6xl px-4 pt-16 pb-10 sm:px-6 md:pt-20">
 			<div class="grid gap-14 lg:grid-cols-12 lg:gap-8">
-				<div class="lg:col-span-4">
+				<div class="flex flex-col items-center text-center lg:col-span-4 lg:items-start lg:text-left">
 					<a href="/" class="inline-flex transition-opacity duration-300 ease-smooth hover:opacity-75">
 						<Image src={logo} alt={company.brandName} class="h-9 w-auto" />
 					</a>
 					<p class="mt-6 max-w-sm text-sm leading-relaxed text-muted-on-dark">{company.description}</p>
 
-					<ul class="mt-6 grid gap-3 text-sm">
+					<ul class="mt-6 grid justify-items-center gap-3 text-sm lg:justify-items-start">
 						{whatsapp && (
 							<li>
 								<a href={whatsapp.href} class="group inline-flex items-center gap-3 text-ink-100 transition-colors duration-300 ease-smooth hover:text-white">
@@ -75,7 +75,7 @@ const { whatsapp, email, socialProfiles, paymentMethods } = company;
 					)}
 				</div>
 
-				<nav class="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4 lg:col-span-8" aria-label="Pie de página">
+				<nav class="grid gap-x-6 gap-y-12 text-center sm:grid-cols-4 lg:col-span-8 lg:text-left" aria-label="Pie de página">
 					{footerGroups.map((group) => (
 						<div>
 							<h2 class="text-sm font-medium text-ink-400">{group.title}</h2>
@@ -91,10 +91,10 @@ const { whatsapp, email, socialProfiles, paymentMethods } = company;
 				</nav>
 			</div>
 
-			<div class="mt-16 flex flex-col gap-6 border-t border-white/10 pt-8 text-xs text-ink-400 md:flex-row md:items-center md:justify-between">
-				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
+			<div class="mt-16 flex flex-col items-center gap-6 border-t border-white/10 pt-8 text-center text-xs text-ink-400 lg:flex-row lg:justify-between lg:text-left">
+				<div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-8">
 					<p>© {currentYear} {siteHost}</p>
-					<ul class="flex flex-wrap gap-x-6 gap-y-2">
+					<ul class="flex flex-wrap justify-center gap-x-6 gap-y-2">
 						{legalLinks.map((link) => (
 							<li>
 								<a href={link.href} class="transition-colors duration-300 ease-smooth hover:text-white">{link.label}</a>
@@ -104,7 +104,7 @@ const { whatsapp, email, socialProfiles, paymentMethods } = company;
 				</div>
 
 				{paymentMethods.length > 0 && (
-					<ul class="flex flex-wrap gap-2" aria-label="Métodos de pago">
+					<ul class="flex flex-wrap justify-center gap-2" aria-label="Métodos de pago">
 						{paymentMethods.map((method) => {
 							const Icon = paymentIcons[method];
 							return (
