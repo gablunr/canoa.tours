@@ -26,18 +26,23 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 				class="rounded-3xl border border-border/50 bg-surface/60 p-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0"
 			>
 				<p id="legal-contents-title" class="text-sm font-medium text-primary">En esta página</p>
-				<ol class="mt-4 border-l border-border/60 text-sm">
+				<ol class="relative mt-4 border-l border-border/60 text-sm">
+					<span
+						data-toc-indicator
+						class="absolute top-0 -left-px w-px bg-accent-strong opacity-0 transition-[translate,height,opacity] duration-500 ease-smooth"
+						aria-hidden="true"
+					></span>
 					{sections.map((section, index) => (
 						<li>
 							<a
 								href={`#${section.slug}`}
 								data-toc-link
-								class="group/toc -ml-px flex gap-3 border-l border-transparent py-1.5 pl-4 leading-snug text-muted transition-colors duration-300 ease-smooth hover:text-primary aria-[current=true]:border-accent-strong aria-[current=true]:text-primary"
+								class="group/toc flex gap-3 py-1.5 pl-4 leading-snug text-muted transition-colors duration-300 ease-smooth hover:text-primary aria-[current=true]:text-primary"
 							>
 								<span class="w-5 shrink-0 text-xs leading-5 text-subtle tabular-nums transition-colors duration-300 ease-smooth group-aria-[current=true]/toc:text-accent-strong">
 									{sectionNumber(index)}
 								</span>
-								{section.text}
+								<span class="transition-transform duration-500 ease-smooth group-hover/toc:translate-x-1">{section.text}</span>
 							</a>
 						</li>
 					))}
@@ -70,7 +75,7 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 				<Content />
 			</div>
 
-			<div class="mt-16 flex flex-col gap-6 rounded-3xl border border-border/50 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
+			<div class="mt-16 flex flex-col gap-6 rounded-3xl border border-border/50 p-6 transition-colors duration-500 ease-smooth hover:border-border sm:p-8 md:flex-row md:items-center md:justify-between">
 				<div>
 					<h2 class="text-lg font-medium tracking-tight text-primary">¿Tienes dudas sobre este documento?</h2>
 					<p class="mt-1 text-sm leading-relaxed text-muted">Escríbenos y te respondemos lo antes posible.</p>
@@ -124,6 +129,20 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 		letter-spacing: 0;
 		color: var(--color-accent-strong);
 		font-variant-numeric: tabular-nums;
+	}
+
+	.legal-content :global(h2:target) {
+		animation: section-arrival 2s var(--ease-smooth);
+	}
+
+	@keyframes section-arrival {
+		0%,
+		40% {
+			color: var(--color-accent-strong);
+		}
+		100% {
+			color: var(--color-primary);
+		}
 	}
 
 	.legal-content > :global(h2:first-child) {

@@ -20,7 +20,20 @@ export function initTableOfContents(root: HTMLElement) {
 	const sections = trackedSections(root);
 	if (sections.length === 0) return;
 
+	const indicator = root.querySelector<HTMLElement>('[data-toc-indicator]');
+	let currentLink: HTMLAnchorElement | undefined;
 	let pendingFrame = 0;
+
+	function moveIndicator() {
+		if (!indicator) return;
+		if (!currentLink) {
+			indicator.style.opacity = '0';
+			return;
+		}
+		indicator.style.translate = `0 ${currentLink.offsetTop}px`;
+		indicator.style.height = `${currentLink.offsetHeight}px`;
+		indicator.style.opacity = '1';
+	}
 
 	function markCurrentSection() {
 		pendingFrame = 0;
@@ -31,6 +44,11 @@ export function initTableOfContents(root: HTMLElement) {
 			if (link === current?.link) link.setAttribute('aria-current', 'true');
 			else link.removeAttribute('aria-current');
 		}
+
+		if (current?.link !== currentLink) {
+			currentLink = current?.link;
+			moveIndicator();
+		}
 	}
 
 	window.addEventListener(
@@ -40,6 +58,8 @@ export function initTableOfContents(root: HTMLElement) {
 		},
 		{ passive: true },
 	);
+
+	window.addEventListener('resize', moveIndicator, { passive: true });
 
 	markCurrentSection();
 }
