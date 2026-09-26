@@ -112,6 +112,12 @@
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 .fonts-loading .animate-fade-up {
   animation-play-state: paused;
 }
