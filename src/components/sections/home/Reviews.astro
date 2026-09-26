@@ -1,0 +1,45 @@
+---
+import RatingBadge from '../../ui/RatingBadge.astro';
+import ReviewCard from '../../ui/cards/ReviewCard.astro';
+import { formatRating, reviewCountLabel, reviewSource, reviewTourHref, reviews } from '../../../data/reviews';
+---
+
+<section aria-labelledby="reviews-title" class="px-4 pt-24 sm:px-6 lg:pt-32">
+	<div class="mx-auto max-w-6xl">
+		<p data-reveal class="flex justify-center">
+			<RatingBadge
+				rating={reviewSource.rating}
+				ratingLabel={formatRating(reviewSource.rating)}
+				source={reviewSource.name}
+				countLabel={reviewCountLabel(reviewSource.count)}
+				href={reviewSource.url}
+			/>
+		</p>
+
+		<h2
+			id="reviews-title"
+			data-reveal
+			class="mx-auto mt-6 max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+		>
+			Opiniones de clientes de Canoa Tours
+		</h2>
+
+		<ul class="mt-10 grid gap-4 max-sm:px-5 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+			{reviews.map((review) => (
+				<li data-reveal>
+					<ReviewCard
+						author={review.author}
+						avatar={review.avatar}
+						rating={review.rating}
+						text={review.text}
+						tourTitle={review.tourTitle}
+						tourHref={reviewTourHref(review)}
+						source={reviewSource.name}
+						date={review.date}
+						url={review.url}
+					/>
+				</li>
+			))}
+		</ul>
+	</div>
+</section>

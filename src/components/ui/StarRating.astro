@@ -1,0 +1,33 @@
+---
+import { Star } from '@lucide/astro';
+
+interface Props {
+	rating: number;
+	decorative?: boolean;
+	size?: number;
+	class?: string;
+}
+
+const { rating, decorative = false, size = 16, class: className } = Astro.props;
+
+const maxRating = 5;
+const filledStars = Math.round(rating);
+const label = `${new Intl.NumberFormat('es').format(rating)} de ${maxRating} estrellas`;
+---
+
+<span
+	role={decorative ? undefined : 'img'}
+	aria-label={decorative ? undefined : label}
+	aria-hidden={decorative ? 'true' : undefined}
+	class:list={['inline-flex shrink-0 gap-0.5', className]}
+>
+	{Array.from({ length: maxRating }, (_, index) => (
+		<Star
+			size={size}
+			stroke-width={0}
+			fill="currentColor"
+			aria-hidden="true"
+			class:list={[index < filledStars ? 'text-sun' : 'text-border']}
+		/>
+	))}
+</span>
