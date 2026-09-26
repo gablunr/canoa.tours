@@ -1,0 +1,30 @@
+{
+ "map-pin": {
+  "title": "map-pin dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/1858b9-map-pin",
+  "processing": "2400 px clay render recolored to sun-800 (shadows) and sun-300 (lights) between luminance 0.668 and 0.909, downscaled to 800 px"
+ },
+ "wallet": {
+  "title": "wallet dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/7d956f-wallet",
+  "processing": "2400 px clay render recolored to teal-800 (shadows) and teal-300 (lights) between luminance 0.667 and 0.871, downscaled to 800 px"
+ },
+ "umbrella": {
+  "title": "umbrella dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/3f82a3-umbrella",
+  "processing": "2400 px clay render recolored to sun-800 (shadows) and sun-300 (lights) between luminance 0.69 and 0.937, downscaled to 800 px"
+ },
+ "calendar": {
+  "title": "calendar dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/f32794-calendar",
+  "processing": "2400 px clay render recolored to teal-900 (shadows) and teal-50 (lights) between luminance 0.643 and 0.937, downscaled to 800 px"
+ }
+}

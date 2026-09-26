@@ -1,0 +1,65 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+type Tone = 'night' | 'sand' | 'surface' | 'teal';
+
+interface Props {
+	image: ImageMetadata;
+	title: string;
+	text: string;
+	tone?: Tone;
+	class?: string;
+}
+
+const { image, title, text, tone = 'surface', class: className } = Astro.props;
+
+const tones: Record<Tone, { card: string; title: string; text: string }> = {
+	night: {
+		card: 'bg-primary bg-radial-[at_100%_100%] from-teal-800 to-primary to-70%',
+		title: 'text-white',
+		text: 'text-muted-on-dark',
+	},
+	sand: {
+		card: 'bg-sand',
+		title: 'text-primary',
+		text: 'text-secondary',
+	},
+	surface: {
+		card: 'bg-surface',
+		title: 'text-primary',
+		text: 'text-secondary',
+	},
+	teal: {
+		card: 'bg-accent bg-radial-[at_100%_0%] from-teal-500 to-accent to-60%',
+		title: 'text-white',
+		text: 'text-white',
+	},
+};
+
+const palette = tones[tone];
+---
+
+<article
+	class:list={[
+		'group @container relative isolate flex h-full min-h-64 flex-col overflow-hidden rounded-[1.75rem] p-7 lg:p-8',
+		palette.card,
+		className,
+	]}
+>
+	<span class="block size-18 shrink-0 drop-shadow-xl transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-110 @xl:absolute @xl:-right-4 @xl:-bottom-8 @xl:-z-10 @xl:size-50 @xl:-rotate-6">
+		<Image
+			src={image}
+			alt=""
+			widths={[144, 400, 600]}
+			sizes="(min-width: 640px) 12.5rem, 4.5rem"
+			quality={90}
+			class="size-full"
+		/>
+	</span>
+
+	<div class="mt-auto max-w-md pt-12">
+		<h3 class:list={['text-2xl leading-[1.1] font-semibold tracking-[-0.03em] text-balance', palette.title]}>{title}</h3>
+		<p class:list={['mt-3 text-[15px] leading-relaxed text-pretty', palette.text]}>{text}</p>
+	</div>
+</article>

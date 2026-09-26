@@ -1,0 +1,46 @@
+---
+import type { ImageMetadata } from 'astro';
+import type { ComponentProps } from 'astro/types';
+import BenefitCard from '../../ui/cards/BenefitCard.astro';
+import mapPin from '../../../assets/images/icons-3d/map-pin.png';
+import wallet from '../../../assets/images/icons-3d/wallet.png';
+import umbrella from '../../../assets/images/icons-3d/umbrella.png';
+import calendar from '../../../assets/images/icons-3d/calendar.png';
+import { bookingBenefits, type BookingBenefitId } from '../../../data/booking-benefits';
+
+type BenefitLayout = {
+	image: ImageMetadata;
+	tone: ComponentProps<typeof BenefitCard>['tone'];
+	wide?: boolean;
+};
+
+const layouts: Record<BookingBenefitId, BenefitLayout> = {
+	'hotel-pickup': { image: mapPin, tone: 'night', wide: true },
+	deposit: { image: wallet, tone: 'sand' },
+	'weather-reschedule': { image: umbrella, tone: 'surface' },
+	'cancellation-insurance': { image: calendar, tone: 'teal', wide: true },
+};
+---
+
+<section aria-labelledby="booking-benefits-title" class="px-4 pt-24 sm:px-6 lg:pt-32">
+	<div class="mx-auto max-w-6xl">
+		<h2
+			id="booking-benefits-title"
+			data-reveal
+			class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+		>
+			Por qué reservar tus excursiones en Punta Cana con Canoa Tours
+		</h2>
+
+		<ul class="mt-10 grid gap-4 max-sm:px-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+			{bookingBenefits.map((benefit) => {
+				const { image, tone, wide } = layouts[benefit.id];
+				return (
+					<li data-reveal class:list={[wide && 'sm:col-span-2']}>
+						<BenefitCard image={image} tone={tone} title={benefit.title} text={benefit.text} />
+					</li>
+				);
+			})}
+		</ul>
+	</div>
+</section>

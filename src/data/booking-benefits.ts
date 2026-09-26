@@ -1,0 +1,32 @@
+export type BookingBenefitId = 'hotel-pickup' | 'deposit' | 'weather-reschedule' | 'cancellation-insurance';
+
+export interface BookingBenefit {
+	id: BookingBenefitId;
+	title: string;
+	text: string;
+}
+
+export const bookingBenefits: BookingBenefit[] = [
+	{
+		id: 'hotel-pickup',
+		title: 'Te recogemos en tu hotel',
+		text: 'Hay recogida en hoteles de Punta Cana y Bayahibe en todas las excursiones. En Saona, Catalina y Samaná se cobra aparte según tu zona, porque hay quien se aloja al lado del puerto y no la necesita.',
+	},
+	{
+		id: 'deposit',
+		title: 'Reservas con un anticipo',
+		text: 'Pagas una parte al reservar y el resto el día de la excursión.',
+	},
+	{
+		id: 'weather-reschedule',
+		title: 'Si hace mal tiempo, cambiamos la fecha',
+		text: 'Si el clima impide salir, movemos tu excursión al siguiente día disponible, sin coste.',
+	},
+	{
+		id: 'cancellation-insurance',
+		title: 'Cancela o cambia la fecha hasta 24 horas antes',
+		text: 'Con el seguro de cancelación (US$4,99 por persona) te devolvemos el 100 % o cambias la fecha cuando quieras.',
+	},
+];
+
+export const bookingBenefitSummary = (benefit: BookingBenefit) => `${benefit.title}. ${benefit.text}`;
