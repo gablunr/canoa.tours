@@ -1,0 +1,42 @@
+---
+import { Plus } from '@lucide/astro';
+import type { HTMLAttributes } from 'astro/types';
+import UnderlineLink from './UnderlineLink.astro';
+
+interface Props extends HTMLAttributes<'details'> {
+	summary: string;
+	text: string;
+	link?: { label: string; href: string };
+}
+
+const { summary, text, link, class: className, ...attributes } = Astro.props;
+---
+
+<details
+	{...attributes}
+	class:list={[
+		'group/accordion liquid-glass rounded-[1.5rem] bg-primary/90 transition-colors duration-500 ease-smooth [interpolate-size:allow-keywords] after:opacity-60 hover:bg-primary open:bg-primary',
+		'has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 has-[summary:focus-visible]:outline-accent',
+		'details-content:h-0 details-content:overflow-y-clip details-content:opacity-0 details-content:transition-[height,opacity,content-visibility] details-content:transition-discrete details-content:duration-700 details-content:ease-smooth open:details-content:h-auto open:details-content:opacity-100',
+		className,
+	]}
+>
+	<summary class="flex cursor-pointer list-none items-center gap-4 py-4 pr-3.5 pl-5 outline-none sm:py-5 sm:pr-4 sm:pl-6 [&::-webkit-details-marker]:hidden">
+		<h3 class="flex-1 text-base leading-snug font-medium tracking-[-0.01em] text-pretty text-white sm:text-lg">{summary}</h3>
+		<span
+			class="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-colors duration-500 ease-smooth group-hover/accordion:bg-white/25 group-open/accordion:bg-white group-open/accordion:text-primary"
+			aria-hidden="true"
+		>
+			<Plus size={18} stroke-width={2} class="transition-transform duration-700 ease-spring group-open/accordion:rotate-45" />
+		</span>
+	</summary>
+
+	<div class="px-5 pb-5 sm:px-6 sm:pb-6">
+		<p class="max-w-2xl text-[15px] leading-relaxed text-pretty text-white/85">{text}</p>
+		{link && (
+			<p class="mt-4">
+				<UnderlineLink href={link.href} tone="light">{link.label}</UnderlineLink>
+			</p>
+		)}
+	</div>
+</details>

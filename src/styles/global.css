@@ -72,6 +72,7 @@
 
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-zoom: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-spring: linear(0, 0.022 2%, 0.082 4%, 0.168 6%, 0.271 8%, 0.383 10%, 0.497 12%, 0.609 14%, 0.761 17%, 0.889 20%, 0.988 23%, 1.058 26%, 1.101 29%, 1.125 33%, 1.121 37%, 1.093 42%, 1.051 48%, 1.01 55%, 0.987 63%, 0.985 72%, 0.993 82%, 1);
 
   --animate-fade-up: fade-up 0.7s var(--ease-smooth) both;
   --animate-notch-drop: notch-drop 1.2s var(--ease-smooth) 0.1s both;
