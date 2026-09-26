@@ -1,18 +1,50 @@
 ---
-import Button from '../../ui/Button.astro';
+import { Picture } from 'astro:assets';
+import GlassButton from '../../ui/GlassButton.astro';
+import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
+import GlassBadge from '../../ui/GlassBadge.astro';
 ---
 
-<section class="px-4 pt-16 pb-24 sm:px-6 md:pt-24 md:pb-32">
-	<div class="mx-auto max-w-2xl text-center">
-		<p class="animate-fade-up text-sm text-muted">Error 404</p>
-		<h1 class="mt-4 animate-fade-up text-4xl leading-[1.05] font-medium tracking-tight text-balance md:text-5xl" style="animation-delay: 80ms">
-			No encontramos esta página
+<section class="relative isolate -mt-14 flex min-h-[max(32rem,78svh)] flex-col justify-center overflow-hidden bg-primary">
+	<Picture
+		src={palmBeach}
+		alt=""
+		formats={['avif', 'webp']}
+		widths={[640, 960, 1280, 1920, 2560, 3344]}
+		sizes="(max-aspect-ratio: 3/2) 146vh, 100vw"
+		quality={90}
+		priority
+		pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
+		class="size-full object-cover object-bottom brightness-75 saturate-110 contrast-105"
+	/>
+	<div class="film-grain absolute inset-0 -z-20 opacity-90" aria-hidden="true"></div>
+	<div
+		class="absolute inset-0 -z-10 bg-linear-to-b from-primary/70 via-primary/25 via-35% to-transparent to-60%"
+		aria-hidden="true"
+	></div>
+
+	<div class="mx-auto flex max-w-3xl flex-col items-center px-4 pt-30 pb-24 text-center text-white sm:px-6 md:pb-26">
+		<GlassBadge class="animate-fade-up" style="animation-delay: 550ms">
+			Error 404
+		</GlassBadge>
+		<h1
+			class="mt-5 animate-fade-up bg-linear-to-b from-white to-muted-on-dark bg-clip-text pb-1 text-5xl leading-[0.98] font-semibold tracking-[-0.04em] text-balance text-transparent sm:text-6xl lg:text-7xl"
+			style="animation-delay: 630ms"
+		>
+			Esta página no existe
 		</h1>
-		<p class="mx-auto mt-6 max-w-lg animate-fade-up text-base leading-relaxed text-muted" style="animation-delay: 160ms">
-			Puede que la dirección esté mal escrita o que la página haya cambiado de lugar.
+		<p
+			class="mt-8 max-w-xl animate-fade-up font-display text-base leading-[1.4] tracking-[-0.01em] text-balance sm:text-lg md:text-xl"
+			style="animation-delay: 710ms"
+		>
+			Puede que el enlace esté mal escrito o que la página haya cambiado de dirección.
 		</p>
-		<div class="mt-10 flex animate-fade-up justify-center" style="animation-delay: 240ms">
-			<Button href="/">Ir al inicio</Button>
-		</div>
+		<GlassButton
+			href="/"
+			class="mt-10 animate-fade-up focus-visible:ring-white focus-visible:ring-offset-primary"
+			style="animation-delay: 790ms"
+		>
+			Volver al inicio
+		</GlassButton>
 	</div>
 </section>
