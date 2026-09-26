@@ -5,10 +5,11 @@ interface Props extends Omit<HTMLAttributes<'button'>, 'class' | 'type'> {
 	href?: string;
 	type?: 'button' | 'submit';
 	size?: 'sm' | 'md';
+	tone?: 'solid' | 'glass';
 	class?: string;
 }
 
-const { href, type = 'button', size = 'md', class: className, ...attributes } = Astro.props;
+const { href, type = 'button', size = 'md', tone = 'solid', class: className, ...attributes } = Astro.props;
 const Element = href ? 'a' : 'button';
 
 const sizes = {
@@ -24,7 +25,21 @@ const sizes = {
 	},
 };
 
+const tones = {
+	solid: {
+		root: 'bg-white text-primary',
+		circle: 'bg-ink-200',
+		icon: 'text-primary',
+	},
+	glass: {
+		root: 'liquid-glass bg-primary/25 text-white',
+		circle: 'bg-white/20',
+		icon: 'text-white',
+	},
+};
+
 const s = sizes[size];
+const t = tones[tone];
 ---
 
 <Element
@@ -32,8 +47,9 @@ const s = sizes[size];
 	href={href}
 	type={href ? undefined : type}
 	class:list={[
-		'group/arrow relative isolate inline-flex cursor-pointer items-center justify-center rounded-full bg-white font-medium text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60',
+		'group/arrow relative isolate inline-flex cursor-pointer items-center justify-center rounded-full font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60',
 		s.root,
+		t.root,
 		className,
 	]}
 >
@@ -42,12 +58,13 @@ const s = sizes[size];
 	</span>
 	<span
 		class:list={[
-			'absolute right-1 inline-flex items-center justify-end rounded-full bg-ink-200 transition-[width] duration-500 ease-smooth group-hover/arrow:w-[calc(100%-0.5rem)] group-focus-visible/arrow:w-[calc(100%-0.5rem)]',
+			'absolute right-1 inline-flex items-center justify-end rounded-full transition-[width] duration-500 ease-smooth group-hover/arrow:w-[calc(100%-0.5rem)] group-focus-visible/arrow:w-[calc(100%-0.5rem)]',
 			s.circle,
+			t.circle,
 		]}
 		aria-hidden="true"
 	>
-		<svg class:list={['shrink-0 text-primary', s.icon]} viewBox="0 0 15 15" fill="none">
+		<svg class:list={['shrink-0', t.icon, s.icon]} viewBox="0 0 15 15" fill="none">
 			<path
 				d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z"
 				fill="currentColor"

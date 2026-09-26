@@ -1,0 +1,10 @@
+---
+import type { ComponentProps } from 'astro/types';
+import ArrowButton from './ArrowButton.astro';
+
+type Props = Omit<ComponentProps<typeof ArrowButton>, 'tone'>;
+---
+
+<ArrowButton {...Astro.props} tone="glass">
+	<slot />
+</ArrowButton>
