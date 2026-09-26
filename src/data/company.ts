@@ -66,6 +66,7 @@ export const company: Company = {
 	description:
 		'Canoa Tours es una agencia local de excursiones en Punta Cana. Organizamos nuestros propios tours, sin intermediarios, y te recogemos en el hotel.',
 	email: 'hola@canoatours.com',
+	whatsapp: whatsappFrom('+1 809 555 0100', '+18095550100'),
 	serviceAreas: [{ name: 'Punta Cana', kind: 'City' }],
 	socialProfiles: [],
 	paymentMethods: ['visa', 'mastercard', 'paypal'],
