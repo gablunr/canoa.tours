@@ -1,0 +1,90 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata, ImageOutputFormat } from 'astro';
+import { CalendarDays, MapPin } from '@lucide/astro';
+import ArrowCircle from '../ArrowCircle.astro';
+import GlassBadge from '../GlassBadge.astro';
+
+interface Props {
+	href: string;
+	title: string;
+	badge: string;
+	price: string;
+	priceUnit: string;
+	schedule: string;
+	departure: string;
+	image?: ImageMetadata;
+	sizes?: string;
+	class?: string;
+}
+
+const {
+	href,
+	title,
+	badge,
+	price,
+	priceUnit,
+	schedule,
+	departure,
+	image,
+	sizes = '(min-width: 1152px) 43rem, (min-width: 1024px) 62vw, (min-width: 640px) 94vw, 190vw',
+	class: className,
+} = Astro.props;
+
+const photoOptions = {
+	alt: '',
+	formats: ['avif', 'webp'] as ImageOutputFormat[],
+	quality: 85,
+	widths: [640, 960, 1280, 1600, 2048],
+	sizes,
+	class: 'size-full object-cover',
+};
+
+const hoverZoom = 'transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-105';
+---
+
+<article class:list={['relative isolate', className]}>
+	{image && (
+		<Picture
+			src={image}
+			{...photoOptions}
+			pictureAttributes={{ class: 'absolute inset-x-8 top-1/2 -bottom-6 -z-10 opacity-50 blur-2xl', 'aria-hidden': 'true' }}
+		/>
+	)}
+
+	<div class="group relative isolate flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[2rem] bg-primary p-3 pb-4 text-center text-white has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-accent has-[a:focus-visible]:ring-offset-2 lg:aspect-[3/5]">
+		{image && <Picture src={image} {...photoOptions} pictureAttributes={{ class: `absolute inset-0 -z-10 brightness-90 ${hoverZoom}` }} />}
+		<div class="progressive-blur -z-10" aria-hidden="true">
+			{image ? <Picture src={image} {...photoOptions} class={`${photoOptions.class} ${hoverZoom}`} /> : <div></div>}
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+		</div>
+		<GlassBadge overPhoto class="absolute top-4 left-4">{badge}</GlassBadge>
+		<ArrowCircle class="absolute top-3 right-3" />
+
+		<div class="px-2 pb-5">
+			<h3 class="text-[1.375rem] leading-tight font-semibold tracking-[-0.03em] text-balance">
+				<a href={href} class="outline-none after:absolute after:inset-0 after:z-10">
+					<span class="bg-linear-to-b from-ink-200 to-white to-70% bg-clip-text text-transparent drop-shadow-md">{title}</span>
+				</a>
+			</h3>
+			<p class="mt-1 text-sm text-white/85 drop-shadow-md">
+				<span class="mr-1 font-display text-lg font-semibold tracking-[-0.02em] text-white">{price}</span>
+				{priceUnit}
+			</p>
+			<ul class="mt-2.5 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-white/85">
+				<li class="flex items-center gap-1.5">
+					<CalendarDays size={14} stroke-width={1.75} class="shrink-0 text-white/70" aria-hidden="true" />
+					{schedule}
+				</li>
+				<li class="flex items-center gap-1.5">
+					<MapPin size={14} stroke-width={1.75} class="shrink-0 text-white/70" aria-hidden="true" />
+					{departure}
+				</li>
+			</ul>
+		</div>
+	</div>
+</article>

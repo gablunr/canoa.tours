@@ -142,6 +142,60 @@
     pointer-events: none;
   }
 
+  .progressive-blur {
+    --clear-area: ellipse 125% 55% at 50% 38%;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .progressive-blur > * {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .progressive-blur > :nth-child(1) {
+    filter: url(#liquid-warp) brightness(0.9);
+    mask-image: radial-gradient(var(--clear-area), transparent 48%, black 70%);
+  }
+
+  .progressive-blur > :nth-child(2) {
+    backdrop-filter: blur(4px);
+    mask-image: radial-gradient(var(--clear-area), transparent 56%, black 72%);
+  }
+
+  .progressive-blur > :nth-child(3) {
+    backdrop-filter: blur(12px);
+    mask-image: radial-gradient(var(--clear-area), transparent 64%, black 84%);
+  }
+
+  .progressive-blur > :nth-child(4) {
+    backdrop-filter: blur(28px);
+    mask-image: radial-gradient(var(--clear-area), transparent 76%, black 100%);
+  }
+
+  .progressive-blur > :nth-child(5) {
+    background: radial-gradient(var(--clear-area), transparent 38%, color-mix(in oklab, var(--color-primary) 75%, transparent) 100%);
+  }
+
+  .progressive-blur > :nth-child(6) {
+    --glass-shine: color-mix(in oklab, var(--color-white) 85%, transparent);
+    --glass-soft-shine: color-mix(in oklab, var(--color-white) 45%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-white) 22%, transparent);
+    background:
+      linear-gradient(135deg, color-mix(in oklab, var(--color-white) 22%, transparent), transparent 22%),
+      linear-gradient(315deg, color-mix(in oklab, var(--color-white) 14%, transparent), transparent 20%),
+      linear-gradient(to top, color-mix(in oklab, var(--color-white) 22%, transparent), transparent 24%);
+    box-shadow:
+      inset 2px 2px 1px -1px var(--glass-shine),
+      inset -2px -2px 1px -1px var(--glass-shine),
+      inset 8px 8px 2px -8px var(--glass-soft-shine),
+      inset -8px -8px 2px -8px var(--glass-soft-shine),
+      inset 0 -10px 14px -10px color-mix(in oklab, var(--color-white) 60%, transparent);
+  }
+
   .liquid-glass {
     --glass-shine: color-mix(in oklab, var(--color-white) 90%, transparent);
     --glass-soft-shine: color-mix(in oklab, var(--color-white) 55%, transparent);
