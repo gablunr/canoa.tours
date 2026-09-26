@@ -1,0 +1,56 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import StepCard from '../../ui/cards/StepCard.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import magnifyingGlass from '../../../assets/images/icons-3d/magnifying-glass.png';
+import creditCard from '../../../assets/images/icons-3d/credit-card.png';
+import chat from '../../../assets/images/icons-3d/chat.png';
+import sun from '../../../assets/images/icons-3d/sun.png';
+import coconutPalms from '../../../assets/images/home/coconut-palms.png';
+import { bookingSteps, type BookingStepId } from '../../../data/booking-steps';
+import { howToBookLink } from '../../../data/navigation';
+
+const stepImages: Record<BookingStepId, ImageMetadata> = {
+	'choose-tour': magnifyingGlass,
+	'pay-deposit': creditCard,
+	'get-pickup-time': chat,
+	'enjoy-tour': sun,
+};
+
+const palmCorners = ['-left-52 lg:-left-32', '-right-52 -scale-x-100 lg:-right-32'];
+---
+
+<section aria-labelledby="how-to-book-title" class="relative isolate overflow-hidden px-4 pt-24 sm:px-6 lg:pt-32">
+	{palmCorners.map((corner) => (
+		<Image
+			src={coconutPalms}
+			alt=""
+			widths={[320, 576, 640, 800, 1142]}
+			sizes="(min-width: 1024px) 36rem, 20rem"
+			class:list={['pointer-events-none absolute bottom-0 -z-10 w-80 mask-b-from-55% max-sm:hidden lg:w-144', corner]}
+		/>
+	))}
+
+	<div class="mx-auto max-w-6xl">
+		<h2
+			id="how-to-book-title"
+			data-reveal
+			class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+		>
+			Cómo reservar tu excursión en Punta Cana
+		</h2>
+
+		<ol class="mx-auto mt-10 grid max-w-sm gap-6 sm:max-w-2xl sm:grid-cols-2 lg:mt-14 lg:max-w-none lg:grid-cols-4">
+			{bookingSteps.map((step, index) => (
+				<li>
+					<StepCard data-reveal number={index + 1} title={step.title} text={step.text} image={stepImages[step.id]} />
+				</li>
+			))}
+		</ol>
+
+		<p data-reveal class="mt-10 text-center lg:mt-14">
+			<UnderlineLink href={howToBookLink.href} tone="accent">Todo sobre reservas, pagos y cancelaciones</UnderlineLink>
+		</p>
+	</div>
+</section>

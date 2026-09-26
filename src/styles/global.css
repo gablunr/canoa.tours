@@ -242,6 +242,38 @@
     pointer-events: none;
   }
 
+  .clear-glass {
+    --glass-shine: color-mix(in oklab, var(--color-white) 95%, transparent);
+    --glass-soft-shine: color-mix(in oklab, var(--color-white) 60%, transparent);
+    position: relative;
+    isolation: isolate;
+    border: 1px solid color-mix(in oklab, var(--color-white) 50%, transparent);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-white) 8%, transparent) 34%,
+      color-mix(in oklab, var(--color-white) 66%, transparent) 56%
+    );
+    backdrop-filter: blur(4px) saturate(1.6) brightness(1.05);
+    box-shadow:
+      inset 2px 2px 1px -1px var(--glass-shine),
+      inset -2px -2px 1px -1px var(--glass-shine),
+      inset 12px 12px 3px -12px var(--glass-soft-shine),
+      inset -12px -12px 3px -12px var(--glass-soft-shine),
+      0 16px 32px -16px color-mix(in oklab, var(--color-primary) 35%, transparent);
+  }
+
+  .clear-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background:
+      linear-gradient(135deg, color-mix(in oklab, var(--color-white) 45%, transparent), transparent 22%),
+      linear-gradient(315deg, color-mix(in oklab, var(--color-white) 30%, transparent), transparent 18%);
+    pointer-events: none;
+  }
+
   .tab-corners {
     --corner: 1.375rem;
   }

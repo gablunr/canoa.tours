@@ -1,4 +1,32 @@
 {
+ "magnifying-glass": {
+  "title": "zoom dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/b4a0af-zoom",
+  "processing": "2400 px clay render recolored to teal-800 (shadows) and teal-300 (lights) between luminance 0.536 and 0.906, downscaled to 800 px"
+ },
+ "credit-card": {
+  "title": "credit-card dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/11463e-credit-card",
+  "processing": "2400 px clay render recolored to sun-800 (shadows) and sun-300 (lights) between luminance 0.784 and 0.922, downscaled to 800 px"
+ },
+ "chat": {
+  "title": "chat-text dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/f0f795-chat-text",
+  "processing": "2400 px clay render recolored to teal-800 (shadows) and teal-300 (lights) between luminance 0.545 and 0.922, downscaled to 800 px"
+ },
+ "sun": {
+  "title": "sun dynamic clay",
+  "creator": "Vijay Verma (3dicons)",
+  "license": "CC0 1.0",
+  "source": "https://3dicons.co/icons/801da3-sun",
+  "processing": "2400 px clay render recolored to sun-800 (shadows) and sun-300 (lights) between luminance 0.698 and 0.925, downscaled to 800 px"
+ },
  "map-pin": {
   "title": "map-pin dynamic clay",
   "creator": "Vijay Verma (3dicons)",
