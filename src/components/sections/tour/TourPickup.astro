@@ -1,0 +1,46 @@
+---
+import TourSection from './TourSection.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import { departurePorts } from '../../../data/tours/departure-ports';
+import { routes } from '../../../data/site/routes';
+import { pickupFeeLabel, pickupIncluded, pickupWindowLabel, pickupZones, type TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+const place = details.port ? departurePorts[details.port].port : details.destination.name;
+const intro = pickupIncluded(details)
+	? 'La recogida está incluida desde Bávaro y Arena Gorda. Desde otras zonas se suma un cargo por persona, porque quedan lejos de la ruta.'
+	: `El transporte se paga aparte porque hay quien se hospeda cerca de ${place} y no lo necesita. Esto cuesta por persona según tu zona.`;
+const pickupWindow = pickupWindowLabel(details);
+---
+
+<TourSection id="tour-pickup-title" title="Recogida en el hotel" intro={intro}>
+	<div class="rounded-[1.75rem] border border-border/60 px-5 py-2 sm:px-7">
+		<table class="w-full text-left text-[15px] leading-normal">
+			<caption class="sr-only">{`Precio de la recogida por zona para ${details.title}`}</caption>
+			<thead>
+				<tr>
+					<th scope="col" class="w-3/5 pt-3.5 pb-2 pr-4 text-xs font-medium text-muted">Zona</th>
+					<th scope="col" class="pt-3.5 pb-2 text-xs font-medium text-muted">Por persona</th>
+				</tr>
+			</thead>
+			<tbody>
+				{pickupZones.map((zone) => (
+					<tr class="border-t border-border/60">
+						<th scope="row" class="py-3.5 pr-4 align-top font-medium text-primary">{zone.name}</th>
+						<td class="py-3.5 align-top text-secondary tabular-nums">{pickupFeeLabel(details.pickupFees[zone.id])}</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+	<p class="mt-5 text-[15px] text-secondary max-lg:text-center">
+		Te recogemos {pickupWindow.charAt(0).toLowerCase() + pickupWindow.slice(1)}. La hora exacta viene en tu ticket.
+	</p>
+	<p class="mt-4 max-lg:text-center">
+		<UnderlineLink href={routes.pickupZones} tone="accent">Busca tu hotel en las zonas de recogida</UnderlineLink>
+	</p>
+</TourSection>

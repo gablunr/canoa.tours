@@ -1,0 +1,18 @@
+---
+interface Props {
+	id: string;
+	title: string;
+	intro?: string;
+	divider?: boolean;
+}
+
+const { id, title, intro, divider = true } = Astro.props;
+---
+
+<section aria-labelledby={id} data-reveal class:list={['scroll-mt-24', divider && 'border-t border-border/60 pt-12']}>
+	<h2 id={id} class="text-[1.625rem] leading-[1.2] font-medium tracking-[-0.02em] text-balance text-primary max-lg:text-center">{title}</h2>
+	{intro && <p class="mt-3 max-w-2xl text-[15px] leading-relaxed text-pretty text-secondary max-lg:mx-auto max-lg:text-center">{intro}</p>}
+	<div class="mt-8">
+		<slot />
+	</div>
+</section>

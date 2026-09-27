@@ -1,0 +1,21 @@
+---
+import TourSection from './TourSection.astro';
+import GlassAccordion from '../../ui/GlassAccordion.astro';
+import type { QuestionAndAnswer } from '../../../lib/seo/structured-data';
+
+interface Props {
+	faqs: QuestionAndAnswer[];
+}
+
+const { faqs } = Astro.props;
+---
+
+<TourSection id="tour-faq-title" title="Preguntas frecuentes">
+	<ul class="grid gap-3">
+		{faqs.map((faq) => (
+			<li>
+				<GlassAccordion name="tour-faq" summary={faq.question} text={faq.answer} />
+			</li>
+		))}
+	</ul>
+</TourSection>

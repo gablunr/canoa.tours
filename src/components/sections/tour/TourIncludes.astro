@@ -1,0 +1,38 @@
+---
+import { Check, X } from '@lucide/astro';
+import TourSection from './TourSection.astro';
+import type { TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+---
+
+<TourSection id="tour-includes-title" title="Qué incluye y qué no">
+	<div class="grid gap-4 sm:grid-cols-2">
+		<div class="rounded-[1.75rem] bg-surface p-6 sm:p-7">
+			<h3 class="text-lg font-medium tracking-[-0.01em] text-primary">Incluye</h3>
+			<ul class="mt-4 grid gap-3">
+				{details.includes.map((item) => (
+					<li class="flex gap-3 text-[15px] leading-relaxed text-secondary">
+						<Check size={18} stroke-width={2} class="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+						{item}
+					</li>
+				))}
+			</ul>
+		</div>
+		<div class="rounded-[1.75rem] bg-sand p-6 sm:p-7">
+			<h3 class="text-lg font-medium tracking-[-0.01em] text-primary">No incluye</h3>
+			<ul class="mt-4 grid gap-3">
+				{details.excludes.map((item) => (
+					<li class="flex gap-3 text-[15px] leading-relaxed text-secondary">
+						<X size={18} stroke-width={2} class="mt-0.5 shrink-0 text-sun-strong" aria-hidden="true" />
+						{item}
+					</li>
+				))}
+			</ul>
+		</div>
+	</div>
+</TourSection>

@@ -1,0 +1,22 @@
+---
+import { MessageSquareText } from '@lucide/astro';
+import TourSection from './TourSection.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import { routes } from '../../../data/site/routes';
+---
+
+<TourSection id="opiniones" title="Opiniones">
+	<div class="flex flex-col items-center rounded-[1.75rem] border border-border/60 p-6 text-center sm:p-8">
+		<span class="flex size-12 items-center justify-center rounded-full bg-surface text-accent-strong" aria-hidden="true">
+			<MessageSquareText size={22} stroke-width={1.75} />
+		</span>
+		<p class="mt-4 font-display text-lg font-medium tracking-[-0.01em] text-primary">Todavía no hay opiniones de esta excursión</p>
+		<p class="mt-2 max-w-md text-[15px] leading-relaxed text-pretty text-muted">
+			Somos una agencia nueva y solo publicamos opiniones de personas que viajaron con nosotros. Si ya hiciste esta excursión, muy
+			pronto vas a poder dejar la tuya aquí.
+		</p>
+		<p class="mt-5">
+			<UnderlineLink href={routes.reviews} tone="accent">Cómo funcionan las opiniones</UnderlineLink>
+		</p>
+	</div>
+</TourSection>

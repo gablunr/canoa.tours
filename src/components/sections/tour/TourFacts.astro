@@ -1,0 +1,26 @@
+---
+import TourSection from './TourSection.astro';
+import { tourFacts, type TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+---
+
+<TourSection id="tour-facts-title" title="Datos de la excursión">
+	<div class="rounded-[1.75rem] border border-border/60 px-5 py-2 sm:px-7">
+		<table class="w-full text-left text-[15px] leading-normal">
+			<caption class="sr-only">{`Datos de ${details.title}`}</caption>
+			<tbody>
+				{tourFacts(details).map((fact) => (
+					<tr class="border-t border-border/60 first:border-t-0">
+						<th scope="row" class="w-2/5 py-3.5 pr-4 align-top font-medium text-primary">{fact.label}</th>
+						<td class="py-3.5 align-top text-secondary">{fact.value}</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+</TourSection>

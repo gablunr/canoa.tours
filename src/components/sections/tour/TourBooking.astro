@@ -1,0 +1,227 @@
+---
+import { Check, ChevronDown, Minus, Plus } from '@lucide/astro';
+import Button from '../../ui/Button.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { cancellationInsurancePriceLabel, cancellationNoticeLabel } from '../../../data/booking/booking-policy';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+import { cancellationsLink, howToBookLink } from '../../../data/site/navigation';
+import { childPriceLabel, pickupZones, scheduleLabel, type TourDetails } from '../../../data/tours/tours';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+const { whatsapp } = company;
+const child = details.childPrice;
+const childLabel = childPriceLabel(details);
+const daysLabel = scheduleLabel(details.days);
+const fallbackMessage = `Hola, quiero reservar ${details.title} para el [fecha]. Somos [personas] y nos hospedamos en [hotel].`;
+
+const counters = [
+	{ name: 'adultos', label: details.pricePer === 'group' ? 'Personas' : 'Adultos', value: 2, min: 1, max: 30, invalidMessage: 'Tiene que ir al menos una persona.' },
+	...(child ? [{ name: 'ninos', label: `Niños (${child.fromAge} a ${child.toAge})`, value: 0, min: 0, max: 20, invalidMessage: 'Revisa cuántos niños van.' }] : []),
+];
+const breakdownRows = [
+	{ key: 'tour', label: 'Excursión' },
+	{ key: 'pickup', label: 'Recogida' },
+	{ key: 'rest', label: 'El día de la excursión' },
+];
+
+const fieldLabel = 'flex items-baseline justify-between gap-3 text-sm font-medium text-primary';
+const glassControl =
+	'liquid-glass cursor-pointer bg-surface/70 text-primary transition-colors duration-300 ease-smooth outline-none hover:bg-ink-100 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40';
+const selectClass =
+	'block h-12 w-full cursor-pointer appearance-none truncate rounded-2xl border border-border-strong bg-background pr-8 pl-3 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error';
+const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const buildYear = new Date().getFullYear();
+const bookingYears = [buildYear, buildYear + 1];
+---
+
+<div
+	class="rounded-[2rem] border border-border/60 bg-background p-6 shadow-[0_24px_48px_-24px_color-mix(in_oklab,var(--color-primary)_35%,transparent)] max-lg:mx-auto max-lg:max-w-md sm:p-7 md:max-lg:max-w-3xl md:max-lg:p-10"
+>
+	<p class="text-sm text-muted">Desde</p>
+	<p class="flex flex-wrap items-baseline gap-x-2 font-display text-4xl font-semibold tracking-[-0.03em] text-primary">
+		{formatPrice(details.price)}
+		<span class="text-base leading-snug font-normal tracking-normal text-muted">{details.priceUnit}</span>
+	</p>
+	{childLabel && <p class="mt-1 text-sm text-muted">{childLabel}</p>}
+
+	{whatsapp ? (
+		<form
+			data-booking-form
+			novalidate
+			class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-5"
+			data-whatsapp-href={whatsapp.href}
+			data-tour-title={details.title}
+			data-price={details.price}
+			data-price-per={details.pricePer}
+			data-child-price={child?.amount ?? ''}
+			data-deposit={details.deposit}
+			data-days={details.days.join(',')}
+			data-days-label={daysLabel}
+			data-pickup-fees={JSON.stringify(details.pickupFees)}
+		>
+			<fieldset data-field data-date-field data-required-message="Elige el día, el mes y el año." aria-describedby="field-fecha-hint field-fecha-error">
+				<legend class:list={[fieldLabel, 'w-full']}>
+					Fecha
+					<span id="field-fecha-hint" class="text-xs font-normal text-muted">Sale: {daysLabel.toLowerCase()}</span>
+				</legend>
+				<div class="mt-2 grid grid-cols-[4.5rem_minmax(0,1fr)_5.75rem] gap-2">
+					<div class="relative">
+						<select name="dia" required aria-label="Día" class={selectClass}>
+							<option value="">Día</option>
+							{Array.from({ length: 31 }, (_, index) => <option value={index + 1}>{index + 1}</option>)}
+						</select>
+						<ChevronDown size={16} class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+					</div>
+					<div class="relative">
+						<select name="mes" required aria-label="Mes" class={selectClass}>
+							<option value="">Mes</option>
+							{monthNames.map((month, index) => <option value={index + 1}>{month}</option>)}
+						</select>
+						<ChevronDown size={16} class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+					</div>
+					<div class="relative">
+						<select name="anio" required aria-label="Año" class={selectClass}>
+							<option value="">Año</option>
+							{bookingYears.map((year) => <option value={year}>{year}</option>)}
+						</select>
+						<ChevronDown size={16} class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+					</div>
+				</div>
+				<input type="hidden" name="fecha" />
+				<p id="field-fecha-error" data-field-error class="mt-2 text-xs text-error" hidden></p>
+			</fieldset>
+
+			<div class:list={['grid gap-3', counters.length > 1 && 'grid-cols-2']}>
+				{counters.map((counter) => (
+					<div data-field data-invalid-message={counter.invalidMessage}>
+						<label for={`field-${counter.name}`} class={fieldLabel}>{counter.label}</label>
+						<div class="mt-2 flex h-12 items-center justify-between rounded-full border border-border-strong p-1">
+							<button type="button" data-step="-1" data-target={counter.name} aria-label={`Quitar ${counter.label.toLowerCase()}`} class:list={[glassControl, 'flex size-9.5 items-center justify-center']}>
+								<Minus size={16} aria-hidden="true" />
+							</button>
+							<input
+								type="number"
+								id={`field-${counter.name}`}
+								name={counter.name}
+								value={counter.value}
+								min={counter.min}
+								max={counter.max}
+								inputmode="numeric"
+								required
+								aria-describedby={`field-${counter.name}-error`}
+								class="w-10 [appearance:textfield] bg-transparent text-center text-base font-medium text-primary tabular-nums focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+							/>
+							<button type="button" data-step="1" data-target={counter.name} aria-label={`Añadir ${counter.label.toLowerCase()}`} class:list={[glassControl, 'flex size-9.5 items-center justify-center']}>
+								<Plus size={16} aria-hidden="true" />
+							</button>
+						</div>
+						<p id={`field-${counter.name}-error`} data-field-error class="mt-2 text-xs text-error" hidden></p>
+					</div>
+				))}
+			</div>
+
+			<div class="grid grid-cols-2 gap-3">
+				<TextField
+					name="hotel"
+					label="Hotel"
+					placeholder="Tu hotel"
+					autocomplete="off"
+					required
+					requiredMessage="Dinos en qué hotel te hospedas."
+				/>
+				<div data-field>
+					<label for="field-zona" class={fieldLabel}>
+						Zona
+						<span class="text-xs font-normal text-muted">Opcional</span>
+					</label>
+					<div class="relative mt-2">
+						<select
+							id="field-zona"
+							name="zona"
+							aria-describedby="field-zona-error"
+							class={selectClass}
+						>
+							{pickupZones.map((zone) => <option value={zone.id}>{zone.name}</option>)}
+							<option value="">No lo sé</option>
+						</select>
+						<ChevronDown size={16} class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+					</div>
+					<p id="field-zona-error" data-field-error class="mt-2 text-xs text-error" hidden></p>
+				</div>
+			</div>
+
+			<div data-booking-summary class="rounded-[1.25rem] bg-surface p-4 text-sm">
+				<div class="flex items-baseline justify-between gap-4">
+					<span class="text-muted">Total aproximado</span>
+					<span data-summary="total" class="font-display text-xl font-semibold tracking-[-0.02em] text-primary tabular-nums"></span>
+				</div>
+				<div class="mt-1 flex justify-between gap-4">
+					<span class="text-muted">Anticipo al reservar</span>
+					<span data-summary="deposit" class="font-medium text-primary tabular-nums"></span>
+				</div>
+				<details class="group mt-3 border-t border-border/60 pt-3">
+					<summary class="flex cursor-pointer list-none items-center gap-1 text-xs text-muted transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+						Ver desglose
+						<ChevronDown size={14} class="transition-transform duration-300 group-open:rotate-180" aria-hidden="true" />
+					</summary>
+					<dl class="mt-2 grid gap-2">
+						{breakdownRows.map((row) => (
+							<div class="flex justify-between gap-4">
+								<dt class="text-muted">{row.label}</dt>
+								<dd data-summary={row.key} class="text-right font-medium text-primary tabular-nums"></dd>
+							</div>
+						))}
+					</dl>
+				</details>
+			</div>
+
+			<div>
+				<Button type="submit" size="lg" class="liquid-glass w-full gap-2.5">
+					<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+					Reservar por WhatsApp
+				</Button>
+				<noscript>
+					<Button href={whatsappMessageHref(whatsapp, fallbackMessage)} variant="outline" size="lg" class="mt-3 w-full">
+						Abrir WhatsApp con el mensaje listo
+					</Button>
+				</noscript>
+				<p class="mt-3 text-center text-xs leading-relaxed text-muted">
+					Precio orientativo. Te confirmamos la disponibilidad por WhatsApp y te enviamos el enlace para pagar el anticipo.
+				</p>
+			</div>
+		</form>
+	) : (
+		<p class="mt-6 text-[15px] leading-relaxed text-secondary">
+			Escríbenos a <UnderlineLink tone="accent" href={`mailto:${company.email}`}>{company.email}</UnderlineLink> con la fecha, cuántos
+			son y tu hotel.
+		</p>
+	)}
+
+	<ul class="mt-5 grid gap-2 border-t border-border/60 pt-5 text-[13px] text-muted">
+		<li class="flex gap-2">
+			<Check size={16} stroke-width={2} class="mt-px shrink-0 text-accent" aria-hidden="true" />
+			Cancela hasta {cancellationNoticeLabel} antes con el seguro de cancelación ({cancellationInsurancePriceLabel} por persona)
+		</li>
+		<li class="flex gap-2">
+			<Check size={16} stroke-width={2} class="mt-px shrink-0 text-accent" aria-hidden="true" />
+			Si hace mal tiempo, cambiamos la fecha sin coste
+		</li>
+	</ul>
+	<p class="mt-4 flex flex-wrap gap-x-5 gap-y-2 max-lg:justify-center">
+		<UnderlineLink href={howToBookLink.href}>{howToBookLink.label}</UnderlineLink>
+		<UnderlineLink href={cancellationsLink.href}>{cancellationsLink.label}</UnderlineLink>
+	</p>
+</div>
+
+<script>
+	import { initTourBooking } from '../../../scripts/tour/tour-booking';
+
+	document.querySelectorAll<HTMLFormElement>('[data-booking-form]').forEach(initTourBooking);
+</script>

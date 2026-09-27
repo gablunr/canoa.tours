@@ -1,0 +1,31 @@
+---
+import TourSection from './TourSection.astro';
+import { clockLabel, type TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+---
+
+<TourSection
+	id="tour-itinerary-title"
+	title="Cómo es el día"
+	intro="Horarios aproximados: pueden cambiar según el tráfico, el mar y la hora de recogida de tu hotel."
+>
+	<ol class="relative ml-3 border-l border-border/60">
+		{details.itinerary.map((step) => (
+			<li class="relative pb-8 pl-8 last:pb-0">
+				<span class="absolute top-2 -left-[5px] size-2.5 rounded-full bg-accent ring-4 ring-background" aria-hidden="true"></span>
+				{step.time && (
+					<p class="text-xs font-medium tabular-nums text-accent-strong">
+						<time datetime={step.time}>{clockLabel(step.time)}</time>
+					</p>
+				)}
+				<h3 class="mt-1 font-display text-lg font-medium tracking-[-0.01em] text-primary">{step.title}</h3>
+				<p class="mt-1 text-[15px] leading-relaxed text-pretty text-secondary">{step.text}</p>
+			</li>
+		))}
+	</ol>
+</TourSection>

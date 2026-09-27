@@ -1,0 +1,24 @@
+---
+import { Check } from '@lucide/astro';
+import TourSection from './TourSection.astro';
+import type { TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+---
+
+<TourSection id="tour-highlights-title" title="Lo mejor de la excursión" divider={false}>
+	<ul class="grid gap-3 sm:grid-cols-2">
+		{details.highlights.map((highlight) => (
+			<li class="flex items-start gap-3 rounded-[1.5rem] bg-surface px-5 py-4 text-[15px] leading-relaxed text-secondary">
+				<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-strong" aria-hidden="true">
+					<Check size={16} stroke-width={2.25} />
+				</span>
+				{highlight}
+			</li>
+		))}
+	</ul>
+</TourSection>

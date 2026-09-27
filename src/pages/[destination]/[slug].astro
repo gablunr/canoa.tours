@@ -1,0 +1,34 @@
+---
+import type { GetStaticPaths } from 'astro';
+import GuidePage from '../../components/sections/guides/GuidePage.astro';
+import TourPage from '../../components/sections/tour/TourPage.astro';
+import { findDestination } from '../../data/tours/destinations';
+import { guides, type Guide } from '../../data/guides/guides';
+import { tourDetails, type TourDetails } from '../../data/tours/tours';
+
+export const getStaticPaths = (() => {
+	const tourPaths = tourDetails.map((details) => ({
+		params: { destination: details.destination.slug, slug: details.tour.slug },
+		props: { kind: 'tour' as const, details },
+	}));
+	const guidePaths = guides.flatMap((guide) =>
+		guide.silo === 'general'
+			? []
+			: [{ params: { destination: findDestination(guide.silo).slug, slug: guide.slug }, props: { kind: 'guide' as const, guide } }],
+	);
+	const paths = [...tourPaths, ...guidePaths];
+	const taken = new Set<string>();
+	for (const { params } of paths) {
+		const path = `/${params.destination}/${params.slug}`;
+		if (taken.has(path)) throw new Error(`Una guía y una excursión comparten la ruta ${path}`);
+		taken.add(path);
+	}
+	return paths;
+}) satisfies GetStaticPaths;
+
+type Props = { kind: 'tour'; details: TourDetails } | { kind: 'guide'; guide: Guide };
+
+const props = Astro.props;
+---
+
+{props.kind === 'tour' ? <TourPage details={props.details} /> : <GuidePage guide={props.guide} />}

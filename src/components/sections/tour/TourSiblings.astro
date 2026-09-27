@@ -1,0 +1,54 @@
+---
+import PageSection from '../page/PageSection.astro';
+import TourCard from '../../ui/cards/TourCard.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import { destinationHref } from '../../../data/tours/destinations';
+import {
+	destinationToursTitle,
+	durationCategoryLabels,
+	scheduleLabel,
+	siblingToursTitle,
+	siblingTourDetails,
+	tourDeparture,
+	tourDetailsHref,
+	tourPhoto,
+	type TourDetails,
+} from '../../../data/tours/tours';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+const { destination } = details;
+const siblings = siblingTourDetails(details);
+const toursTitle = destinationToursTitle(destination);
+const allToursLabel = `Ver todas las ${toursTitle.charAt(0).toLowerCase()}${toursTitle.slice(1)}`;
+---
+
+{siblings.length > 0 && (
+	<PageSection id="tour-siblings-title" title={siblingToursTitle(destination)} intro={destination.details}>
+		<ul class:list={['grid gap-5 max-sm:px-5 sm:grid-cols-2', siblings.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3']}>
+			{siblings.map((sibling) => (
+				<li data-reveal>
+					<TourCard
+						href={tourDetailsHref(sibling)}
+						title={sibling.title}
+						badge={durationCategoryLabels[sibling.durationCategory]}
+						price={formatPrice(sibling.price)}
+						priceUnit={sibling.priceUnit}
+						schedule={scheduleLabel(sibling.days)}
+						departure={tourDeparture(sibling)}
+						image={tourPhoto(sibling)}
+						sizes="(min-width: 1024px) 24rem, (min-width: 640px) 50vw, 100vw"
+						frameClass="h-96"
+					/>
+				</li>
+			))}
+		</ul>
+		<p data-reveal class="mt-10 text-center lg:mt-14">
+			<UnderlineLink href={destinationHref(destination)} tone="accent">{allToursLabel}</UnderlineLink>
+		</p>
+	</PageSection>
+)}

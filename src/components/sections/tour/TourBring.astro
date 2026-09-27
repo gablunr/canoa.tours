@@ -1,0 +1,16 @@
+---
+import TourSection from './TourSection.astro';
+import type { TourDetails } from '../../../data/tours/tours';
+
+interface Props {
+	details: TourDetails;
+}
+
+const { details } = Astro.props;
+---
+
+<TourSection id="tour-bring-title" title="Qué llevar">
+	<ul class="flex flex-wrap gap-2 max-lg:justify-center">
+		{details.bring.map((item) => <li class="rounded-full bg-chip px-3.5 py-2 text-[13px] font-medium text-secondary">{item}</li>)}
+	</ul>
+</TourSection>
