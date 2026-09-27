@@ -30,7 +30,7 @@ export interface BookingEmailOptions {
 	chargedAmount?: number;
 }
 
-function renderBookingEmail(kind: BookingEmailKind, details: BookingDetails, options: BookingEmailOptions): EmailContent {
+export function renderBookingEmail(kind: BookingEmailKind, details: BookingDetails, options: BookingEmailOptions): EmailContent {
 	const bookingTicketUrl = ticketUrl(options.origin, details.code);
 	const tourUrl = `${options.origin}${details.tourPath}`;
 
