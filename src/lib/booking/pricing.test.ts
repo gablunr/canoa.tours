@@ -34,6 +34,13 @@ describe('quoteBooking', () => {
 		expect(quote.lines).toEqual([{ key: 'adults', quantity: 2, unitAmount: 85, amount: 170 }]);
 	});
 
+	it('charges the whole total now when the customer pays in full', () => {
+		const quote = quoteBooking({ ...baseInput, insurance: true, paymentOption: 'full' });
+		expect(quote.total).toBe(179.98);
+		expect(quote.depositAmount).toBe(179.98);
+		expect(quote.balanceAmount).toBe(0);
+	});
+
 	it('prices children at the child rate, keeps infants free and counts children for the deposit', () => {
 		const quote = quoteBooking({ ...baseInput, children: 1, infants: 1 });
 		expect(quote.subtotal).toBe(230);

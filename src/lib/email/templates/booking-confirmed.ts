@@ -3,7 +3,12 @@ import { firstName, formatMoney, formatTourDate, renderEmail, type EmailContent 
 import { bookingSummaryDetails, pickupPendingNotice, pickupWindowNotice } from './booking-summary';
 
 export function bookingConfirmedEmail(details: BookingDetails, links: { ticketUrl: string }): EmailContent {
-	const paidOnlineLabel = details.hasInsurance ? 'Pagado al reservar (depósito y seguro)' : 'Pagado al reservar (depósito)';
+	const paidInFull = details.balanceAmount <= 0;
+	const paidOnlineLabel = paidInFull
+		? 'Pagado al reservar (total)'
+		: details.hasInsurance
+			? 'Pagado al reservar (depósito y seguro)'
+			: 'Pagado al reservar (depósito)';
 
 	return renderEmail({
 		subject: `Reserva confirmada: ${details.productName}, ${formatTourDate(details.tourDate)}`,
@@ -16,7 +21,7 @@ export function bookingConfirmedEmail(details: BookingDetails, links: { ticketUr
 			...bookingSummaryDetails(details),
 			{ label: 'Total', value: formatMoney(details.total) },
 			{ label: paidOnlineLabel, value: formatMoney(details.depositAmount) },
-			{ label: 'A pagar el día del tour', value: formatMoney(details.balanceAmount) },
+			{ label: 'A pagar el día del tour', value: paidInFull ? 'Nada, ya está pagado' : formatMoney(details.balanceAmount) },
 			...(details.hasInsurance ? [{ label: 'Seguro de cancelación', value: 'Incluido' }] : []),
 		],
 		detailsAfter: [...pickupWindowNotice(details), ...pickupPendingNotice(details)],

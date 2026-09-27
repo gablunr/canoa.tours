@@ -1,3 +1,5 @@
+export type PaymentOption = 'deposit' | 'full';
+
 export interface QuoteInput {
 	pricingMode: 'per_person' | 'per_group';
 	adultPrice: number;
@@ -11,6 +13,7 @@ export interface QuoteInput {
 	insurance: boolean;
 	insurancePricePerPerson: number;
 	coupon: { type: 'fixed' | 'percent'; value: number } | null;
+	paymentOption?: PaymentOption;
 }
 
 export interface QuoteLine {
@@ -86,7 +89,7 @@ export function quoteBooking(input: QuoteInput): Quote {
 			? percentOf(subtotalCents - discountCents, input.depositValue)
 			: toCents(input.depositValue) * (isGroup ? 1 : payingPeople);
 	const cappedTourDepositCents = Math.min(Math.max(tourDepositCents, 0), totalCents - insuranceCents);
-	const depositCents = cappedTourDepositCents + insuranceCents;
+	const depositCents = input.paymentOption === 'full' ? totalCents : cappedTourDepositCents + insuranceCents;
 
 	return {
 		lines: lines.map((line) => ({

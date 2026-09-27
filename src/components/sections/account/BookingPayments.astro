@@ -11,7 +11,7 @@ const { details, refunded } = Astro.props;
 const isActive = details.status === 'confirmed';
 
 const headline = isActive
-	? { label: 'A pagar el día del tour', value: formatMoney(details.balanceAmount) }
+	? { label: 'A pagar el día del tour', value: details.balanceAmount > 0 ? formatMoney(details.balanceAmount) : 'Nada, ya está pagado' }
 	: refunded > 0
 		? { label: 'Reembolsado', value: formatMoney(refunded) }
 		: null;
