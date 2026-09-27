@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CatalogBrowser from '../components/sections/catalog/CatalogBrowser.astro';
+import CatalogComparison from '../components/sections/catalog/CatalogComparison.astro';
+import CatalogControls from '../components/sections/catalog/CatalogControls.astro';
+import CatalogCta from '../components/sections/catalog/CatalogCta.astro';
+import Faq from '../components/sections/home/Faq.astro';
+import PhotoHero from '../components/sections/page/PhotoHero.astro';
+import EdgeWaves from '../components/ui/EdgeWaves.astro';
+import pierBeach from '../assets/images/home/turquoise-pier-beach.jpg';
+import { catalogDescription, catalogFaqs, catalogIntro, catalogSeoTitle, catalogTitle } from '../data/tours/catalog';
+import { routes } from '../data/site/routes';
+import { tourDetails, tourDetailsHref } from '../data/tours/tours';
+import { canonicalUrl } from '../lib/seo/seo';
+import { faqSchema, itemListSchema } from '../lib/seo/structured-data';
+
+const tourList = itemListSchema(
+	canonicalUrl(routes.catalog),
+	catalogTitle,
+	tourDetails.map((details) => ({ name: details.title, path: tourDetailsHref(details) })),
+);
+---
+
+<Layout
+	title={catalogSeoTitle}
+	description={catalogDescription}
+	pageType={['CollectionPage', 'FAQPage']}
+	mainEntity={[tourList, ...faqSchema(catalogFaqs)]}
+	breadcrumbs={[{ name: 'Excursiones', path: routes.catalog }]}
+	footerOverlapsPhoto
+>
+	<EdgeWaves />
+	<div data-catalog>
+		<PhotoHero
+			title={catalogTitle}
+			image={pierBeach}
+			imageAlt="Muelle de madera sobre el mar turquesa, con hojas de palmera en primer plano"
+			imageClass="object-[center_70%]"
+			introClass="max-w-4xl"
+			compact
+		>
+			{catalogIntro}
+			<CatalogControls slot="actions" />
+		</PhotoHero>
+		<CatalogBrowser />
+		<CatalogComparison />
+	</div>
+	<Faq
+		id="catalog-faq"
+		title="Preguntas frecuentes sobre excursiones en Punta Cana"
+		intro="Precios, horarios y quién puede hacer cada una."
+		items={catalogFaqs}
+		split
+	/>
+	<CatalogCta />
+</Layout>

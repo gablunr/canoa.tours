@@ -1,0 +1,228 @@
+---
+import { ArrowDown, ArrowUp, ArrowUpDown } from '@lucide/astro';
+import PageSection from '../page/PageSection.astro';
+import {
+	durationCategorySlugs,
+	durationLabel,
+	pickupZones,
+	scheduleLabel,
+	tourCountText,
+	tourDetails,
+	tourDetailsHref,
+	weekdays,
+	type TourDetails,
+	type Weekday,
+} from '../../../data/tours/tours';
+import { formatPrice } from '../../../lib/format';
+
+const tours = tourDetails;
+
+const collapsedRows = { phone: 3, tablet: 4, desktop: 8 };
+
+const weekdayLetters: Record<Weekday, { letter: string; name: string }> = {
+	monday: { letter: 'L', name: 'Lunes' },
+	tuesday: { letter: 'M', name: 'Martes' },
+	wednesday: { letter: 'X', name: 'Miércoles' },
+	thursday: { letter: 'J', name: 'Jueves' },
+	friday: { letter: 'V', name: 'Viernes' },
+	saturday: { letter: 'S', name: 'Sábado' },
+	sunday: { letter: 'D', name: 'Domingo' },
+};
+
+const [defaultZone] = pickupZones;
+const pickupText = (fee: number) => (fee === 0 ? 'Incluida' : `+${formatPrice(fee)} por persona`);
+const pickupByZone = (details: TourDetails) =>
+	JSON.stringify(Object.fromEntries(pickupZones.map((zone) => [zone.id, pickupText(details.pickupFees[zone.id])])));
+
+const suitability = (details: TourDetails) => [
+	...(details.pregnancy === 'allowed' ? ['Embarazadas'] : []),
+	...(details.pregnancy === 'limited' ? [`Embarazadas hasta ${details.pregnancyMaxMonths} meses`] : []),
+	...(details.wheelchair ? ['Silla de ruedas'] : []),
+];
+
+const rows = [...tours].sort((a, b) => a.price - b.price || a.durationHours - b.durationHours);
+const longestHours = Math.max(...tours.map((details) => details.durationHours));
+
+const chip =
+	'inline-flex h-8 cursor-pointer items-center rounded-full border border-border/70 bg-background px-3 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:border-primary hover:text-primary has-checked:border-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent has-focus-visible:ring-offset-2';
+const cell =
+	'border-t border-border/60 py-3 pr-4 pl-4 align-middle text-secondary max-lg:border-0 max-lg:p-0 max-lg:before:mb-1 max-lg:before:block max-lg:before:text-xs max-lg:before:text-muted max-lg:before:content-[attr(data-label)]';
+const sortButton =
+	'inline-flex cursor-pointer items-center gap-1 rounded-full py-1 text-xs font-medium whitespace-nowrap text-muted outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent group-aria-[sort]/sort:text-primary max-lg:h-8 max-lg:border max-lg:border-border/70 max-lg:bg-background max-lg:px-3 max-lg:text-[13px] max-lg:group-aria-[sort]/sort:border-primary';
+const mobileHidden = 'max-lg:hidden';
+---
+
+<PageSection
+	id="catalog-comparison-title"
+	title="Compara precios, duración y días de salida"
+	intro="Elige tu zona y el día que tienes libre, y ordena por precio o por duración."
+>
+	<div data-catalog-comparison data-collapsed-rows={JSON.stringify(collapsedRows)}>
+		<div data-reveal class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between lg:gap-x-10">
+			<label class="flex flex-col gap-1.5 text-xs font-medium text-muted max-lg:items-center">
+				Te alojas en
+				<select
+					id="comparison-zone"
+					data-comparison-zone
+					class="h-9 cursor-pointer rounded-full border border-border/70 bg-background pr-8 pl-3.5 text-[13px] font-medium text-primary outline-none transition-colors duration-300 ease-smooth hover:border-primary focus-visible:ring-2 focus-visible:ring-accent"
+				>
+					{pickupZones.map((zone) => <option value={zone.id}>{zone.name}</option>)}
+				</select>
+			</label>
+
+			<fieldset data-comparison-day class="flex flex-col gap-1.5 max-lg:items-center">
+				<legend class="mb-1.5 text-xs font-medium text-muted max-lg:mx-auto">Día que tienes libre</legend>
+				<div class="flex flex-wrap justify-center gap-1">
+					<label class={chip}>
+						<input type="radio" name="comparison-day" value="" checked class="sr-only" />
+						Cualquiera
+					</label>
+					{weekdays.map((day) => (
+						<label class:list={[chip, 'w-8 justify-center px-0']} title={weekdayLetters[day].name}>
+							<input type="radio" name="comparison-day" value={day} class="sr-only" />
+							<span aria-hidden="true">{weekdayLetters[day].letter}</span>
+							<span class="sr-only">{weekdayLetters[day].name}</span>
+						</label>
+					))}
+				</div>
+			</fieldset>
+
+			<fieldset class="flex flex-col gap-1.5 max-lg:items-center">
+				<legend class="mb-1.5 text-xs font-medium text-muted max-lg:mx-auto">Apta para</legend>
+				<div class="flex flex-wrap justify-center gap-1">
+					<label class={chip}>
+						<input type="checkbox" data-comparison-pregnancy class="sr-only" />
+						Embarazadas
+					</label>
+					<label class={chip}>
+						<input type="checkbox" data-comparison-wheelchair class="sr-only" />
+						Silla de ruedas
+					</label>
+				</div>
+			</fieldset>
+		</div>
+
+		<div data-reveal class="mt-8 lg:overflow-x-auto">
+			<table class="w-full border-separate border-spacing-0 text-left text-sm max-lg:block lg:min-w-[52rem]">
+				<caption class="sr-only">Excursiones en Punta Cana comparadas por precio, duración, días de salida, recogida y accesibilidad</caption>
+				<thead class="max-lg:block">
+					<tr class="max-lg:mb-4 max-lg:flex max-lg:items-center max-lg:justify-center max-lg:gap-1.5">
+						<th scope="col" class="sticky left-0 z-10 bg-background pr-4 pb-3 pl-4 text-left text-xs font-medium text-muted max-lg:static max-lg:p-0 max-lg:pr-1">
+							<span class="lg:hidden">Ordenar por</span>
+							<span class="max-lg:hidden">Excursión</span>
+						</th>
+						<th scope="col" data-sort-column="price" aria-sort="ascending" class="group/sort pr-4 pb-3 pl-4 text-left max-lg:p-0">
+							<button type="button" data-sort="price" class={sortButton}>
+								Precio desde
+								<ArrowUpDown size={13} class="group-aria-[sort]/sort:hidden" aria-hidden="true" />
+								<ArrowUp size={13} class="hidden group-aria-[sort=ascending]/sort:block" aria-hidden="true" />
+								<ArrowDown size={13} class="hidden group-aria-[sort=descending]/sort:block" aria-hidden="true" />
+							</button>
+						</th>
+						<th scope="col" data-sort-column="hours" class="group/sort pr-4 pb-3 pl-4 text-left max-lg:p-0">
+							<button type="button" data-sort="hours" class={sortButton}>
+								Duración
+								<ArrowUpDown size={13} class="group-aria-[sort]/sort:hidden" aria-hidden="true" />
+								<ArrowUp size={13} class="hidden group-aria-[sort=ascending]/sort:block" aria-hidden="true" />
+								<ArrowDown size={13} class="hidden group-aria-[sort=descending]/sort:block" aria-hidden="true" />
+							</button>
+						</th>
+						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>Días de salida</th>
+						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>
+							Recogida desde <span data-comparison-zone-name>{defaultZone.name}</span>
+						</th>
+						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>Apta para</th>
+					</tr>
+				</thead>
+				<tbody data-comparison-body class="max-lg:grid max-lg:gap-3 md:max-lg:grid-cols-2">
+					{rows.map((details) => {
+						const suitable = suitability(details);
+						return (
+							<tr
+								data-duration={durationCategorySlugs[details.durationCategory]}
+								data-comparison-row
+								data-price={details.price}
+								data-hours={details.durationHours}
+								data-days={details.days.join(' ')}
+								data-pregnancy={details.pregnancy}
+								data-wheelchair={String(details.wheelchair)}
+								data-pickup={pickupByZone(details)}
+								class="data-collapsed:hidden! data-excluded:hidden! max-lg:grid max-lg:grid-cols-2 max-lg:content-start max-lg:gap-x-4 max-lg:gap-y-4 max-lg:rounded-3xl max-lg:border max-lg:border-border/60 max-lg:p-5"
+							>
+								<th scope="row" class="sticky left-0 z-10 w-60 min-w-48 border-t border-border/60 bg-background py-3 pr-4 pl-4 text-left align-middle font-normal max-lg:static max-lg:col-span-2 max-lg:w-auto max-lg:min-w-0 max-lg:border-0 max-lg:bg-transparent max-lg:p-0">
+									<a
+										href={tourDetailsHref(details)}
+										class="font-medium text-primary underline decoration-accent/40 decoration-1 underline-offset-[0.2em] transition-colors duration-300 ease-smooth hover:decoration-accent-strong"
+									>
+										{details.title}
+									</a>
+									<span class="mt-0.5 block text-xs text-muted">{details.destination.name}</span>
+								</th>
+								<td class:list={[cell, 'lg:whitespace-nowrap']} data-label="Precio desde">
+									<span class="font-medium text-primary">{formatPrice(details.price)}</span>
+									<span class="block text-xs text-muted">{details.priceUnit}</span>
+								</td>
+								<td class={cell} data-label="Duración">
+									<span class="whitespace-nowrap">{durationLabel(details)}</span>
+									<span class="mt-1.5 block h-1 w-24 overflow-hidden rounded-full bg-surface" aria-hidden="true">
+										<span class="block h-full rounded-full bg-accent/70" style={`width: ${(details.durationHours / longestHours) * 100}%`}></span>
+									</span>
+								</td>
+								<td class:list={[cell, 'max-lg:col-span-2']} data-label="Días de salida">
+									<span class="flex gap-1" aria-hidden="true">
+										{weekdays.map((day) => (
+											<span
+												data-weekday={day}
+												class:list={[
+													'flex size-5 items-center justify-center rounded-full text-[10px] font-medium transition-shadow duration-300 ease-smooth data-selected:ring-2 data-selected:ring-accent data-selected:ring-offset-1',
+													details.days.includes(day) ? 'bg-primary text-white' : 'bg-surface text-muted/60',
+												]}
+											>
+												{weekdayLetters[day].letter}
+											</span>
+										))}
+									</span>
+									<span class="sr-only">{scheduleLabel(details.days)}</span>
+								</td>
+								<td class:list={[cell, 'max-lg:whitespace-normal lg:whitespace-nowrap']} data-label="Recogida" data-comparison-pickup>
+									{pickupText(details.pickupFees[defaultZone.id])}
+								</td>
+								<td class={cell} data-label="Apta para">
+									{suitable.length > 0 ? (
+										<span class="flex flex-col gap-0.5 text-xs">{suitable.map((item) => <span>{item}</span>)}</span>
+									) : (
+										<span class="text-xs text-muted">Ni embarazadas ni silla de ruedas</span>
+									)}
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="mt-6 flex flex-col items-center gap-3 text-center">
+			<p data-comparison-empty hidden class="text-sm text-secondary">
+				Ninguna excursión cumple estos filtros.
+				<button type="button" data-comparison-reset class="cursor-pointer font-medium text-accent-strong underline decoration-accent/40 underline-offset-[0.2em]">
+					Quitar filtros
+				</button>
+			</p>
+			<button
+				type="button"
+				data-comparison-toggle
+				aria-expanded="false"
+				class="inline-flex h-9 cursor-pointer items-center rounded-full border border-border/70 bg-background px-4 text-[13px] font-medium text-primary transition-colors duration-300 ease-smooth hover:border-primary focus-visible:ring-2 focus-visible:ring-accent"
+			>
+				Ver las {tourCountText(tours.length)}
+			</button>
+			<p data-comparison-count aria-live="polite" class="text-xs text-muted"></p>
+		</div>
+	</div>
+</PageSection>
+
+<script>
+	import { initCatalogComparison } from '../../../scripts/catalog/catalog-comparison';
+
+	document.querySelectorAll<HTMLElement>('[data-catalog-comparison]').forEach(initCatalogComparison);
+</script>

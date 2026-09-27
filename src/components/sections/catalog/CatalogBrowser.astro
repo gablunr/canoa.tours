@@ -1,0 +1,16 @@
+---
+import CatalogGroup from './CatalogGroup.astro';
+import { catalogGroups } from '../../../data/tours/catalog';
+---
+
+<div class="px-4 sm:px-6 md:px-12 lg:px-6">
+	<div class="mx-auto max-w-6xl">
+		{catalogGroups.map((group) => <CatalogGroup group={group} />)}
+	</div>
+</div>
+
+<script>
+	import { initCatalogFilter } from '../../../scripts/catalog/catalog-filter';
+
+	initCatalogFilter(document.querySelector<HTMLElement>('[data-catalog]'));
+</script>

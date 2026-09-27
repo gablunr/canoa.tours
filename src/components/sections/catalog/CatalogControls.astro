@@ -1,0 +1,23 @@
+---
+import CatalogFilter from './CatalogFilter.astro';
+import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
+import SectionNav from '../../ui/SectionNav.astro';
+import { catalogGroups } from '../../../data/tours/catalog';
+import { tourCountText } from '../../../data/tours/tours';
+
+interface Props {
+	slot?: string;
+}
+
+const navLinks = catalogGroups.map((group) => ({
+	href: `#${group.anchor}`,
+	label: group.destination.name,
+	count: { value: group.tours.length, label: tourCountText(group.tours.length) },
+}));
+---
+
+<div class="mt-10 w-full animate-fade-up" style="animation-delay: 790ms">
+	<LiquidWarpFilter />
+	<SectionNav label="Excursiones por destino" links={navLinks} overPhoto class="px-0 sm:px-0" />
+	<CatalogFilter />
+</div>

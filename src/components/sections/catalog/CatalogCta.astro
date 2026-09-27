@@ -1,0 +1,50 @@
+---
+import ArrowButton from '../../ui/ArrowButton.astro';
+import Button from '../../ui/Button.astro';
+import PhotoCta from '../../ui/PhotoCta.astro';
+import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+import { howToBookLink } from '../../../data/site/navigation';
+
+interface Props {
+	titleId?: string;
+	title?: string;
+	text?: string;
+	whatsappMessage?: string;
+	image?: ImageMetadata;
+	imageClass?: string;
+}
+
+const {
+	titleId = 'catalog-cta-title',
+	title = '¿No sabes cuál elegir?',
+	text = 'Escríbenos con tus fechas, cuántos son y dónde te hospedas, y te recomendamos la que mejor encaja.',
+	whatsappMessage = 'Hola, estoy en Punta Cana del [fecha] al [fecha] y no sé qué excursión elegir',
+	image = palmBeach,
+	imageClass = image === palmBeach ? 'object-[center_65%]' : undefined,
+} = Astro.props;
+const { whatsapp } = company;
+---
+
+<PhotoCta titleId={titleId} title={title} image={image} imageClass={imageClass}>
+	<Fragment slot="text">
+		{text}
+	</Fragment>
+	<Fragment slot="actions">
+		<ArrowButton href={howToBookLink.href} class="focus-visible:ring-white focus-visible:ring-offset-primary">
+			{howToBookLink.label}
+		</ArrowButton>
+		{whatsapp && (
+			<Button
+				href={whatsappMessageHref(whatsapp, whatsappMessage)}
+				variant="glass"
+				size="lg"
+				class="gap-2.5 focus-visible:ring-white focus-visible:ring-offset-primary"
+			>
+				<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+				Escríbenos por WhatsApp
+			</Button>
+		)}
+	</Fragment>
+</PhotoCta>
