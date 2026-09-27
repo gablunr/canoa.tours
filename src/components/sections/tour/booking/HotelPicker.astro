@@ -1,0 +1,92 @@
+---
+import { ChevronDown, MapPin, Search } from '@lucide/astro';
+
+interface Props {
+	requiredMessage?: string;
+	label?: string;
+}
+
+const { requiredMessage = 'Dinos tu hotel o dónde te recogemos.', label = 'Hotel o lugar de recogida' } = Astro.props;
+
+const inputId = 'field-hotelQuery';
+const listId = `${inputId}-list`;
+const zoneNoteId = `${inputId}-zone`;
+const errorId = `${inputId}-error`;
+const zoneSelectId = 'field-zoneSlug';
+const zoneHintId = `${zoneSelectId}-hint`;
+const zoneErrorId = `${zoneSelectId}-error`;
+const fieldLabel = 'flex items-baseline justify-between gap-3 text-sm font-medium text-primary';
+---
+
+<div data-hotel-picker class="grid grid-cols-[minmax(0,1fr)] gap-5">
+	<div data-field data-required-message={requiredMessage}>
+		<label for={inputId} class={fieldLabel}>{label}</label>
+		<div class="relative mt-2">
+			<input
+				id={inputId}
+				name="hotelQuery"
+				type="text"
+				required
+				role="combobox"
+				aria-autocomplete="list"
+				aria-expanded="false"
+				aria-controls={listId}
+				aria-describedby={`${zoneNoteId} ${errorId}`}
+				autocomplete="off"
+				autocapitalize="words"
+				spellcheck="false"
+				enterkeyhint="done"
+				placeholder="Busca tu hotel"
+				data-required-message={requiredMessage}
+				class="block h-12 w-full rounded-2xl border border-border-strong bg-background pr-4 pl-11 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
+			/>
+			<Search size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+			<ul
+				id={listId}
+				role="listbox"
+				aria-label="Hoteles"
+				data-hotel-list
+				hidden
+				class="absolute inset-x-0 top-full z-30 mt-2 max-h-64 overflow-auto overscroll-contain rounded-2xl border border-border bg-background p-1.5 shadow-[0_24px_48px_-24px_color-mix(in_oklab,var(--color-primary)_45%,transparent)]"
+			>
+			</ul>
+		</div>
+		<p id={zoneNoteId} data-hotel-zone hidden class="mt-2 flex items-center gap-1.5 text-xs text-muted">
+			<MapPin size={14} stroke-width={1.75} class="shrink-0 text-accent" aria-hidden="true" />
+			<span data-hotel-zone-text></span>
+		</p>
+		<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+	</div>
+
+	<input type="hidden" name="hotelId" />
+	<input type="hidden" name="hotelName" />
+
+	<div data-field data-zone-field hidden>
+		<label for={zoneSelectId} class={fieldLabel}>Zona de recogida</label>
+		<div class="relative mt-2">
+			<select
+				id={zoneSelectId}
+				name="zoneSlug"
+				disabled
+				aria-describedby={`${zoneHintId} ${zoneErrorId}`}
+				class="block h-12 w-full cursor-pointer appearance-none truncate rounded-2xl border border-border-strong bg-background pr-11 pl-4 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:cursor-default disabled:text-subtle aria-invalid:border-error"
+			>
+				<option value="">Cargando zonas…</option>
+			</select>
+			<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+		</div>
+		<p id={zoneHintId} class="mt-2 text-xs text-muted">Si no la sabes, te la confirmamos antes de la excursión.</p>
+		<p id={zoneErrorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+	</div>
+
+	<template data-hotel-option-template>
+		<li
+			role="option"
+			aria-selected="false"
+			class="flex cursor-pointer flex-col gap-0.5 rounded-xl px-3 py-2.5 text-sm text-primary transition-colors duration-200 ease-smooth hover:bg-surface aria-selected:bg-surface data-missing:text-accent-strong"
+		>
+			<span data-option-name class="font-medium"></span>
+			<span data-option-zone class="text-xs text-muted empty:hidden"></span>
+		</li>
+	</template>
+</div>
