@@ -1,0 +1,122 @@
+---
+import { Image } from 'astro:assets';
+import { ArrowUpRight } from '@lucide/astro';
+import {
+	destinationHref,
+	destinationImage,
+	destinations,
+	lowestFromPrice,
+	tourCountLabel,
+	type Destination,
+} from '../../../data/tours/destinations';
+import { catalogLink } from '../../../data/site/navigation';
+import { formatPrice } from '../../../lib/format';
+
+const [featured, ...places] = destinations.filter((destination) => destination.kind === 'place');
+const activities = destinations.filter((destination) => destination.kind === 'activity');
+
+const summary = (destination: Destination) => `${tourCountLabel(destination)}, desde ${formatPrice(destination.fromPrice)}`;
+const featuredImage = destinationImage(featured);
+const tourCount = destinations.reduce((total, destination) => total + destination.tours.length, 0);
+---
+
+<div class="grid grid-cols-12 gap-2">
+	<p class="col-span-9 px-2 pb-1 text-xs text-muted-on-dark">Por destino</p>
+	<p class="col-span-3 px-2 pb-1 text-xs text-muted-on-dark">Por actividad</p>
+
+	<a
+		href={destinationHref(featured)}
+		class="group relative isolate col-span-5 flex min-h-84 flex-col justify-end overflow-hidden rounded-2xl bg-primary p-5 outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+	>
+		{featuredImage && (
+			<Image
+				src={featuredImage}
+				alt=""
+				widths={[480, 720, 960]}
+				sizes="28rem"
+				class="absolute inset-0 -z-10 size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105"
+			/>
+		)}
+		<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
+		<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+		<span class="text-xs text-white/75">{summary(featured)}</span>
+		<span class="mt-1 text-2xl leading-tight font-semibold tracking-[-0.03em]">{featured.name}</span>
+		<span class="mt-1 text-sm text-white/80">{featured.details}</span>
+		<span class="mt-4 flex flex-wrap gap-1.5">
+			{featured.tours.map((tour) => (
+				<span class="rounded-full bg-white/15 px-2.5 py-1 text-xs backdrop-blur-sm">{tour.name}</span>
+			))}
+		</span>
+		<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
+	</a>
+
+	<ul class="col-span-4 grid gap-2">
+		{places.map((destination) => {
+			const image = destinationImage(destination);
+			return (
+				<li>
+					<a
+						href={destinationHref(destination)}
+						class="group flex h-full items-center gap-4 bento-glass rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+					>
+						{image && (
+							<span class="size-20 shrink-0 overflow-hidden rounded-xl">
+								<Image
+									src={image}
+									alt=""
+									widths={[160, 240]}
+									sizes="5rem"
+									class="size-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-110"
+								/>
+							</span>
+						)}
+						<span class="min-w-0">
+							<span class="block font-medium">{destination.name}</span>
+							<span class="block text-xs text-muted-on-dark">{summary(destination)}</span>
+							<span class="mt-1.5 line-clamp-2 text-xs text-white/55">{destination.details}</span>
+						</span>
+					</a>
+				</li>
+			);
+		})}
+	</ul>
+
+	<ul class="col-span-3 grid grid-rows-[1fr_1fr_auto] gap-2">
+		{activities.map((destination) => {
+			const image = destinationImage(destination);
+			return (
+				<li>
+					<a
+						href={destinationHref(destination)}
+						class="group relative isolate flex h-full flex-col justify-end overflow-hidden rounded-2xl bg-primary p-4 outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+					>
+						{image && (
+							<Image
+								src={image}
+								alt=""
+								widths={[320, 480]}
+								sizes="16rem"
+								class="absolute inset-0 -z-10 size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105"
+							/>
+						)}
+						<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/15 to-transparent"></span>
+						<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+						<span class="text-lg leading-tight font-semibold tracking-[-0.02em]">{destination.name}</span>
+						<span class="mt-0.5 text-xs text-white/75">{summary(destination)}</span>
+						<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
+					</a>
+				</li>
+			);
+		})}
+		<li>
+			<a
+				href={catalogLink.href}
+				class="group bento-glass flex flex-col rounded-2xl bg-white p-4 text-primary outline-none transition-colors duration-300 ease-smooth hover:bg-ink-100 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+			>
+				<ArrowUpRight size={18} class="absolute top-4 right-4 transition-transform duration-300 ease-smooth group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+				<span class="text-sm font-semibold">Todas las excursiones</span>
+				<span class="mt-0.5 text-xs text-muted">{tourCount} excursiones desde {formatPrice(lowestFromPrice)}, con recogida en tu hotel</span>
+			</a>
+		</li>
+	</ul>
+</div>

@@ -1,0 +1,86 @@
+---
+import { ArrowUpRight, MapPin, MessageCircle, ShieldCheck } from '@lucide/astro';
+import { cancellationInsurancePriceLabel } from '../../../data/booking/booking-policy';
+import { bookingSteps } from '../../../data/booking/booking-steps';
+import { company } from '../../../data/site/company';
+import { faqs } from '../../../data/booking/faq';
+import {
+	cancellationsLink,
+	contactLink,
+	faqLink,
+	howToBookLink,
+	pickupZonesLink,
+} from '../../../data/site/navigation';
+
+const tile =
+	'group relative flex flex-col bento-glass rounded-2xl p-5 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
+const tileTitle = 'text-base leading-tight font-semibold tracking-[-0.02em]';
+const tileText = 'mt-1.5 text-[13px] leading-relaxed text-muted-on-dark';
+const corner =
+	'absolute top-4 right-4 text-white/40 transition duration-300 ease-smooth group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white';
+
+const topQuestions = faqs.slice(0, 3);
+const whatsapp = company.whatsapp;
+---
+
+<div class="grid grid-cols-12 grid-rows-2 gap-2">
+	<a href={howToBookLink.href} class:list={[tile, 'col-span-5 row-span-2']}>
+		<ArrowUpRight size={18} class={corner} aria-hidden="true" />
+		<span class={tileTitle}>{howToBookLink.label}</span>
+		<span class={tileText}>Reservas en línea con un anticipo y pagas el resto el día del tour.</span>
+		<ol class="mt-auto grid gap-3 pt-6">
+			{bookingSteps.map((step, index) => (
+				<li class="flex items-center gap-3 text-sm">
+					<span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-medium tabular-nums">
+						{index + 1}
+					</span>
+					{step.title}
+				</li>
+			))}
+		</ol>
+	</a>
+
+	<a href={pickupZonesLink.href} class:list={[tile, 'col-span-4']}>
+		<ArrowUpRight size={18} class={corner} aria-hidden="true" />
+		<MapPin size={20} class="mb-4 text-accent-on-dark" aria-hidden="true" />
+		<span class={tileTitle}>{pickupZonesLink.label}</span>
+		<span class={tileText}>Te recogemos en tu hotel de Punta Cana o Bayahibe. Mira si tu zona tiene cargo extra.</span>
+	</a>
+
+	<a href={cancellationsLink.href} class:list={[tile, 'col-span-3']}>
+		<ArrowUpRight size={18} class={corner} aria-hidden="true" />
+		<ShieldCheck size={20} class="mb-4 text-accent-on-dark" aria-hidden="true" />
+		<span class={tileTitle}>{cancellationsLink.label}</span>
+		<span class={tileText}>Con el seguro de {cancellationInsurancePriceLabel} por persona.</span>
+	</a>
+
+	<a href={faqLink.href} class:list={[tile, 'col-span-4']}>
+		<ArrowUpRight size={18} class={corner} aria-hidden="true" />
+		<span class={tileTitle}>{faqLink.label}</span>
+		<ul class="mt-3 grid gap-2 text-[13px] text-muted-on-dark">
+			{topQuestions.map((faq) => (
+				<li class="line-clamp-1">{faq.question}</li>
+			))}
+		</ul>
+	</a>
+
+	{whatsapp ? (
+		<a
+			href={whatsapp.href}
+			target="_blank"
+			rel="noopener"
+			class="group relative bento-glass col-span-3 flex flex-col rounded-2xl bg-accent p-5 outline-none transition-colors duration-300 ease-smooth hover:bg-accent-strong focus-visible:ring-2 focus-visible:ring-white"
+		>
+			<ArrowUpRight size={18} class="absolute top-4 right-4 text-white/70 transition duration-300 ease-smooth group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white" aria-hidden="true" />
+			<MessageCircle size={20} class="mb-4" aria-hidden="true" />
+			<span class={tileTitle}>¿Tienes dudas?</span>
+			<span class="mt-1.5 text-[13px] leading-relaxed text-white/80">Escríbenos por WhatsApp y te respondemos.</span>
+		</a>
+	) : (
+		<a href={contactLink.href} class:list={[tile, 'col-span-3']}>
+			<ArrowUpRight size={18} class={corner} aria-hidden="true" />
+			<span class={tileTitle}>¿Tienes dudas?</span>
+			<span class={tileText}>Escríbenos y te respondemos.</span>
+		</a>
+	)}
+</div>

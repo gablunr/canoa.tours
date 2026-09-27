@@ -1,0 +1,185 @@
+---
+import { Image } from 'astro:assets';
+import { ArrowUpRight, CalendarCheck, ChevronDown, ChevronRight, CircleHelp, MapPin, MessageCircle, ShieldCheck } from '@lucide/astro';
+import { cancellationInsurancePriceLabel } from '../../../data/booking/booking-policy';
+import { company } from '../../../data/site/company';
+import { destinationHref, destinationImage, destinations, lowestFromPrice } from '../../../data/tours/destinations';
+import { featuredGuide, guideGroups, guideHref, guideReadingTime, guides } from '../../../data/guides/guides';
+import {
+	cancellationsLink,
+	catalogLink,
+	contactLink,
+	faqLink,
+	guidesLink,
+	howToBookLink,
+	pickupZonesLink,
+	reviewsLink,
+} from '../../../data/site/navigation';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+const tourCount = destinations.reduce((total, destination) => total + destination.tours.length, 0);
+const planningGuides = guides.filter((guide) => guide.silo === 'general' && guide !== featuredGuide).slice(0, 2);
+const destinationGroups = guideGroups.filter((group) => group.silo !== 'general');
+const whatsapp = company.whatsapp;
+
+const section =
+	'group/section details-content:h-0 details-content:overflow-y-clip details-content:opacity-0 details-content:transition-[height,opacity,content-visibility] details-content:transition-discrete details-content:duration-500 details-content:ease-smooth [interpolate-size:allow-keywords] open:details-content:h-auto open:details-content:opacity-100';
+const summary =
+	'flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-3 text-[15px] text-muted-on-dark outline-none transition-colors duration-300 ease-smooth group-open/section:text-white hover:text-white focus-visible:ring-2 focus-visible:ring-accent-on-dark [&::-webkit-details-marker]:hidden';
+const chevron = 'transition-transform duration-500 ease-smooth group-open/section:rotate-180';
+
+const tile =
+	'group bento-glass flex flex-col rounded-2xl p-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
+const tileIcon = 'mb-3 text-accent-on-dark';
+const tileTitle = 'text-sm leading-tight font-semibold tracking-[-0.01em]';
+const tileText = 'mt-1 text-xs leading-relaxed text-muted-on-dark';
+const viewAll =
+	'group flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-primary outline-none transition-colors duration-300 ease-smooth hover:bg-ink-100 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
+const viewAllIcon = 'shrink-0 transition-transform duration-300 ease-smooth group-hover:translate-x-0.5 group-hover:-translate-y-0.5';
+const photoFrame = 'group relative isolate flex flex-col justify-end overflow-hidden rounded-2xl bg-primary outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark';
+const photo = 'absolute inset-0 -z-10 size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105';
+---
+
+<div class="grid grid-cols-1 gap-1">
+	<details name="notch-menu-section" open class={section}>
+		<summary class={summary}>
+			Excursiones
+			<ChevronDown size={18} class={chevron} aria-hidden="true" />
+		</summary>
+		<div class="grid gap-2 pt-1 pb-3">
+			<a href={catalogLink.href} class={viewAll}>
+				<span>
+					<span class="block text-sm font-semibold">Ver todas las excursiones</span>
+					<span class="block text-xs text-muted">{tourCount} excursiones desde {formatPrice(lowestFromPrice)}, con recogida en tu hotel</span>
+				</span>
+				<ArrowUpRight size={18} class={viewAllIcon} aria-hidden="true" />
+			</a>
+			<ul class="grid grid-cols-2 gap-2 md:grid-cols-3">
+				{destinations.map((destination) => {
+					const image = destinationImage(destination);
+					return (
+						<li>
+							<a href={destinationHref(destination)} class:list={[photoFrame, 'aspect-[4/3] p-3']}>
+								{image && <Image src={image} alt="" widths={[320, 480, 640]} sizes="(min-width: 768px) 14rem, 50vw" class={photo} />}
+								<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
+								<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+								<span class="text-[15px] leading-tight font-semibold tracking-[-0.02em]">{destination.name}</span>
+								<span class="mt-0.5 text-xs text-white/80">Desde {formatPrice(destination.fromPrice)}</span>
+								<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
+							</a>
+						</li>
+					);
+				})}
+			</ul>
+		</div>
+	</details>
+
+	<details name="notch-menu-section" class={section}>
+		<summary class={summary}>
+			Antes de reservar
+			<ChevronDown size={18} class={chevron} aria-hidden="true" />
+		</summary>
+		<div class="grid grid-cols-2 gap-2 pt-1 pb-3 md:grid-cols-3">
+			<a href={howToBookLink.href} class:list={[tile, 'col-span-2 md:col-span-1']}>
+				<CalendarCheck size={18} class={tileIcon} aria-hidden="true" />
+				<span class={tileTitle}>{howToBookLink.label}</span>
+				<span class={tileText}>Reservas en línea con un anticipo y pagas el resto el día del tour.</span>
+			</a>
+			<a href={pickupZonesLink.href} class={tile}>
+				<MapPin size={18} class={tileIcon} aria-hidden="true" />
+				<span class={tileTitle}>{pickupZonesLink.label}</span>
+				<span class={tileText}>Mira si tu hotel tiene cargo extra.</span>
+			</a>
+			<a href={cancellationsLink.href} class={tile}>
+				<ShieldCheck size={18} class={tileIcon} aria-hidden="true" />
+				<span class={tileTitle}>Cancelaciones</span>
+				<span class={tileText}>Con el seguro de {cancellationInsurancePriceLabel} por persona.</span>
+			</a>
+			<a href={faqLink.href} class:list={[tile, 'md:col-span-2']}>
+				<CircleHelp size={18} class={tileIcon} aria-hidden="true" />
+				<span class={tileTitle}>{faqLink.label}</span>
+				<span class={tileText}>Pagos, recogida, mal tiempo y cancelaciones.</span>
+			</a>
+			<a
+				href={whatsapp?.href ?? contactLink.href}
+				target={whatsapp ? '_blank' : undefined}
+				rel={whatsapp ? 'noopener' : undefined}
+				class="group bento-glass flex flex-col rounded-2xl bg-accent p-4 outline-none transition-colors duration-300 ease-smooth hover:bg-accent-strong focus-visible:ring-2 focus-visible:ring-white"
+			>
+				<MessageCircle size={18} class="mb-3" aria-hidden="true" />
+				<span class={tileTitle}>¿Tienes dudas?</span>
+				<span class="mt-1 text-xs leading-relaxed text-white/80">{whatsapp ? 'Escríbenos por WhatsApp.' : 'Escríbenos y te respondemos.'}</span>
+			</a>
+		</div>
+	</details>
+
+	<details name="notch-menu-section" class={section}>
+		<summary class={summary}>
+			Guías
+			<ChevronDown size={18} class={chevron} aria-hidden="true" />
+		</summary>
+		<div class="grid gap-2 pt-1 pb-3 md:grid-cols-2">
+			<a href={guidesLink.href} class:list={[viewAll, 'md:col-span-2']}>
+				<span>
+					<span class="block text-sm font-semibold">Ver todas las guías</span>
+					<span class="block text-xs text-muted">Qué llevar, cuándo ir y cuánto cuesta cada excursión</span>
+				</span>
+				<ArrowUpRight size={18} class={viewAllIcon} aria-hidden="true" />
+			</a>
+			<a href={guideHref(featuredGuide)} class:list={[photoFrame, 'aspect-[16/9] p-4 md:row-span-3 md:aspect-auto']}>
+				<Image src={featuredGuide.image} alt="" widths={[480, 720, 960]} sizes="(min-width: 768px) 21rem, 100vw" class={photo} />
+				<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
+				<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+				<span class="text-xs text-white/80">Guía destacada, {guideReadingTime(featuredGuide)}</span>
+				<span class="mt-0.5 text-lg leading-tight font-semibold tracking-[-0.02em] text-balance">{featuredGuide.title}</span>
+				<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
+			</a>
+
+			{planningGuides.map((guide) => (
+				<a
+					href={guideHref(guide)}
+					class="group bento-glass flex items-center gap-3 rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+				>
+					<span class="size-14 shrink-0 overflow-hidden rounded-xl">
+						<Image src={guide.image} alt="" widths={[112, 168]} sizes="3.5rem" class="size-full object-cover" />
+					</span>
+					<span class="min-w-0">
+						<span class="line-clamp-2 text-sm leading-snug font-medium">{guide.title}</span>
+						<span class="mt-0.5 block text-xs text-muted-on-dark">{guideReadingTime(guide)}</span>
+					</span>
+				</a>
+			))}
+
+			<div class="bento-glass rounded-2xl p-4">
+				<p class="text-xs text-muted-on-dark">Guías por destino</p>
+				<ul class="mt-3 flex flex-wrap gap-1.5">
+					{destinationGroups.map((group) => (
+						<li>
+							<a
+								href={`${guidesLink.href}#${group.anchor}`}
+								class="block rounded-full bg-white/10 px-3 py-1.5 text-xs transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary"
+							>
+								{group.title}
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+	</details>
+
+	<a
+		href={reviewsLink.href}
+		aria-current={currentPath === reviewsLink.href ? 'page' : undefined}
+		class="flex items-center justify-between rounded-xl px-3 py-3 text-[15px] text-muted-on-dark outline-none transition-colors duration-300 ease-smooth hover:text-white focus-visible:ring-2 focus-visible:ring-accent-on-dark aria-[current=page]:text-white"
+	>
+		{reviewsLink.label}
+		<ChevronRight size={18} aria-hidden="true" />
+	</a>
+</div>
