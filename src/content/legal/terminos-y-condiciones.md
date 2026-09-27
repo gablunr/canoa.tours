@@ -20,7 +20,7 @@ En la ficha de cada excursión indicamos los días de salida, la duración, qué
 
 ## Reserva y contrato
 
-Eliges la fecha, cuántas personas van y tu hotel, y ves el precio exacto antes de pagar. La reserva queda hecha cuando pagas el depósito con tarjeta y te llega la confirmación por email con tu billete. Si el pago no se completa, no hay reserva ni plaza apartada.
+Eliges la fecha, cuántas personas van y tu hotel, y ves el precio exacto antes de pagar. La reserva queda hecha cuando pagas online, el depósito o el total, y te llega la confirmación por email con tu billete. Si el pago no se completa, no hay reserva ni plaza apartada.
 
 Las plazas se confirman en el momento de pagar. Si las últimas se ocupan mientras pagas, te devolvemos todo lo que pagaste y te avisamos por email.
 
@@ -28,9 +28,9 @@ Las plazas se confirman en el momento de pagar. Si las últimas se ocupan mientr
 
 Todos los precios están en dólares estadounidenses (USD). Si tu tarjeta es de otra moneda, tu banco puede aplicar su propio cambio o comisión.
 
-Al reservar pagas online el depósito de la excursión y, si lo contratas, el seguro de cancelación. El resto del precio (el saldo) se paga el día de la excursión.
+Al reservar eliges si pagas online solo el depósito de la excursión o el total. El seguro de cancelación, si lo contratas, se paga siempre al reservar. Si pagas solo el depósito, el resto del precio (el saldo) se paga el día de la excursión.
 
-Los pagos online los procesa Stripe. Guardamos tu tarjeta de forma segura con Stripe y solo la usamos para cobrar el saldo pendiente si no te presentas a la excursión y no has contratado el seguro de cancelación. Nosotros no vemos ni guardamos el número de tu tarjeta.
+Los pagos online los procesa Stripe. Si pagas solo el depósito, guardamos tu tarjeta de forma segura con Stripe y solo la usamos para cobrar el saldo pendiente si no te presentas a la excursión y no has contratado el seguro de cancelación. Si pagas el total, no la guardamos. Nosotros no vemos ni guardamos el número de tu tarjeta.
 
 ## Recogida en el hotel
 
@@ -42,7 +42,7 @@ La hora exacta de recogida te la confirmamos después de reservar y la verás en
 
 El seguro cuesta {{insurancePrice}} por persona y solo se puede contratar al reservar. Con él puedes:
 
-- Cancelar hasta {{noticeHours}} antes de la excursión y recuperar el depósito completo, al mismo medio de pago.
+- Cancelar hasta {{noticeHours}} antes de la excursión y recuperar lo que pagaste por la excursión, al mismo medio de pago.
 - Cambiar la fecha hasta {{maxDateChanges}} por reserva, con al menos {{noticeHours}} de antelación y según las plazas disponibles.
 - No pagar el saldo si no te presentas o avisas con menos de {{noticeHours}}.
 
@@ -50,9 +50,9 @@ Lo que pagaste por el seguro no se devuelve.
 
 ## Cancelación y cambios sin seguro
 
-Sin seguro no hay reembolso del depósito si cancelas, y la fecha no se puede cambiar.
+Sin seguro no hay reembolso de lo que pagaste si cancelas, y la fecha no se puede cambiar.
 
-Si no te presentas o cancelas con menos de {{noticeHours}} de antelación, cobramos el saldo pendiente a la tarjeta que guardaste al reservar.
+Si pagaste solo el depósito y no te presentas o cancelas con menos de {{noticeHours}} de antelación, cobramos el saldo pendiente a la tarjeta que guardaste al reservar.
 
 ## Cómo cancelar o cambiar la fecha
 
@@ -60,7 +60,7 @@ Lo haces tú desde el enlace de tu reserva, que va en el email de confirmación,
 
 ## Mal tiempo y causas ajenas
 
-Si el clima o una orden de las autoridades impiden hacer la excursión, cambiamos la fecha sin coste. Con seguro, si la fecha nueva no te viene bien, puedes cancelar y te devolvemos el depósito. Sin seguro, la reserva pasa a la fecha nueva y no hay reembolso.
+Si el clima o una orden de las autoridades impiden hacer la excursión, cambiamos la fecha sin coste. Con seguro, si la fecha nueva no te viene bien, puedes cancelar y te devolvemos lo que pagaste por la excursión. Sin seguro, la reserva pasa a la fecha nueva y no hay reembolso.
 
 Si somos nosotros quienes cancelamos la excursión por cualquier otro motivo, te devolvemos todo lo que pagaste.
 

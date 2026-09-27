@@ -17,7 +17,7 @@ Si nos escribes por WhatsApp o por email, tenemos los datos que tú nos envíes.
 ## Para qué los usamos
 
 - Gestionar tu reserva: confirmarla, enviarte el billete, organizar la recogida y avisarte de cualquier cambio.
-- Cobrar el depósito y, solo si no te presentas sin seguro de cancelación, el saldo pendiente.
+- Cobrar lo que pagas al reservar y, solo si pagaste el depósito y no te presentas sin seguro de cancelación, el saldo pendiente.
 - Responder a tus dudas y atender cancelaciones y cambios.
 - Saber qué campañas nos traen reservas, sin usarlas para seguirte por otros sitios.
 - Cumplir nuestras obligaciones legales, contables y fiscales.
@@ -28,7 +28,7 @@ No vendemos tus datos ni los usamos para enviarte publicidad sin tu permiso.
 
 Compartimos lo necesario con el operador local que realiza la excursión (tu nombre, hotel, personas y teléfono) para que pueda recogerte y atenderte. Además, estos proveedores tratan datos por encargo nuestro:
 
-- Stripe, para procesar los pagos y guardar tu tarjeta.
+- Stripe, para procesar los pagos y, si pagas solo el depósito, guardar tu tarjeta.
 - Supabase, donde está la base de datos de reservas.
 - Vercel, que aloja este sitio.
 - Resend, que envía los emails de la reserva.
