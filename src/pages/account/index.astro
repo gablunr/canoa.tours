@@ -1,0 +1,120 @@
+---
+import { Ticket } from '@lucide/astro';
+import Layout from '../../layouts/Layout.astro';
+import AccountHeader from '../../components/sections/account/AccountHeader.astro';
+import BookingCard from '../../components/sections/account/BookingCard.astro';
+import Button from '../../components/ui/Button.astro';
+import { isUpcoming, loadCustomerBookings, loadCustomerProfile, localToday, type CustomerBooking } from '../../lib/account/bookings';
+import { firstName } from '../../lib/email/templates/layout';
+
+export const prerender = false;
+
+const { supabase, user } = Astro.locals;
+if (!user) return Astro.redirect('/account/sign-in?next=/account');
+
+const customer = await loadCustomerProfile(supabase, user.id);
+const bookings = customer ? await loadCustomerBookings(supabase, customer.id) : [];
+
+type BookingGroup = 'upcoming' | 'done' | 'cancelled';
+
+const today = localToday();
+const groupOf = (booking: CustomerBooking): BookingGroup => {
+	if (booking.status === 'cancelled') return 'cancelled';
+	return isUpcoming(booking, today) ? 'upcoming' : 'done';
+};
+
+const upcoming = bookings.filter((booking) => groupOf(booking) === 'upcoming');
+const others = bookings.filter((booking) => groupOf(booking) !== 'upcoming').reverse();
+const ordered = [...upcoming, ...others].map((booking) => ({ booking, group: groupOf(booking) }));
+
+const filters = [
+	{ id: 'upcoming', label: 'Próximas' },
+	{ id: 'done', label: 'Realizadas' },
+	{ id: 'cancelled', label: 'Canceladas' },
+	{ id: 'all', label: 'Todas' },
+]
+	.map((filter) => ({
+		...filter,
+		count: filter.id === 'all' ? ordered.length : ordered.filter((item) => item.group === filter.id).length,
+	}))
+	.filter((filter) => filter.count > 0);
+
+const activeFilter = upcoming.length > 0 ? 'upcoming' : 'all';
+const pageSize = 6;
+const matchesActiveFilter = (group: BookingGroup) => activeFilter === 'all' || activeFilter === group;
+const visibleIndexes = new Set(
+	ordered
+		.map((item, index) => ({ item, index }))
+		.filter(({ item }) => matchesActiveFilter(item.group))
+		.slice(0, pageSize)
+		.map(({ index }) => index),
+);
+const greeting = customer ? `Hola, ${firstName(customer.fullName)}` : 'Hola';
+const intro =
+	upcoming.length === 1
+		? 'Tienes una excursión por delante.'
+		: upcoming.length > 1
+			? `Tienes ${upcoming.length} excursiones por delante.`
+			: 'Aquí tienes tus reservas con Canoa Tours.';
+---
+
+<Layout title="Tu cuenta" description="Tus reservas con Canoa Tours." noindex>
+	<AccountHeader current="bookings" title={greeting} intro={intro} />
+
+	<div class="px-4 pt-10 sm:px-6 md:pt-12">
+		<div class="mx-auto max-w-5xl">
+			{ordered.length > 0 ? (
+				<section aria-label="Tus reservas" class="scroll-mt-24 animate-fade-up" style="animation-delay: 240ms" data-booking-filters data-page-size={pageSize} data-mobile-page-size={3} data-active-filter={activeFilter}>
+					<div class="max-lg:text-center">
+						<div class="liquid-glass flex w-full overflow-x-auto bg-ink-200/55 p-1.5 backdrop-blur-xl backdrop-saturate-150 [scrollbar-width:none] sm:inline-flex sm:w-auto sm:max-w-full">
+							<div role="group" aria-label="Filtrar reservas" class="flex w-full gap-1 sm:w-auto">
+								{filters.map((filter) => (
+									<button
+										type="button"
+										data-filter={filter.id}
+										aria-pressed={filter.id === activeFilter ? 'true' : 'false'}
+										class="group/filter flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium sm:flex-none sm:gap-2 sm:px-4 sm:text-[13px] whitespace-nowrap text-secondary outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent aria-pressed:bg-primary aria-pressed:text-white aria-pressed:shadow-lg aria-pressed:shadow-primary/25"
+									>
+										{filter.label}
+										<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/60">{filter.count}</span>
+									</button>
+								))}
+							</div>
+						</div>
+					</div>
+
+					<ul class="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+						{ordered.map(({ booking, group }, index) => (
+							<li data-booking-group={group} hidden={!visibleIndexes.has(index)}>
+								<BookingCard booking={booking} upcoming={group === 'upcoming'} />
+							</li>
+						))}
+					</ul>
+
+					<nav class="mt-8 flex flex-col items-center gap-3" aria-label="Páginas de reservas" data-pagination hidden>
+						<div class="liquid-glass flex items-center gap-1 bg-ink-200/55 p-1.5 backdrop-blur-xl backdrop-saturate-150" data-pagination-pages></div>
+						<p class="text-xs text-muted" aria-live="polite" data-pagination-status></p>
+					</nav>
+				</section>
+			) : (
+				<section
+					class="liquid-glass flex animate-fade-up flex-col items-center rounded-[2rem] bg-ink-200/40 px-6 py-14 text-center backdrop-blur-xl backdrop-saturate-150 sm:px-10"
+					style="animation-delay: 240ms"
+				>
+					<span class="liquid-glass flex size-14 items-center justify-center bg-white/70 text-accent">
+						<Ticket size={24} stroke-width={1.75} aria-hidden="true" />
+					</span>
+					<h2 class="mt-6 text-2xl font-semibold tracking-[-0.03em] text-primary">Todavía no tienes reservas</h2>
+					<p class="mx-auto mt-3 max-w-md text-secondary">Cuando reserves una excursión con {user.email}, aparecerá aquí.</p>
+					<Button href="/excursiones" class="mt-8">Ver excursiones</Button>
+				</section>
+			)}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { initBookingFilters } from '../../scripts/account/booking-filters';
+
+	document.querySelectorAll<HTMLElement>('[data-booking-filters]').forEach(initBookingFilters);
+</script>

@@ -1,0 +1,77 @@
+---
+import { Picture } from 'astro:assets';
+import { CalendarDays, Clock, Star, Users } from '@lucide/astro';
+import ArrowCircle from '../../ui/ArrowCircle.astro';
+import GlassBadge from '../../ui/GlassBadge.astro';
+import { bookingPhoto, bookingStatusLabels, formatBookingDate, type CustomerBooking } from '../../../lib/account/bookings';
+import { peopleSummary, pickupSummary } from '../../../lib/email/templates/layout';
+
+interface Props {
+	booking: CustomerBooking;
+	upcoming: boolean;
+}
+
+const { booking, upcoming } = Astro.props;
+const photo = bookingPhoto(booking.productKey);
+const cancelled = booking.status === 'cancelled';
+const canReview = booking.status === 'completed' && !booking.hasReview;
+const facts = [
+	{ icon: CalendarDays, text: formatBookingDate(booking.tourDate) },
+	{ icon: Users, text: peopleSummary(booking) },
+	...(upcoming
+		? [{ icon: Clock, text: `Recogida ${pickupSummary({ pickupTime: booking.pickupTime, startTime: booking.startTime, pickupTo: booking.pickupTo }).toLowerCase()}` }]
+		: []),
+];
+---
+
+<article
+	class="group relative isolate flex min-h-44 flex-col justify-end overflow-hidden rounded-[1.75rem] bg-primary p-2 text-white sm:aspect-[4/5] sm:min-h-0 sm:rounded-[2rem] sm:p-2.5 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary has-[a:focus-visible]:ring-offset-2"
+>
+	{photo && (
+		<Picture
+			src={photo}
+			alt=""
+			formats={['avif', 'webp']}
+			widths={[400, 640, 800]}
+			sizes="(min-width: 1024px) 20rem, (min-width: 640px) 45vw, 100vw"
+			quality={80}
+			pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
+			class:list={[
+				'size-full object-cover transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-105',
+				cancelled ? 'grayscale brightness-75' : 'brightness-90',
+			]}
+		/>
+	)}
+	<div class="absolute inset-0 -z-10 bg-linear-to-r from-primary/90 via-primary/55 to-primary/5 sm:bg-linear-to-b sm:from-primary/45 sm:via-transparent sm:via-35% sm:to-primary/90" aria-hidden="true"></div>
+
+	<GlassBadge overPhoto class="absolute top-3.5 left-3.5 sm:top-4 sm:left-4">{bookingStatusLabels[booking.status]}</GlassBadge>
+	<ArrowCircle class="absolute top-2.5 right-2.5 sm:top-3 sm:right-3" />
+
+	<a href={`/account/bookings/${booking.code}`} class="absolute inset-0 z-10 rounded-[inherit] outline-none">
+		<span class="sr-only">Ver la reserva {booking.code} de {booking.productName}</span>
+	</a>
+
+	<div class="max-w-[80%] px-2 pb-2 sm:max-w-none sm:px-2.5 sm:pb-2.5">
+		<p class="text-[11px] font-medium tracking-wide text-white/65">Reserva {booking.code}</p>
+		<h3 class="mt-0.5 text-base leading-tight font-semibold tracking-[-0.03em] text-balance sm:text-lg">{booking.productName}</h3>
+		<ul class="mt-2 grid gap-1 text-xs text-white/85 sm:mt-2.5">
+			{facts.map((fact) => (
+				<li class="flex items-center gap-1.5">
+					<fact.icon size={13} stroke-width={1.75} class="shrink-0 text-white/65" aria-hidden="true" />
+					<span class="truncate">{fact.text}</span>
+				</li>
+			))}
+		</ul>
+		{canReview && (
+			<a
+				href={`/account/reviews/new?code=${booking.code}`}
+				class="relative z-20 mt-3 inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-3.5 text-xs font-medium text-primary transition-colors duration-300 ease-smooth hover:bg-white/85"
+			>
+				<Star size={12} stroke-width={2} aria-hidden="true" />
+				Cuéntanos qué tal fue
+			</a>
+		)}
+	</div>
+
+	<span class="glass-rim [--rim-width:3px]" aria-hidden="true"></span>
+</article>
