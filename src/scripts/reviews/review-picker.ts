@@ -1,3 +1,5 @@
+import { paginationItems } from '../../lib/account/pagination';
+
 interface ReviewableBooking {
 	code: string;
 	productKey: string;
@@ -10,7 +12,24 @@ type ReviewableBookingsResponse = { signedIn: false } | { signedIn: true; sugges
 
 type PickerState = 'loading' | 'signed-out' | 'empty' | 'error' | 'list';
 
+type PickerFilter = 'pending' | 'reviewed' | 'all';
+
 const endpoint = '/api/account/reviewable-bookings';
+const pageSize = 6;
+
+const filterMatches: Record<PickerFilter, (booking: ReviewableBooking) => boolean> = {
+	pending: (booking) => !booking.hasReview,
+	reviewed: (booking) => booking.hasReview,
+	all: () => true,
+};
+
+const filterEmptyMessages: Record<PickerFilter, string> = {
+	pending: 'Ya opinaste de todas tus excursiones. ¡Gracias!',
+	reviewed: 'Todavía no has opinado de ninguna excursión.',
+	all: '',
+};
+
+const isPickerFilter = (value: string): value is PickerFilter => value in filterMatches;
 
 function readThumbnails(root: HTMLElement): Record<string, string> {
 	try {
@@ -24,6 +43,13 @@ export async function initReviewPicker(root: HTMLElement) {
 	const states = Array.from(root.querySelectorAll<HTMLElement>('[data-picker-state]'));
 	const options = root.querySelector<HTMLElement>('[data-picker-options]');
 	const template = root.querySelector<HTMLTemplateElement>('[data-picker-option-template]');
+	const filterGroup = root.querySelector<HTMLElement>('[data-picker-filter]');
+	const filterEmpty = root.querySelector<HTMLElement>('[data-picker-filter-empty]');
+	const pagination = root.querySelector<HTMLElement>('[data-picker-pagination]');
+	const pageList = root.querySelector<HTMLElement>('[data-picker-pages]');
+	const pageTemplate = root.querySelector<HTMLTemplateElement>('[data-picker-page-template]');
+	const previousButton = root.querySelector<HTMLButtonElement>('[data-picker-page-previous]');
+	const nextButton = root.querySelector<HTMLButtonElement>('[data-picker-page-next]');
 	const formPanel = root.querySelector<HTMLElement>('[data-picker-form]');
 	const formTitle = root.querySelector<HTMLElement>('[data-picker-form-title]');
 	const codeInput = root.querySelector<HTMLInputElement>('[data-review-code]');
@@ -51,18 +77,19 @@ export async function initReviewPicker(root: HTMLElement) {
 		show('signed-out');
 		return;
 	}
-	if (data.bookings.length === 0) {
+	const { bookings } = data;
+	if (bookings.length === 0) {
 		show('empty');
 		return;
 	}
 
 	if (authorInput && !authorInput.value) authorInput.value = data.suggestedAuthor;
 
-	const buttons = new Map<ReviewableBooking, HTMLButtonElement>();
+	const items = new Map<ReviewableBooking, { item: HTMLElement; button: HTMLButtonElement }>();
 
 	const choose = (booking: ReviewableBooking, button: HTMLButtonElement, moveFocus: boolean) => {
-		for (const candidate of buttons.values()) {
-			if (!candidate.disabled) candidate.setAttribute('aria-pressed', String(candidate === button));
+		for (const candidate of items.values()) {
+			if (!candidate.button.disabled) candidate.button.setAttribute('aria-pressed', String(candidate.button === button));
 		}
 		codeInput.value = booking.code;
 		if (formTitle) formTitle.textContent = `¿Qué tal fue ${booking.productName}?`;
@@ -70,7 +97,7 @@ export async function initReviewPicker(root: HTMLElement) {
 		if (moveFocus) formTitle?.focus();
 	};
 
-	for (const booking of data.bookings) {
+	for (const booking of bookings) {
 		const item = template.content.firstElementChild?.cloneNode(true) as HTMLElement | undefined;
 		const button = item?.querySelector<HTMLButtonElement>('[data-picker-option]');
 		if (!item || !button) continue;
@@ -96,14 +123,83 @@ export async function initReviewPicker(root: HTMLElement) {
 			button.addEventListener('click', () => choose(booking, button, true));
 		}
 
-		buttons.set(booking, button);
+		items.set(booking, { item, button });
 		options.append(item);
 	}
 
+	for (const counter of root.querySelectorAll<HTMLElement>('[data-picker-filter-count]')) {
+		const filter = counter.dataset.pickerFilterCount ?? '';
+		if (isPickerFilter(filter)) counter.textContent = String(bookings.filter(filterMatches[filter]).length);
+	}
+
+	const pending = bookings.filter(filterMatches.pending);
+	let activeFilter: PickerFilter = pending.length > 0 ? 'pending' : 'all';
+	let currentPage = 1;
+
+	const filterInput = (filter: PickerFilter) => filterGroup?.querySelector<HTMLInputElement>(`input[value="${filter}"]`);
+	const selectedFilterInput = filterInput(activeFilter);
+	if (selectedFilterInput) selectedFilterInput.checked = true;
+
+	const renderPages = (totalPages: number) => {
+		if (!pagination || !pageList || !pageTemplate) return;
+		pagination.hidden = totalPages <= 1;
+		if (previousButton) previousButton.disabled = currentPage <= 1;
+		if (nextButton) nextButton.disabled = currentPage >= totalPages;
+
+		pageList.replaceChildren(
+			...paginationItems(currentPage, totalPages, 5).map((entry) => {
+				if (entry.kind === 'gap') {
+					const gap = document.createElement('span');
+					gap.className = 'flex size-9 items-center justify-center text-[13px] text-muted';
+					gap.setAttribute('aria-hidden', 'true');
+					gap.textContent = '…';
+					return gap;
+				}
+				const pageButton = pageTemplate.content.firstElementChild?.cloneNode(true) as HTMLButtonElement;
+				pageButton.textContent = String(entry.page);
+				pageButton.setAttribute('aria-label', `Página ${entry.page}`);
+				if (entry.page === currentPage) pageButton.setAttribute('aria-current', 'page');
+				pageButton.addEventListener('click', () => goToPage(entry.page));
+				return pageButton;
+			}),
+		);
+	};
+
+	const render = () => {
+		const visible = bookings.filter(filterMatches[activeFilter]);
+		const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+		currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+		const pageBookings = new Set(visible.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+
+		for (const [booking, { item }] of items) item.hidden = !pageBookings.has(booking);
+
+		if (filterEmpty) {
+			filterEmpty.textContent = filterEmptyMessages[activeFilter];
+			filterEmpty.hidden = visible.length > 0;
+		}
+		renderPages(totalPages);
+	};
+
+	const goToPage = (page: number) => {
+		currentPage = page;
+		render();
+		pageList?.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+	};
+
+	filterGroup?.addEventListener('change', (event) => {
+		const value = (event.target as HTMLInputElement).value;
+		if (!isPickerFilter(value)) return;
+		activeFilter = value;
+		currentPage = 1;
+		render();
+	});
+	previousButton?.addEventListener('click', () => goToPage(currentPage - 1));
+	nextButton?.addEventListener('click', () => goToPage(currentPage + 1));
+
+	render();
 	show('list');
 
-	const pending = data.bookings.filter((booking) => !booking.hasReview);
 	const onlyPending = pending.length === 1 ? pending[0] : undefined;
-	const onlyPendingButton = onlyPending && buttons.get(onlyPending);
+	const onlyPendingButton = onlyPending && items.get(onlyPending)?.button;
 	if (onlyPending && onlyPendingButton) choose(onlyPending, onlyPendingButton, false);
 }
