@@ -1,5 +1,5 @@
 import { formatPrice } from '../../lib/format';
-import { clearErrorOnInput, setFieldError, validateFields } from './form-validation';
+import { clearErrorOnInput, setFieldError, validateFields } from '../ui/form-validation';
 
 const weekdayIds = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
