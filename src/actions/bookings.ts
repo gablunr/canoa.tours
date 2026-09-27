@@ -1,7 +1,7 @@
 import { ActionError, defineAction, type ActionErrorCode } from 'astro:actions';
 import { z } from 'astro/zod';
 import { bookingPolicy } from '../data/booking/booking-policy';
-import { loadBookableProduct, type BookableProduct } from '../lib/booking/catalog';
+import { findActiveProductId, loadBookableProduct, loadPickupOptions, type BookableProduct } from '../lib/booking/catalog';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
 import { createCheckoutSession } from '../lib/booking/payments';
 import { quoteBooking, type Quote, type QuoteInput } from '../lib/booking/pricing';
@@ -11,8 +11,14 @@ import { supabaseAdmin } from '../lib/supabase/admin';
 const maxPendingBookingsPerCustomer = 2;
 const termsVersion = 'v1';
 
+const productKeyInput = z.string().trim().min(1).max(100);
+
+const availabilityInputSchema = z
+	.object({ productKey: productKeyInput, from: z.iso.date(), to: z.iso.date() })
+	.refine((range) => range.from <= range.to, { message: 'El rango de fechas no es válido.', path: ['to'] });
+
 const bookingSelectionShape = {
-	productKey: z.string().trim().min(1).max(100),
+	productKey: productKeyInput,
 	tourDate: z.iso.date(),
 	adults: z.number().int().min(0).max(50),
 	children: z.number().int().min(0).max(50).default(0),
@@ -262,6 +268,42 @@ async function expireBooking(bookingId: string) {
 }
 
 export const bookings = {
+	availability: defineAction({
+		accept: 'json',
+		input: availabilityInputSchema,
+		handler: async (input) => {
+			try {
+				const productId = await findActiveProductId(input.productKey);
+				if (!productId) throw bookingActionError('product_not_available');
+
+				const { data, error } = await supabaseAdmin.rpc('get_availability', {
+					p_product_id: productId,
+					p_from: input.from,
+					p_to: input.to,
+				});
+				if (error) throw error;
+
+				return { days: (data ?? []).map((day) => ({ date: day.tour_date, available: day.available, bookable: day.bookable })) };
+			} catch (error) {
+				throw toActionError(error);
+			}
+		},
+	}),
+
+	pickupOptions: defineAction({
+		accept: 'json',
+		input: z.object({ productKey: productKeyInput }),
+		handler: async (input) => {
+			try {
+				const options = await loadPickupOptions(input.productKey);
+				if (!options) throw bookingActionError('product_not_available');
+				return options;
+			} catch (error) {
+				throw toActionError(error);
+			}
+		},
+	}),
+
 	quote: defineAction({
 		accept: 'json',
 		input: quoteInputSchema,

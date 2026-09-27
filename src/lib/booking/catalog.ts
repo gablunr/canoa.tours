@@ -30,9 +30,63 @@ interface PriceRow {
 	amount: number | string;
 }
 
+export interface PickupOptions {
+	zones: { slug: string; name: string; fee: number }[];
+	hotels: { id: string; name: string; zoneSlug: string }[];
+}
+
 interface PickupZoneRow {
 	fee_per_person: number | string;
 	pickup_zones: { id: string; slug: string; name: string; position: number } | null;
+}
+
+const pickupZoneColumns = 'fee_per_person, pickup_zones ( id, slug, name, position )';
+
+function toPickupZones(rows: PickupZoneRow[]): BookablePickupZone[] {
+	return rows
+		.filter((row) => row.pickup_zones !== null)
+		.sort((first, second) => (first.pickup_zones?.position ?? 0) - (second.pickup_zones?.position ?? 0))
+		.map((row) => ({
+			id: row.pickup_zones?.id ?? '',
+			slug: row.pickup_zones?.slug ?? '',
+			name: row.pickup_zones?.name ?? '',
+			fee: Number(row.fee_per_person),
+		}));
+}
+
+export async function findActiveProductId(productKey: string): Promise<string | null> {
+	const { data, error } = await supabaseAdmin.from('products').select('id').eq('key', productKey).eq('status', 'active').maybeSingle();
+	if (error) throw error;
+	return data?.id ?? null;
+}
+
+export async function loadPickupOptions(productKey: string): Promise<PickupOptions | null> {
+	const productId = await findActiveProductId(productKey);
+	if (!productId) return null;
+
+	const { data: zoneRows, error: zonesError } = await supabaseAdmin
+		.from('product_pickup_zones')
+		.select(pickupZoneColumns)
+		.eq('product_id', productId);
+	if (zonesError) throw zonesError;
+
+	const zones = toPickupZones((zoneRows ?? []) as unknown as PickupZoneRow[]);
+	if (zones.length === 0) return { zones: [], hotels: [] };
+
+	const { data: hotelRows, error: hotelsError } = await supabaseAdmin
+		.from('hotels')
+		.select('id, name, zone_id')
+		.eq('active', true)
+		.in('zone_id', zones.map((zone) => zone.id))
+		.order('name');
+	if (hotelsError) throw hotelsError;
+
+	const zoneSlugById = new Map(zones.map((zone) => [zone.id, zone.slug]));
+
+	return {
+		zones: zones.map(({ slug, name, fee }) => ({ slug, name, fee })),
+		hotels: (hotelRows ?? []).map((hotel) => ({ id: hotel.id, name: hotel.name, zoneSlug: zoneSlugById.get(hotel.zone_id) ?? '' })),
+	};
 }
 
 export function isoWeekday(tourDate: string): number {
@@ -64,7 +118,7 @@ export async function loadBookableProduct(productKey: string, tourDate: string):
 			.eq('product_id', product.id)
 			.lte('valid_from', tourDate)
 			.or(`valid_to.is.null,valid_to.gte.${tourDate}`),
-		supabaseAdmin.from('product_pickup_zones').select('fee_per_person, pickup_zones ( id, slug, name, position )').eq('product_id', product.id),
+		supabaseAdmin.from('product_pickup_zones').select(pickupZoneColumns).eq('product_id', product.id),
 	]);
 
 	if (schedulesResult.error) throw schedulesResult.error;
@@ -80,15 +134,7 @@ export async function loadBookableProduct(productKey: string, tourDate: string):
 		prices[price.passenger_type] = Number(price.amount);
 	}
 
-	const pickupZones = ((zonesResult.data ?? []) as unknown as PickupZoneRow[])
-		.filter((row) => row.pickup_zones !== null)
-		.sort((first, second) => (first.pickup_zones?.position ?? 0) - (second.pickup_zones?.position ?? 0))
-		.map((row) => ({
-			id: row.pickup_zones?.id ?? '',
-			slug: row.pickup_zones?.slug ?? '',
-			name: row.pickup_zones?.name ?? '',
-			fee: Number(row.fee_per_person),
-		}));
+	const pickupZones = toPickupZones((zonesResult.data ?? []) as unknown as PickupZoneRow[]);
 
 	return {
 		product,
