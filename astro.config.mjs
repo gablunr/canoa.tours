@@ -68,6 +68,9 @@ export default defineConfig({
     processor: satteri({ mdastPlugins: [contentTokensPlugin] }),
   },
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ['@stripe/stripe-js'],
+    },
   }
 });
