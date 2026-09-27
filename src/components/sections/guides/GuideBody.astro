@@ -1,0 +1,144 @@
+---
+import GlassAccordion from '../../ui/GlassAccordion.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import TourCard from '../../ui/cards/TourCard.astro';
+import WhatsAppClosing from '../document/WhatsAppClosing.astro';
+import GuideBlocks from './GuideBlocks.astro';
+import { destinationHref, findDestination, tourImage } from '../../../data/tours/destinations';
+import type { GuideContent } from '../../../data/guides/guide-content';
+import type { Guide } from '../../../data/guides/guides';
+import { destinationToursTitle } from '../../../data/tours/tours';
+import { mostBookedHref, mostBookedTours } from '../../../data/tours/most-booked';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	guide: Guide;
+	content: GuideContent;
+}
+
+const { guide, content } = Astro.props;
+
+const anchorFor = (title: string) =>
+	title
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[̀-ͯ]/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
+
+const faqTitle = 'Preguntas frecuentes';
+const contents = [...content.sections.map((section) => section.title), ...(content.faqs.length > 0 ? [faqTitle] : [])];
+const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
+
+const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+const guideTour = content.tour;
+const tour = guideTour && mostBookedTours.find((item) => item.destination.id === guideTour.destinationId && item.tour.slug === guideTour.tourSlug);
+const tourDestination = guideTour && findDestination(guideTour.destinationId);
+---
+
+<div class="px-4 pt-14 pb-4 sm:px-6 md:pt-20 md:pb-8">
+	<div data-reveal class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[15rem_minmax(0,48rem)] lg:justify-center lg:gap-20">
+		<aside class="mx-auto w-full max-w-3xl lg:sticky lg:top-36 lg:mx-0 lg:self-start">
+			<nav
+				aria-labelledby="guide-contents-title"
+				class="rounded-3xl border border-border/50 bg-surface/60 p-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0"
+			>
+				<p id="guide-contents-title" class="text-sm font-medium text-primary">En esta guía</p>
+				<ol class="relative mt-4 border-l border-border/60 text-sm">
+					<span
+						data-toc-indicator
+						class="absolute top-0 -left-px w-px bg-accent-strong opacity-0 transition-[translate,height,opacity] duration-500 ease-smooth"
+						aria-hidden="true"
+					></span>
+					{contents.map((title, index) => (
+						<li>
+							<a
+								href={`#${anchorFor(title)}`}
+								data-toc-link
+								class="group/toc flex gap-3 py-1.5 pl-4 leading-snug text-muted transition-colors duration-300 ease-smooth hover:text-primary aria-[current=true]:text-primary"
+							>
+								<span class="w-5 shrink-0 text-xs leading-5 text-subtle tabular-nums transition-colors duration-300 ease-smooth group-aria-[current=true]/toc:text-accent-strong">
+									{sectionNumber(index)}
+								</span>
+								<span class="transition-transform duration-500 ease-smooth group-hover/toc:translate-x-1">{title}</span>
+							</a>
+						</li>
+					))}
+				</ol>
+			</nav>
+		</aside>
+
+		<div class="mx-auto w-full max-w-3xl lg:mx-0">
+			<div class="mb-14 rounded-3xl bg-surface p-6 sm:p-8">
+				<p class="text-sm font-medium text-accent-strong">Lo esencial</p>
+				<p class="mt-3 text-lg leading-relaxed text-primary">{content.answer}</p>
+			</div>
+
+			<div class="document-content">
+				{content.sections.map((section) => (
+					<Fragment>
+						<h2 id={anchorFor(section.title)}>{section.title}</h2>
+						<GuideBlocks blocks={section.blocks} />
+					</Fragment>
+				))}
+			</div>
+
+			{content.tour && tourDestination && (
+				<section aria-labelledby="guide-tour-title" class="mt-16 grid items-center gap-8 rounded-[2rem] bg-surface p-6 sm:grid-cols-[minmax(0,1fr)_17rem] sm:p-8">
+					<div>
+						<h2 id="guide-tour-title" class="text-2xl leading-[1.1] font-semibold tracking-[-0.03em] text-primary">La excursión de esta guía</h2>
+						<p class="mt-3 text-[15px] leading-relaxed text-pretty text-secondary">{content.tour.note}</p>
+						<p class="mt-5">
+							<UnderlineLink href={destinationHref(tourDestination)} tone="accent">{`Ver todas las ${lowerFirst(destinationToursTitle(tourDestination))}`}</UnderlineLink>
+						</p>
+					</div>
+					{tour && (
+						<TourCard
+							href={mostBookedHref(tour)}
+							title={tour.title}
+							badge={tour.destination.name}
+							price={formatPrice(tour.price)}
+							priceUnit={tour.priceUnit}
+							schedule={tour.schedule}
+							departure={tour.departure}
+							image={tourImage(tour.destination, tour.tour)}
+							sizes="(min-width: 640px) 17rem, 90vw"
+						/>
+					)}
+				</section>
+			)}
+
+			{content.faqs.length > 0 && (
+				<section aria-labelledby={anchorFor(faqTitle)} class="mt-14 border-t border-border/60 pt-14">
+					<h2
+						id={anchorFor(faqTitle)}
+						class="scroll-mt-32 text-[1.625rem] leading-[1.2] font-medium tracking-[-0.02em] text-balance text-primary"
+					>
+						{faqTitle}
+					</h2>
+					<ul class="mt-8 grid gap-3">
+						{content.faqs.map((faq) => (
+							<li>
+								<GlassAccordion name="guide-faq" summary={faq.question} text={faq.answer} />
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			<WhatsAppClosing
+				title="¿Te queda alguna duda?"
+				text="Escríbenos y te ayudamos a preparar la excursión."
+				message={`Hola, estoy leyendo la guía «${guide.title}» y tengo una pregunta`}
+			/>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { initTableOfContents } from '../../../scripts/ui/table-of-contents';
+
+	const root = document.querySelector<HTMLElement>('[data-guide]');
+	if (root) initTableOfContents(root);
+</script>

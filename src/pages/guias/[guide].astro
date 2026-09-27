@@ -1,0 +1,16 @@
+---
+import type { GetStaticPaths } from 'astro';
+import GuidePage from '../../components/sections/guides/GuidePage.astro';
+import { guides, type Guide } from '../../data/guides/guides';
+
+export const getStaticPaths = (() =>
+	guides.flatMap((guide) => (guide.silo === 'general' ? [{ params: { guide: guide.slug }, props: { guide } }] : []))) satisfies GetStaticPaths;
+
+interface Props {
+	guide: Guide;
+}
+
+const { guide } = Astro.props;
+---
+
+<GuidePage guide={guide} />

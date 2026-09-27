@@ -1,0 +1,18 @@
+---
+import GuideCard from '../../ui/cards/GuideCard.astro';
+import { featuredGuide, guideHref, guideReadingTime, guideSiloTitle } from '../../../data/guides/guides';
+---
+
+<div class="px-4 pt-12 sm:px-6 md:pt-16">
+	<div data-reveal class="mx-auto max-w-6xl">
+		<GuideCard
+			size="lg"
+			headingLevel="h2"
+			href={guideHref(featuredGuide)}
+			title={featuredGuide.title}
+			description={featuredGuide.description}
+			image={featuredGuide.image}
+			badges={[guideSiloTitle(featuredGuide.silo), guideReadingTime(featuredGuide)]}
+		/>
+	</div>
+</div>

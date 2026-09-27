@@ -1,0 +1,31 @@
+---
+import PageSection from '../page/PageSection.astro';
+import GuideCard from '../../ui/cards/GuideCard.astro';
+import { guideHref, guideReadingTime, guideSiloTitle, siblingGuides, type Guide } from '../../../data/guides/guides';
+
+interface Props {
+	guide: Guide;
+}
+
+const { guide } = Astro.props;
+const siblings = siblingGuides(guide).slice(0, 3);
+const title = guide.silo === 'general' ? 'Más guías para planear el viaje' : `Más guías de ${guideSiloTitle(guide.silo)}`;
+---
+
+{siblings.length > 0 && (
+	<PageSection id="related-guides-title" title={title}>
+		<ul class="grid gap-x-5 gap-y-10 max-sm:px-5 sm:grid-cols-2 lg:grid-cols-3">
+			{siblings.map((sibling) => (
+				<li data-reveal>
+					<GuideCard
+						href={guideHref(sibling)}
+						title={sibling.title}
+						description={sibling.description}
+						image={sibling.image}
+						badges={[guideReadingTime(sibling)]}
+					/>
+				</li>
+			))}
+		</ul>
+	</PageSection>
+)}

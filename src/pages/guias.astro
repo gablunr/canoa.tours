@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/page/PageHeader.astro';
+import FeaturedGuide from '../components/sections/guides/FeaturedGuide.astro';
+import GuidesByDestination from '../components/sections/guides/GuidesByDestination.astro';
+import EdgeWaves from '../components/ui/EdgeWaves.astro';
+import { guidesIntro } from '../data/guides/guides';
+import { guidesLink } from '../data/site/navigation';
+---
+
+<Layout
+	title="Guías de viaje para Punta Cana"
+	description={guidesIntro}
+	pageType="CollectionPage"
+	breadcrumbs={[{ name: guidesLink.label, path: guidesLink.href }]}
+>
+	<EdgeWaves />
+	<PageHeader title={guidesLink.label} intro={guidesIntro} centered />
+	<FeaturedGuide />
+	<GuidesByDestination />
+</Layout>

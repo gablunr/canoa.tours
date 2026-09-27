@@ -1,0 +1,42 @@
+---
+import HeroBreadcrumb from '../../ui/HeroBreadcrumb.astro';
+import PhotoHero from '../page/PhotoHero.astro';
+import { guideSiloHref, guideSiloTitle, type Guide } from '../../../data/guides/guides';
+import { guidesLink } from '../../../data/site/navigation';
+import { formatLongDate, toIsoDate } from '../../../lib/format';
+
+interface Props {
+	guide: Guide;
+}
+
+const { guide } = Astro.props;
+const updatedAt = guide.updatedAt ?? guide.publishedAt;
+const siloHref = guide.silo === 'general' ? `${guidesLink.href}#planear-el-viaje` : guideSiloHref(guide.silo);
+---
+
+<PhotoHero title={guide.title} image={guide.image} imageAlt={guide.imageAlt} introClass="max-w-3xl" compact dim>
+	<HeroBreadcrumb
+		slot="badge"
+		items={[
+			{ label: guidesLink.label, href: guidesLink.href },
+			{ label: guideSiloTitle(guide.silo), href: siloHref },
+		]}
+	/>
+	{guide.description}
+	<dl
+		slot="actions"
+		class="mt-10 flex animate-fade-up flex-wrap justify-center gap-x-12 gap-y-4 text-center text-sm drop-shadow-md"
+		style="animation-delay: 790ms"
+	>
+		<div>
+			<dt class="text-white/75">Actualizada</dt>
+			<dd class="mt-1 font-medium text-white">
+				<time datetime={toIsoDate(updatedAt)}>{formatLongDate(updatedAt)}</time>
+			</dd>
+		</div>
+		<div>
+			<dt class="text-white/75">Lectura</dt>
+			<dd class="mt-1 font-medium text-white">{guide.readingMinutes} min</dd>
+		</div>
+	</dl>
+</PhotoHero>

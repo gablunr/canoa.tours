@@ -1,0 +1,68 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import GuideHeader from './GuideHeader.astro';
+import GuideBody from './GuideBody.astro';
+import RelatedGuides from './RelatedGuides.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import { guideContent } from '../../../data/guides/guide-content';
+import { guideHref, guideSiloHref, guideSiloTitle, type Guide } from '../../../data/guides/guides';
+import { guidesLink } from '../../../data/site/navigation';
+import { canonicalUrl } from '../../../lib/seo/seo';
+import { blogPostingSchema, faqSchema } from '../../../lib/seo/structured-data';
+
+interface Props {
+	guide: Guide;
+}
+
+const { guide } = Astro.props;
+const content = guideContent(guide.slug);
+const href = guideHref(guide);
+const updatedAt = guide.updatedAt ?? guide.publishedAt;
+const faqs = content?.faqs ?? [];
+const parent = guide.silo === 'general' ? guidesLink : { label: guideSiloTitle(guide.silo), href: guideSiloHref(guide.silo) };
+---
+
+<Layout
+	title={guide.title}
+	description={guide.description}
+	image={{ src: guide.image, alt: guide.imageAlt }}
+	pageType={faqs.length > 0 ? 'FAQPage' : 'WebPage'}
+	mainEntity={faqs.length > 0 ? faqSchema(faqs) : undefined}
+	graph={[
+		blogPostingSchema({
+			url: canonicalUrl(href),
+			headline: guide.title,
+			description: guide.description,
+			section: guideSiloTitle(guide.silo),
+			datePublished: guide.publishedAt,
+			dateModified: updatedAt,
+		}),
+	]}
+	article={{ publishedAt: guide.publishedAt }}
+	modifiedAt={updatedAt}
+	breadcrumbs={[
+		{ name: parent.label, path: parent.href },
+		{ name: guide.title, path: href },
+	]}
+	noindex={!content}
+>
+	<article data-guide>
+		<GuideHeader guide={guide} />
+		{content ? (
+			<GuideBody guide={guide} content={content} />
+		) : (
+			<div class="px-4 pt-14 pb-24 sm:px-6 md:pt-20">
+				<div data-reveal class="mx-auto max-w-6xl rounded-3xl bg-surface p-6 text-center sm:p-8">
+					<p class="text-sm font-medium text-accent-strong">En preparación</p>
+					<p class="mt-3 text-lg leading-relaxed text-pretty text-primary">
+						Estamos escribiendo esta guía. Mientras tanto, puedes leer las demás.
+					</p>
+					<p class="mt-5">
+						<UnderlineLink href={guidesLink.href} tone="accent">Ver todas las guías de viaje</UnderlineLink>
+					</p>
+				</div>
+			</div>
+		)}
+	</article>
+	<RelatedGuides guide={guide} />
+</Layout>

@@ -1,0 +1,109 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata, ImageOutputFormat } from 'astro';
+import ArrowCircle from '../ArrowCircle.astro';
+import GlassBadge from '../GlassBadge.astro';
+
+interface Props {
+	href: string;
+	title: string;
+	description: string;
+	image: ImageMetadata;
+	badges: string[];
+	size?: 'md' | 'lg';
+	headingLevel?: 'h2' | 'h3';
+	frameClass?: string;
+	sizes?: string;
+	class?: string;
+}
+
+const { href, title, description, image, badges, size = 'md', headingLevel: Heading = 'h3', frameClass, sizes: imageSizes, class: className } = Astro.props;
+
+const sizes = {
+	md: {
+		imageSizes: '(min-width: 1152px) 23rem, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 82vw',
+		glow: 'inset-x-6 top-1/3 -bottom-5',
+		frame: 'rounded-[1.75rem]',
+		aspect: 'aspect-[4/5]',
+		content: 'px-5 pt-8 pb-5',
+		water: '',
+		title: 'text-xl leading-[1.15] tracking-[-0.02em]',
+		reveal: 'pointer-fine:grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus-within:grid-rows-[1fr]',
+		text: 'pt-2 text-sm leading-relaxed',
+	},
+	lg: {
+		imageSizes: '(min-width: 1152px) 72rem, 100vw',
+		glow: 'inset-x-12 top-1/2 -bottom-8',
+		frame: 'rounded-[2rem]',
+		aspect: 'aspect-[4/5] sm:aspect-[16/10] lg:aspect-[21/9]',
+		content: 'px-6 pt-11 pb-7 sm:px-8 sm:pb-8 lg:px-10 lg:pt-12 lg:pb-10',
+		water: '[--wave-height:22px] [--wave-width:320px]',
+		title: 'max-w-3xl text-3xl leading-[1.05] tracking-[-0.03em] sm:text-4xl lg:text-5xl',
+		reveal: '',
+		text: 'max-w-2xl pt-3 text-base leading-relaxed sm:text-lg',
+	},
+};
+
+const s = sizes[size];
+
+const photoOptions = {
+	alt: '',
+	formats: ['avif', 'webp'] as ImageOutputFormat[],
+	quality: 85,
+	widths: [480, 720, 960, 1280, 1600, 2048],
+	sizes: imageSizes ?? s.imageSizes,
+	class: 'size-full object-cover',
+};
+---
+
+<article class:list={['group relative isolate', className]}>
+	<Picture
+		src={image}
+		{...photoOptions}
+		pictureAttributes={{
+			class: `absolute -z-10 opacity-40 blur-2xl transition-opacity duration-700 ease-smooth group-hover:opacity-70 max-sm:hidden ${s.glow}`,
+			'aria-hidden': 'true',
+		}}
+	/>
+
+	<div
+		class:list={[
+			'relative isolate flex flex-col justify-end overflow-hidden bg-primary has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-accent has-[a:focus-visible]:ring-offset-2',
+			s.frame,
+			frameClass ?? s.aspect,
+		]}
+	>
+		<Picture
+			src={image}
+			{...photoOptions}
+			pictureAttributes={{ class: 'absolute inset-0 -z-10' }}
+			class="size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-105"
+		/>
+		<div class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></div>
+
+		<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+			{badges.map((badge) => <GlassBadge overPhoto>{badge}</GlassBadge>)}
+		</div>
+		<ArrowCircle class="absolute top-3 right-3" />
+
+		<div class:list={['relative', s.content]}>
+			<div
+				class:list={[
+					'water-glass absolute inset-0 -z-10 group-focus-within:[animation-play-state:running] group-hover:[animation-play-state:running]',
+					s.water,
+				]}
+				aria-hidden="true"
+			></div>
+			<Heading class:list={['font-semibold text-balance text-primary', s.title]}>
+				<a href={href} class="outline-none after:absolute after:-inset-[100vmax] after:z-10">{title}</a>
+			</Heading>
+			<div class:list={['grid grid-rows-[1fr] transition-[grid-template-rows] duration-700 ease-smooth', s.reveal]}>
+				<div class="overflow-hidden">
+					<p class:list={['text-pretty text-secondary', s.text]}>{description}</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="glass-rim" aria-hidden="true"></div>
+	</div>
+</article>
