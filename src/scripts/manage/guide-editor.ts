@@ -1,5 +1,6 @@
 import { actions } from 'astro:actions';
 import { faqHeading, parseGuideMarkdown, type GuideMarkdownContent, type GuideMarkdownIssue } from '../../lib/guides/guide-markdown';
+import { wireCharacterCounters } from '../ui/character-counter';
 import { initConfirmDialogs } from './confirm-dialogs';
 import { createEditorSession, type SaveResult } from './editor-session';
 import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireSlugField } from './form-helpers';
@@ -263,11 +264,7 @@ export function initGuideEditor(root: HTMLElement) {
 	};
 	tourSelect?.addEventListener('change', syncTourNote);
 
-	form.querySelectorAll<HTMLElement>('[data-count-for]').forEach((counter) => {
-		const field = document.getElementById(counter.dataset.countFor ?? '');
-		if (!(field instanceof HTMLTextAreaElement)) return;
-		field.addEventListener('input', () => (counter.textContent = String(field.value.length)));
-	});
+	wireCharacterCounters(form);
 
 	form.querySelectorAll<HTMLButtonElement>('[data-markdown-tool]').forEach((button) => {
 		button.addEventListener('click', () => applyTool(markdownInput, button.dataset.markdownTool ?? ''));

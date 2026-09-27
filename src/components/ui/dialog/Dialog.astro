@@ -2,25 +2,35 @@
 import type { HTMLAttributes } from 'astro/types';
 
 interface Props extends Omit<HTMLAttributes<'dialog'>, 'class'> {
-	size?: 'md' | 'lg';
+	size?: 'md' | 'lg' | 'gallery';
 }
 
 const { size = 'md', ...attributes } = Astro.props;
 
-const widths = {
-	md: 'max-w-md',
-	lg: 'max-w-lg',
+const sizes = {
+	md: {
+		frame: 'max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md',
+		panel: 'p-6 sm:p-8',
+	},
+	lg: {
+		frame: 'max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg',
+		panel: 'p-6 sm:p-8',
+	},
+	gallery: {
+		frame: 'h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-5xl sm:h-[min(calc(100dvh-3rem),56rem)] sm:w-[calc(100%-3rem)]',
+		panel: 'flex h-full flex-col p-3 sm:p-5',
+	},
 };
 ---
 
 <dialog
 	{...attributes}
 	class:list={[
-		'm-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-[2rem] bg-transparent p-0 text-primary backdrop:bg-primary/60 backdrop:backdrop-blur-sm',
-		widths[size],
+		'm-auto overflow-y-auto overscroll-contain rounded-[2rem] bg-transparent p-0 text-primary backdrop:bg-primary/60 backdrop:backdrop-blur-sm',
+		sizes[size].frame,
 	]}
 >
-	<div class="liquid-glass rounded-[2rem] bg-white/85 p-6 backdrop-blur-xl backdrop-saturate-150 [--glass-drop-shadow:0_0_#0000] sm:p-8">
+	<div class:list={['liquid-glass rounded-[2rem] bg-white/85 backdrop-blur-xl backdrop-saturate-150 [--glass-drop-shadow:0_0_#0000]', sizes[size].panel]}>
 		<slot />
 	</div>
 </dialog>

@@ -1,0 +1,78 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'textarea'>, 'id' | 'class' | 'name' | 'value'> {
+	label: string;
+	name: string;
+	value?: string;
+	hint?: string;
+	requiredMessage?: string;
+	invalidMessage?: string;
+	tone?: 'light' | 'glass';
+	counter?: boolean;
+}
+
+const { label, name, value = '', hint, requiredMessage, invalidMessage, required, tone = 'light', counter = false, rows = 4, maxlength, ...attributes } = Astro.props;
+
+const textareaId = `field-${name}`;
+const hintId = `${textareaId}-hint`;
+const errorId = `${textareaId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+const counterLimit = maxlength ? `/${maxlength}` : '';
+
+const tones = {
+	light: {
+		label: 'text-primary',
+		optional: 'text-muted',
+		input: 'border-border-strong bg-background text-primary placeholder:text-subtle hover:border-muted focus:border-primary aria-invalid:border-error',
+		hint: 'text-muted',
+		error: 'text-error',
+	},
+	glass: {
+		label: 'text-white',
+		optional: 'text-white/60',
+		input: 'border-white/25 bg-white/10 text-white placeholder:text-white/50 hover:border-white/45 focus:border-white aria-invalid:border-sun-300',
+		hint: 'text-white/70',
+		error: 'text-sun-200',
+	},
+};
+
+const styles = tones[tone];
+---
+
+<div data-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
+	<label for={textareaId} class:list={['flex items-baseline justify-between gap-3 text-sm font-medium', styles.label]}>
+		{label}
+		{!required && <span class:list={['text-xs font-normal', styles.optional]}>Opcional</span>}
+	</label>
+	<textarea
+		{...attributes}
+		id={textareaId}
+		name={name}
+		rows={rows}
+		maxlength={maxlength}
+		required={required}
+		aria-describedby={describedBy}
+		class:list={[
+			'mt-2 block w-full resize-y rounded-2xl border px-4 py-3 text-base leading-relaxed transition-colors duration-300 ease-smooth focus:outline-none',
+			styles.input,
+		]}
+	>{value}</textarea>
+	{(hint || counter) && (
+		<div class:list={['mt-2 flex items-start justify-between gap-4 text-xs', styles.hint]}>
+			{hint && <p id={hintId}>{hint}</p>}
+			{counter && (
+				<p class="ml-auto shrink-0 tabular-nums">
+					<span data-count-for={textareaId}>{value.length}</span>{counterLimit}
+				</p>
+			)}
+		</div>
+	)}
+	<p id={errorId} data-field-error class:list={['mt-2 text-xs', styles.error]} hidden></p>
+</div>
+
+<script>
+	import { wireCharacterCounters } from '../../../scripts/ui/character-counter';
+
+	wireCharacterCounters(document);
+</script>
