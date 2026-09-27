@@ -1,4 +1,3 @@
-import { paymentMethodLabels } from '../../data/site/brand-icons';
 import { company, type Office } from '../../data/site/company';
 import { absoluteUrl, siteLanguage, type Breadcrumb, type SocialImage } from './seo';
 
@@ -70,7 +69,6 @@ export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaN
 	const { office, openingHours, phone } = company;
 	const geo = office && geoCoordinates(office);
 	const sameAs = [...company.socialProfiles.map((profile) => profile.url), ...(office?.mapsUrl ? [office.mapsUrl] : [])];
-	const paymentAccepted = company.paymentMethods.map((method) => paymentMethodLabels[method]).join(', ');
 
 	return {
 		'@type': company.schemaType,
@@ -83,7 +81,7 @@ export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaN
 		image: image.url,
 		email: company.email,
 		...(phone && { telephone: phone.number }),
-		...(paymentAccepted && { paymentAccepted }),
+		paymentAccepted: 'Tarjeta de crédito o débito',
 		...(office && { address: postalAddress(office) }),
 		...(geo && { geo }),
 		...(office?.mapsUrl && { hasMap: office.mapsUrl }),
@@ -205,13 +203,18 @@ export interface OfferOptions {
 	unitText?: string;
 }
 
+const bookingSectionId = 'reservar';
+
+const bookingUrl = (pageUrl: string) => `${pageUrl}#${bookingSectionId}`;
+
 export const offerSchema = ({ url, price, name, description, priceCurrency = 'USD', unitText }: OfferOptions): SchemaNode => ({
 	'@type': 'Offer',
-	url,
+	url: bookingUrl(url),
 	price,
 	priceCurrency,
 	availability: 'https://schema.org/InStock',
 	seller: organizationReference,
+	potentialAction: { '@type': 'ReserveAction', target: bookingUrl(url) },
 	...(name && { name }),
 	...(description && { description }),
 	...(unitText && { priceSpecification: { '@type': 'UnitPriceSpecification', price, priceCurrency, unitText } }),
