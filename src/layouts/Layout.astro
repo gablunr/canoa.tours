@@ -16,3 +16,8 @@ const { footerOverlapsPhoto, ...seo } = Astro.props;
 	<slot />
 	<Footer slot="footer" overlapsPhoto={footerOverlapsPhoto} />
 </BaseLayout>
+
+<script>
+	import { captureUtm } from '../scripts/ui/utm';
+	captureUtm();
+</script>
