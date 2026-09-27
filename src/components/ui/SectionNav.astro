@@ -1,0 +1,87 @@
+---
+interface SectionNavLink {
+	href: string;
+	label: string;
+	count?: { value: number; label: string };
+}
+
+interface Props {
+	label: string;
+	links: SectionNavLink[];
+	overPhoto?: boolean;
+	sticky?: boolean;
+	class?: string;
+}
+
+const { label, links, overPhoto = false, sticky = false, class: className } = Astro.props;
+---
+
+<nav
+	aria-label={label}
+	data-section-nav
+	data-sticky={sticky || undefined}
+	class:list={[
+		'flex justify-center px-4 sm:px-6',
+		// El nav ocupa todo el ancho: sin pointer-events-none taparía los clics del contenido que pasa por debajo.
+		sticky && 'pointer-events-none sticky top-[4.25rem] z-30',
+		className,
+	]}
+>
+	<div
+		data-reveal
+		class:list={[
+			'liquid-glass max-w-full overflow-hidden',
+			sticky && 'pointer-events-auto',
+			overPhoto ? 'bg-primary/30 backdrop-blur-md' : 'bg-white/70 backdrop-blur-xl backdrop-saturate-150',
+		]}
+	>
+		<div
+			data-section-nav-scroller
+			class="overflow-x-auto overscroll-x-contain [scrollbar-width:none] data-overflowing:mask-x-from-90% [&::-webkit-scrollbar]:hidden"
+		>
+			<div class="relative w-max p-1.5">
+				<span
+					data-section-nav-indicator
+					class="absolute top-1.5 left-0 h-9 rounded-full bg-primary opacity-0 shadow-lg inset-shadow-xs shadow-primary/25 inset-shadow-white/25 transition-[translate,width,opacity] duration-700 ease-spring"
+					aria-hidden="true"
+				></span>
+				<ul class="flex gap-1">
+					{links.map((link) => (
+						<li>
+							<a
+								href={link.href}
+								data-section-nav-link
+								class:list={[
+									'group/link relative flex h-9 items-center gap-2 rounded-full px-4 text-[13px] font-medium whitespace-nowrap outline-none transition-colors duration-300 ease-smooth focus-visible:ring-2 aria-[current=true]:text-white aria-[current=true]:hover:text-white',
+									overPhoto ? 'text-white/90 hover:text-white focus-visible:ring-white' : 'text-secondary hover:text-primary focus-visible:ring-accent',
+								]}
+							>
+								{link.label}
+								{link.count && (
+									<>
+										<span
+											class:list={[
+												'text-xs font-normal tabular-nums transition-colors duration-300 ease-smooth group-aria-[current=true]/link:text-white/60',
+												overPhoto ? 'text-white/60' : 'text-muted',
+											]}
+											aria-hidden="true"
+										>
+											{link.count.value}
+										</span>
+										<span class="sr-only">({link.count.label})</span>
+									</>
+								)}
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+	</div>
+</nav>
+
+<script>
+	import { initSectionNav } from '../../scripts/ui/section-nav';
+
+	document.querySelectorAll<HTMLElement>('[data-section-nav]').forEach(initSectionNav);
+</script>

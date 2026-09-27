@@ -3,7 +3,7 @@ import '../styles/global.css';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import Seo, { type Props as SeoProps } from '../components/layout/Seo.astro';
-import { siteLanguage } from '../lib/seo';
+import { siteLanguage } from '../lib/seo/seo';
 
 type Props = SeoProps & {
 	footerOverlapsPhoto?: boolean;
@@ -30,6 +30,19 @@ const criticalFonts = [
 		))}
 		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
 		<script is:inline>
+			(function () {
+				var navigation = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : undefined;
+				var type = navigation ? navigation.type : 'navigate';
+				var fromSite = false;
+				try {
+					fromSite = document.referrer !== '' && new URL(document.referrer).origin === location.origin;
+				} catch (error) {}
+				if (location.hash || type === 'back_forward' || (fromSite && type !== 'reload')) {
+					document.documentElement.classList.add('skip-entrance');
+				}
+			})();
+		</script>
+		<script is:inline>
 			window.addEventListener('pagereveal', (event) => {
 				if (event.viewTransition) document.documentElement.classList.add('page-transition');
 			});
@@ -49,7 +62,7 @@ const criticalFonts = [
 		</main>
 		<Footer overlapsPhoto={footerOverlapsPhoto} />
 		<script>
-			import { initReveal } from '../scripts/reveal';
+			import { initReveal } from '../scripts/ui/reveal';
 
 			initReveal();
 		</script>

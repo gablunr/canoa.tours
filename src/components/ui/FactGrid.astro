@@ -1,0 +1,32 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { TourFact } from '../../data/tours/tours';
+
+type Props = Omit<HTMLAttributes<'dl'>, 'class'> & {
+	facts: (TourFact & { hiddenBelowSm?: boolean })[];
+	overPhoto?: boolean;
+	class?: string;
+};
+
+const { facts, overPhoto = false, class: className, ...attributes } = Astro.props;
+const factCell = 'px-3 py-4 last:odd:col-span-2 sm:bg-transparent sm:p-0';
+---
+
+<dl
+	class:list={[
+		'grid grid-cols-2 gap-px overflow-hidden rounded-[1.5rem] border text-center text-sm sm:flex sm:flex-wrap sm:justify-center sm:gap-x-12 sm:gap-y-4 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent',
+		overPhoto ? 'border-white/20 bg-white/20 backdrop-blur-md sm:backdrop-blur-none' : 'border-border/60 bg-border/60',
+		className,
+	]}
+	{...attributes}
+>
+	{facts.map((fact) => (
+		<div class:list={[factCell, overPhoto ? 'bg-primary/30 drop-shadow-md' : 'bg-background', fact.hiddenBelowSm && 'max-sm:hidden']}>
+			<dt class={overPhoto ? 'text-white/75' : 'text-muted'}>{fact.label}</dt>
+			<dd class:list={['mt-1 font-medium', overPhoto ? 'text-white' : 'text-primary']}>
+				{fact.value}
+				{fact.note && <span class:list={['block text-xs font-normal', overPhoto ? 'text-white/75' : 'text-muted']}>{fact.note}</span>}
+			</dd>
+		</div>
+	))}
+</dl>

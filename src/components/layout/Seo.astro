@@ -1,7 +1,7 @@
 ---
 import { getImage } from 'astro:assets';
 import logo from '../../assets/images/brand/logo.png';
-import { company } from '../../data/company';
+import { company } from '../../data/site/company';
 import {
 	absoluteUrl,
 	canonicalUrl,
@@ -11,24 +11,27 @@ import {
 	socialImage,
 	type Breadcrumb,
 	type SeoImage,
-} from '../../lib/seo';
+} from '../../lib/seo/seo';
 import {
 	breadcrumbSchema,
+	danglingReferences,
 	organizationSchema,
 	primaryImageSchema,
 	webPageSchema,
 	websiteSchema,
 	type PageType,
 	type SchemaNode,
-} from '../../lib/structured-data';
+} from '../../lib/seo/structured-data';
 
 export interface Props {
 	title: string;
 	description: string;
 	image?: SeoImage;
-	pageType?: PageType;
+	pageType?: PageType | PageType[];
 	breadcrumbs?: Breadcrumb[];
 	mainEntity?: SchemaNode | SchemaNode[];
+	about?: SchemaNode;
+	graph?: SchemaNode[];
 	article?: { publishedAt: Date };
 	modifiedAt?: Date;
 	noindex?: boolean;
@@ -41,6 +44,8 @@ const {
 	pageType = 'WebPage',
 	breadcrumbs = [],
 	mainEntity,
+	about,
+	graph = [],
 	article,
 	modifiedAt = article?.publishedAt,
 	noindex = false,
@@ -65,13 +70,18 @@ const structuredData = {
 			description,
 			hasBreadcrumbs: trail.length > 0,
 			mainEntity,
+			about,
 			datePublished: article?.publishedAt,
 			dateModified: modifiedAt,
 		}),
 		primaryImageSchema(url, shareImage),
 		...(trail.length > 0 ? [breadcrumbSchema(url, trail)] : []),
+		...graph,
 	],
 };
+
+const dangling = danglingReferences(structuredData['@graph']);
+if (dangling.length > 0) throw new Error(`Referencias JSON-LD sin nodo en ${url}: ${dangling.join(', ')}`);
 
 const structuredDataJson = JSON.stringify(structuredData).replaceAll('<', '\\u003c');
 ---

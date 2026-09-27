@@ -1,0 +1,27 @@
+---
+import { ChevronRight } from '@lucide/astro';
+
+interface Props {
+	items: { label: string; href?: string }[];
+	slot?: string;
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="Ruta de navegación" class="animate-fade-up" style="animation-delay: 550ms">
+	<ol class="liquid-glass flex flex-wrap items-center justify-center gap-1 bg-primary/20 px-3 py-1 font-display text-xs font-medium text-white/80 backdrop-blur-md">
+		{items.map((item, index) => (
+			<Fragment>
+				{index > 0 && (
+					<li aria-hidden="true"><ChevronRight size={12} stroke-width={2.25} class="text-white/60" /></li>
+				)}
+				{item.href ? (
+					<li><a href={item.href} class="rounded-full px-1 transition-colors duration-300 ease-smooth hover:text-white">{item.label}</a></li>
+				) : (
+					<li aria-current="page" class="px-1 text-white">{item.label}</li>
+				)}
+			</Fragment>
+		))}
+	</ol>
+</nav>
