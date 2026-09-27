@@ -52,6 +52,11 @@ export const formatTourDay = (isoDate: string, today = localToday()) => {
 	return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
+export function suggestedAuthorName(fullName: string) {
+	const [first = '', ...rest] = fullName.trim().split(/\s+/);
+	return rest.length > 0 ? `${first} ${rest.at(-1)?.charAt(0).toUpperCase()}.` : first;
+}
+
 export function bookingTourDetails(productKey: string): TourDetails | undefined {
 	const [destinationId, tourSlug] = productKey.split('/');
 	if (!destinationId || !tourSlug) return undefined;

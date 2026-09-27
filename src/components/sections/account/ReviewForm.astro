@@ -1,10 +1,10 @@
 ---
 import { Picture } from 'astro:assets';
-import { ArrowLeft, Check, Clock, ImageIcon, ImagePlus, Star, X } from '@lucide/astro';
+import { ArrowLeft, Check, Clock } from '@lucide/astro';
 import Button from '../../ui/Button.astro';
 import GlassBadge from '../../ui/GlassBadge.astro';
-import TextField from '../../ui/form/TextField.astro';
-import { bookingPhoto, formatBookingDate } from '../../../lib/account/bookings';
+import ReviewFormFields from './ReviewFormFields.astro';
+import { bookingPhoto, formatBookingDate, suggestedAuthorName } from '../../../lib/account/bookings';
 import type { BookingDetails } from '../../../lib/booking/booking-details';
 
 interface Props {
@@ -16,11 +16,6 @@ interface Props {
 
 const { details, token, alreadyReviewed, signedIn } = Astro.props;
 const photo = bookingPhoto(details.productKey);
-const [first = '', ...rest] = details.leadName.trim().split(/\s+/);
-const suggestedAuthor = rest.length > 0 ? `${first} ${rest.at(-1)?.charAt(0).toUpperCase()}.` : first;
-const ratingLabels = ['Muy mala', 'Mala', 'Normal', 'Buena', 'Excelente'];
-const ratingPlaceholder = 'Elige de 1 a 5 estrellas';
-const bodyMaxLength = 4000;
 const doneHref = signedIn ? '/account' : '/';
 const doneLabel = signedIn ? 'Volver a mis reservas' : 'Volver al inicio';
 
@@ -82,128 +77,9 @@ const statusText = 'mx-auto mt-3 max-w-sm text-secondary';
 						<Button href={doneHref} variant="outline" class="mt-8">{doneLabel}</Button>
 					</div>
 				) : (
-					<>
-						<form class="grid gap-6" novalidate data-review-form>
-							<input type="hidden" name="code" value={details.code} />
-							{token && <input type="hidden" name="token" value={token} />}
-
-							<div role="radiogroup" aria-labelledby="review-rating-label" data-field data-required-message="Elige cuántas estrellas le das.">
-								<p id="review-rating-label" class="text-sm font-medium text-primary">Tu puntuación</p>
-								<div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
-									<div class="flex gap-2" data-rating>
-										{ratingLabels.map((label, index) => (
-											<label
-												class="liquid-glass flex size-11 cursor-pointer items-center justify-center bg-white/70 text-ink-300 transition duration-300 ease-smooth hover:scale-105 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent data-[filled]:bg-sun-soft/70 data-[filled]:text-sun"
-												data-rating-star={index + 1}
-											>
-												<input type="radio" name="rating" value={index + 1} required class="sr-only" />
-												<span class="sr-only">{index + 1} de 5, {label.toLowerCase()}</span>
-												<Star size={20} stroke-width={1.5} class="fill-current" aria-hidden="true" />
-											</label>
-										))}
-									</div>
-									<span class="text-sm font-medium text-secondary" data-rating-label data-placeholder={ratingPlaceholder} aria-hidden="true">{ratingPlaceholder}</span>
-								</div>
-								<p data-field-error class="mt-2 text-xs text-error" hidden></p>
-							</div>
-
-							<div class="grid gap-6 sm:grid-cols-2 sm:gap-4">
-								<TextField label="Título" name="title" maxlength={120} placeholder="Resúmelo en una frase" />
-								<TextField
-									label="Nombre que se mostrará"
-									name="authorName"
-									value={suggestedAuthor}
-									required
-									minlength={2}
-									maxlength={80}
-									requiredMessage="Escribe cómo quieres que aparezca tu nombre."
-								/>
-							</div>
-
-								<div data-field data-required-message="Cuéntanos qué tal fue." data-invalid-message="Escribe al menos 20 caracteres.">
-									<label for="field-body" class="text-sm font-medium text-primary">Tu experiencia</label>
-									<textarea
-										id="field-body"
-										name="body"
-										required
-										minlength={20}
-										maxlength={bodyMaxLength}
-										rows={4}
-										aria-describedby="field-body-hint field-body-error"
-										placeholder="Qué te gustó, qué mejorarías, algún consejo para otros viajeros…"
-										class="mt-2 block w-full resize-y rounded-2xl border border-border-strong bg-background px-4 py-3 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
-									></textarea>
-									<p id="field-body-hint" class="mt-2 flex justify-between gap-4 text-xs text-muted">
-										<span>Mínimo 20 caracteres</span>
-										<span class="tabular-nums" data-body-count data-max={bodyMaxLength}>0/{bodyMaxLength}</span>
-									</p>
-									<p id="field-body-error" data-field-error class="mt-2 text-xs text-error" hidden></p>
-								</div>
-
-							<div data-photos>
-								<p class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
-									Fotos
-									<span class="text-xs font-normal text-muted">Opcional, hasta 5</span>
-								</p>
-								<label
-									class="liquid-glass mt-2 flex cursor-pointer items-center gap-3 rounded-2xl bg-white/60 p-1.5 pr-4 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 ease-smooth hover:bg-white/90 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent data-[dragging]:bg-accent-soft *:pointer-events-none"
-									data-photo-drop
-								>
-									<input
-										id="field-photos"
-										name="photos"
-										type="file"
-										accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif"
-										multiple
-										class="sr-only"
-									/>
-									<span class="liquid-glass flex size-10 shrink-0 items-center justify-center bg-ink-200/55 text-primary">
-										<ImagePlus size={18} stroke-width={1.75} aria-hidden="true" />
-									</span>
-									<span class="text-sm font-medium text-primary">Añadir fotos</span>
-									<span class="ml-auto text-xs text-muted">Hasta 5 MB cada una</span>
-								</label>
-								<ul class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5" aria-label="Fotos elegidas" data-photo-previews hidden></ul>
-								<p class="mt-2 text-xs text-error" role="alert" data-photos-error hidden></p>
-								<template data-photo-preview-template>
-									<li class="relative aspect-square overflow-hidden rounded-2xl bg-ink-100">
-										<ImageIcon size={20} stroke-width={1.75} class="absolute inset-0 m-auto text-muted" aria-hidden="true" />
-										<img class="relative size-full object-cover" alt="" />
-										<button
-											type="button"
-											class="liquid-glass absolute top-1.5 right-1.5 flex size-7 cursor-pointer items-center justify-center bg-primary/40 text-white backdrop-blur-md outline-none focus-visible:ring-2 focus-visible:ring-white"
-											data-photo-remove
-										>
-											<X size={14} stroke-width={2} aria-hidden="true" />
-										</button>
-									</li>
-								</template>
-							</div>
-
-							<div>
-								<p class="mb-4 text-sm text-error" role="alert" data-review-error hidden></p>
-								<div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-									<p class="text-xs leading-relaxed text-muted">Revisamos cada opinión antes de publicarla.</p>
-									<Button type="submit" class="w-full shrink-0 sm:w-fit" data-review-submit>Enviar opinión</Button>
-								</div>
-							</div>
-						</form>
-
-						<div class={statusView} data-review-done hidden>
-							<span class={statusIcon}><Check size={24} stroke-width={1.75} aria-hidden="true" /></span>
-							<h2 class={statusTitle} tabindex="-1" data-review-done-heading>¡Gracias por tu opinión!</h2>
-							<p class={statusText}>La publicaremos en cuanto la revisemos.</p>
-							<Button href={doneHref} variant="outline" class="mt-8">{doneLabel}</Button>
-						</div>
-					</>
+					<ReviewFormFields code={details.code} token={token} suggestedAuthor={suggestedAuthorName(details.leadName)} doneHref={doneHref} doneLabel={doneLabel} />
 				)}
 			</section>
 		</div>
 	</div>
 </div>
-
-<script>
-	import { initReviewForm } from '../../../scripts/account/review-form';
-
-	document.querySelectorAll<HTMLFormElement>('[data-review-form]').forEach(initReviewForm);
-</script>
