@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { company } from '../data/company';
-import { siteLanguage } from '../lib/seo';
+import { company } from '../data/site/company';
+import { siteLanguage } from '../lib/seo/seo';
 
 const brandBackground = '#ffffff';
 

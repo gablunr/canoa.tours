@@ -2,10 +2,10 @@
 import { Image } from 'astro:assets';
 import { Mail } from '@lucide/astro';
 import logo from '../../assets/images/brand/logo-dark.svg';
-import { company } from '../../data/company';
-import { paymentIcons, paymentMethodLabels, socialIcons, whatsappIcon as WhatsAppIcon } from '../../data/brand-icons';
-import { footerGroups, legalLinks } from '../../data/navigation';
-import { siteHost } from '../../lib/seo';
+import { company } from '../../data/site/company';
+import { paymentIcons, paymentMethodLabels, socialIcons, whatsappIcon as WhatsAppIcon } from '../../data/site/brand-icons';
+import { footerGroups, legalLinks } from '../../data/site/navigation';
+import { siteHost } from '../../lib/seo/seo';
 
 interface Props {
 	overlapsPhoto?: boolean;

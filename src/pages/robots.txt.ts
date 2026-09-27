@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { aiCrawlers } from '../data/ai-crawlers';
-import { absoluteUrl } from '../lib/seo';
+import { aiCrawlers } from '../data/site/ai-crawlers';
+import { absoluteUrl } from '../lib/seo/seo';
 
 const group = (userAgents: string[]) => [...userAgents.map((userAgent) => `User-agent: ${userAgent}`), 'Allow: /', ''];
 

@@ -1,3 +1,5 @@
+import { cancellationInsurancePriceLabel, cancellationNoticeLabel } from './booking-policy';
+
 export type BookingBenefitId = 'hotel-pickup' | 'deposit' | 'weather-reschedule' | 'cancellation-insurance';
 
 export interface BookingBenefit {
@@ -24,8 +26,8 @@ export const bookingBenefits: BookingBenefit[] = [
 	},
 	{
 		id: 'cancellation-insurance',
-		title: 'Cancela o cambia la fecha hasta 24 horas antes',
-		text: 'Con el seguro de cancelación (US$4,99 por persona) te devolvemos el 100 % o cambias la fecha cuando quieras.',
+		title: `Cancela o cambia la fecha hasta ${cancellationNoticeLabel} antes`,
+		text: `Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) te devolvemos el 100 % o cambias la fecha cuando quieras.`,
 	},
 ];
 

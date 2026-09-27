@@ -7,8 +7,11 @@ export interface Tour {
 	slug: string;
 }
 
+export type DestinationKind = 'place' | 'activity';
+
 export interface Destination {
 	id: DestinationId;
+	kind: DestinationKind;
 	name: string;
 	slug: string;
 	fromPrice: number;
@@ -20,6 +23,7 @@ export interface Destination {
 export const destinations: Destination[] = [
 	{
 		id: 'isla-saona',
+		kind: 'place',
 		name: 'Isla Saona',
 		slug: 'isla-saona',
 		fromPrice: 55,
@@ -33,6 +37,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		id: 'samana',
+		kind: 'place',
 		name: 'Samaná',
 		slug: 'samana',
 		fromPrice: 99,
@@ -44,6 +49,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		id: 'santo-domingo',
+		kind: 'place',
 		name: 'Santo Domingo',
 		slug: 'santo-domingo',
 		fromPrice: 69,
@@ -55,6 +61,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		id: 'isla-catalina',
+		kind: 'place',
 		name: 'Isla Catalina',
 		slug: 'isla-catalina',
 		fromPrice: 65,
@@ -66,6 +73,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		id: 'aventura',
+		kind: 'activity',
 		name: 'Aventura',
 		slug: 'aventura-punta-cana',
 		fromPrice: 40,
@@ -82,6 +90,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		id: 'fiesta',
+		kind: 'activity',
 		name: 'Fiesta',
 		slug: 'fiesta-punta-cana',
 		fromPrice: 40,
@@ -95,7 +104,7 @@ export const destinations: Destination[] = [
 ];
 
 const placeholderImages = import.meta.glob<{ default: ImageMetadata }>(
-	'../assets/images/placeholders/destinations/*.{jpg,jpeg,png,webp}',
+	'../../assets/images/placeholders/destinations/*.{jpg,jpeg,png,webp}',
 	{ eager: true },
 );
 
@@ -105,17 +114,23 @@ const placeholderImage = (destination: Destination) =>
 export const destinationImage = (destination: Destination) => destination.image ?? placeholderImage(destination);
 
 const placeholderTourImages = import.meta.glob<{ default: ImageMetadata }>(
-	'../assets/images/placeholders/tours/*/*.{jpg,jpeg,png,webp}',
+	'../../assets/images/placeholders/tours/*/*.{jpg,jpeg,png,webp}',
 	{ eager: true },
 );
 
 export const tourImage = (destination: Destination, tour: Tour) =>
 	Object.entries(placeholderTourImages).find(([path]) => path.includes(`/${destination.slug}/${tour.slug}.`))?.[1].default;
 
-export function findTour(destinationId: DestinationId, tourSlug: string) {
+export function findDestination(destinationId: DestinationId) {
 	const destination = destinations.find((candidate) => candidate.id === destinationId);
-	const tour = destination?.tours.find((candidate) => candidate.slug === tourSlug);
-	if (!destination || !tour) throw new Error(`Unknown tour: ${destinationId}/${tourSlug}`);
+	if (!destination) throw new Error(`Unknown destination: ${destinationId}`);
+	return destination;
+}
+
+export function findTour(destinationId: DestinationId, tourSlug: string) {
+	const destination = findDestination(destinationId);
+	const tour = destination.tours.find((candidate) => candidate.slug === tourSlug);
+	if (!tour) throw new Error(`Unknown tour: ${destinationId}/${tourSlug}`);
 	return { destination, tour };
 }
 
@@ -123,10 +138,7 @@ export const destinationHref = (destination: Destination) => `/${destination.slu
 
 export const tourHref = (destination: Destination, tour: Tour) => `${destinationHref(destination)}/${tour.slug}`;
 
-export const formatPrice = (amount: number) => `US$${amount}`;
+export const lowestFromPrice = Math.min(...destinations.map((destination) => destination.fromPrice));
 
 export const tourCountLabel = (destination: Destination) =>
 	`${destination.tours.length} ${destination.tours.length === 1 ? 'excursión' : 'excursiones'}`;
-
-export const destinationSummary = (destination: Destination) =>
-	`${tourCountLabel(destination)}, desde ${formatPrice(destination.fromPrice)}. ${destination.details}`;

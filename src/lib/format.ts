@@ -10,3 +10,8 @@ export function estimateReadingMinutes(text = '') {
 	const wordCount = text.split(/\s+/).filter(Boolean).length;
 	return Math.max(1, Math.round(wordCount / wordsPerMinute));
 }
+
+const priceFormatter = new Intl.NumberFormat('es', { maximumFractionDigits: 2 });
+
+export const formatPrice = (amount: number) =>
+	`US$${Number.isInteger(amount) ? priceFormatter.format(amount) : amount.toFixed(2).replace('.', ',')}`;

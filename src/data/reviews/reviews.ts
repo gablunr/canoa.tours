@@ -1,11 +1,11 @@
 import type { ImageMetadata } from 'astro';
-import lauraAvatar from '../assets/images/reviews/laura-m.jpg';
-import danielAvatar from '../assets/images/reviews/daniel-r.jpg';
-import carlosAvatar from '../assets/images/reviews/carlos-p.jpg';
-import andreaAvatar from '../assets/images/reviews/andrea-v.jpg';
-import javierAvatar from '../assets/images/reviews/javier-a.jpg';
-import paulaAvatar from '../assets/images/reviews/paula-s.jpg';
-import { findTour, tourHref, type Destination, type DestinationId, type Tour } from './destinations';
+import lauraAvatar from '../../assets/images/reviews/laura-m.jpg';
+import danielAvatar from '../../assets/images/reviews/daniel-r.jpg';
+import carlosAvatar from '../../assets/images/reviews/carlos-p.jpg';
+import andreaAvatar from '../../assets/images/reviews/andrea-v.jpg';
+import javierAvatar from '../../assets/images/reviews/javier-a.jpg';
+import paulaAvatar from '../../assets/images/reviews/paula-s.jpg';
+import { findTour, tourHref, type Destination, type DestinationId, type Tour } from '../tours/destinations';
 
 export interface ReviewSource {
 	name: string;

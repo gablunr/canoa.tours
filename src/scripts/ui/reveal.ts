@@ -1,19 +1,59 @@
 const sequenceStepMs = 150;
+const fastSequenceStepMs = 40;
+const revealDurationMs = 700;
+const fastRevealDurationMs = 400;
+const maxScrollBacklogMs = 450;
+const fastScrollSpeed = 3;
+const scrollIdleMs = 120;
 
 let nextSlotAt = 0;
+let scrollSpeed = 0;
+let lastScrollY = 0;
+let lastScrollAt = 0;
+let trackingScroll = false;
 
-function reveal(element: HTMLElement, delayMs = 0) {
+function trackScrollSpeed() {
+	if (trackingScroll) return;
+	trackingScroll = true;
+	lastScrollY = window.scrollY;
+
+	window.addEventListener(
+		'scroll',
+		() => {
+			const now = performance.now();
+			const elapsed = now - lastScrollAt;
+			const speed = Math.abs(window.scrollY - lastScrollY) / Math.max(elapsed, 1);
+			scrollSpeed = elapsed > scrollIdleMs ? speed : scrollSpeed * 0.6 + speed * 0.4;
+			lastScrollY = window.scrollY;
+			lastScrollAt = now;
+		},
+		{ passive: true },
+	);
+}
+
+function scrollUrgency() {
+	if (performance.now() - lastScrollAt > scrollIdleMs) return 0;
+	return Math.min(scrollSpeed / fastScrollSpeed, 1);
+}
+
+const lerp = (from: number, to: number, amount: number) => from + (to - from) * amount;
+
+function reveal(element: HTMLElement, delayMs = 0, urgency = scrollUrgency()) {
 	element.style.setProperty('--reveal-delay', `${Math.round(delayMs)}ms`);
+	element.style.setProperty('--reveal-duration', `${Math.round(lerp(revealDurationMs, fastRevealDurationMs, urgency))}ms`);
 	element.setAttribute('data-revealed', '');
 }
 
 function revealInSequence(elements: HTMLElement[]) {
 	const now = performance.now();
+	const urgency = scrollUrgency();
+	const step = lerp(sequenceStepMs, fastSequenceStepMs, urgency);
+	if (urgency > 0) nextSlotAt = Math.min(nextSlotAt, now + maxScrollBacklogMs * (1 - urgency));
 
 	elements.forEach((element) => {
 		const startAt = Math.max(now, nextSlotAt);
-		reveal(element, startAt - now);
-		nextSlotAt = startAt + sequenceStepMs;
+		reveal(element, startAt - now, urgency);
+		nextSlotAt = startAt + step;
 	});
 }
 
@@ -56,15 +96,37 @@ const isScrolledDown = () => window.scrollY > 0;
 const byDocumentOrder = (first: HTMLElement, second: HTMLElement) =>
 	first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 
+function jumpToHashTarget() {
+	if (!location.hash) return;
+	document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ behavior: 'instant', block: 'start' });
+}
+
+const skipsEntrance = () => document.documentElement.classList.contains('skip-entrance') || isScrolledDown();
+
+function showInstantly(elements: HTMLElement[]) {
+	elements.forEach((element) => {
+		element.style.setProperty('--reveal-delay', '0ms');
+		element.style.setProperty('--reveal-duration', '0ms');
+		element.setAttribute('data-revealed', '');
+	});
+}
+
 export function initReveal() {
+	jumpToHashTarget();
 	const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-revealed])'));
 	if (targets.length === 0) return;
+
+	if (skipsEntrance()) {
+		showInstantly(targets);
+		return;
+	}
 
 	if (!('IntersectionObserver' in window)) {
 		targets.forEach((target) => reveal(target));
 		return;
 	}
 
+	trackScrollSpeed();
 	const entrance = waitForPageEntranceStart();
 	let entranceStarted = false;
 	entrance.then(() => {

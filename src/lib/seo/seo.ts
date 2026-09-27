@@ -1,7 +1,7 @@
 import type { ImageMetadata } from 'astro';
 import { getImage } from 'astro:assets';
-import shareImage from '../assets/images/brand/share.jpg';
-import { company } from '../data/company';
+import shareImage from '../../assets/images/brand/share.jpg';
+import { company } from '../../data/site/company';
 
 export interface SeoImage {
 	src: ImageMetadata | string;

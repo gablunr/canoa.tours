@@ -2,8 +2,9 @@
 import { Image } from 'astro:assets';
 import TourCard from '../../ui/cards/TourCard.astro';
 import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
-import { formatPrice, tourImage } from '../../../data/destinations';
-import { mostBookedHref, mostBookedTours } from '../../../data/most-booked';
+import { tourImage } from '../../../data/tours/destinations';
+import { formatPrice } from '../../../lib/format';
+import { mostBookedHref, mostBookedTours } from '../../../data/tours/most-booked';
 import seaTurtle from '../../../assets/images/home/sea-turtle.png';
 
 const turtleSides = [

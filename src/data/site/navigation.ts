@@ -1,6 +1,7 @@
 import { company } from './company';
-import { destinationHref, destinations } from './destinations';
-import { mostBookedHref, mostBookedTours } from './most-booked';
+import { routes } from './routes';
+import { destinationHref, destinations } from '../tours/destinations';
+import { mostBookedHref, mostBookedTours } from '../tours/most-booked';
 
 export interface NavLink {
 	label: string;
@@ -17,29 +18,41 @@ export const mainLinks: NavLink[] = destinations.map((destination) => ({
 	href: destinationHref(destination),
 }));
 
-export const catalogLink: NavLink = { label: 'Ver excursiones', href: '/excursiones' };
+export const catalogLink: NavLink = { label: 'Ver excursiones', href: routes.catalog };
 
 export const mostBookedLinks: NavLink[] = mostBookedTours.map((item) => ({
 	label: item.title,
 	href: mostBookedHref(item),
 }));
 
-export const howToBookLink: NavLink = { label: 'Cómo reservar', href: '/como-reservar' };
+export const howToBookLink: NavLink = { label: 'Cómo reservar', href: routes.howToBook };
 
-export const pickupZonesLink: NavLink = { label: 'Zonas de recogida', href: '/zonas-de-recogida' };
+export const faqLink: NavLink = { label: 'Preguntas frecuentes', href: routes.faq };
+
+export const pickupZonesLink: NavLink = { label: 'Zonas de recogida', href: routes.pickupZones };
+
+export const cancellationsLink: NavLink = { label: 'Cancelaciones y cambios', href: routes.cancellations };
+
+export const contactLink: NavLink = { label: 'Contacto', href: routes.contact };
 
 export const helpLinks: NavLink[] = [
 	howToBookLink,
-	{ label: 'Preguntas frecuentes', href: '/preguntas-frecuentes' },
+	faqLink,
 	pickupZonesLink,
-	{ label: 'Cancelaciones y cambios', href: '/cancelaciones' },
-	{ label: 'Contacto', href: '/contacto' },
+	cancellationsLink,
+	contactLink,
 ];
 
+export const aboutLink: NavLink = { label: 'Quiénes somos', href: routes.about };
+
+export const reviewsLink: NavLink = { label: 'Opiniones', href: routes.reviews };
+
+export const guidesLink: NavLink = { label: 'Guías de viaje', href: routes.guides };
+
 export const companyLinks: NavLink[] = [
-	{ label: 'Quiénes somos', href: '/quienes-somos' },
-	{ label: 'Opiniones', href: '/opiniones' },
-	{ label: 'Guías de viaje', href: '/guias' },
+	aboutLink,
+	reviewsLink,
+	guidesLink,
 ];
 
 export const footerGroups: NavGroup[] = [
