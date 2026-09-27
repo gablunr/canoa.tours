@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import TourCard from '../../ui/cards/TourCard.astro';
 import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
 import { tourImage } from '../../../data/tours/destinations';
@@ -26,9 +26,10 @@ const turtleSides = [
 
 		<div class="relative mt-10 lg:mt-14">
 			{turtleSides.map((side) => (
-				<Image
+				<Picture
 					src={seaTurtle}
 					alt=""
+					formats={['avif', 'webp']}
 					widths={[256, 384, 512, 768, 964]}
 					sizes="(min-width: 1536px) 24rem, 16rem"
 					class:list={['pointer-events-none absolute top-1/2 -z-10 w-64 -translate-y-1/2 mask-b-from-55% max-xl:hidden 2xl:w-96', side]}
