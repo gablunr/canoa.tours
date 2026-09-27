@@ -1,0 +1,27 @@
+---
+import Button from '../../ui/Button.astro';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import DocumentClosing from './DocumentClosing.astro';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+
+interface Props {
+	title: string;
+	text: string;
+	message: string;
+}
+
+const { title, text, message } = Astro.props;
+const { whatsapp } = company;
+---
+
+<DocumentClosing title={title} text={text}>
+	{whatsapp ? (
+		<Button href={whatsappMessageHref(whatsapp, message)} class="gap-2.5">
+			<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+			Escríbenos por WhatsApp
+		</Button>
+	) : (
+		<UnderlineLink tone="accent" href={`mailto:${company.email}`}>{company.email}</UnderlineLink>
+	)}
+</DocumentClosing>

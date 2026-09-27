@@ -1,9 +1,13 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Layout from '../layouts/Layout.astro';
-import LegalHeader from '../components/sections/legal/LegalHeader.astro';
-import LegalBody from '../components/sections/legal/LegalBody.astro';
-import { getLegalDocuments, legalHref, type LegalDocument } from '../data/legal';
+import DocumentHeader from '../components/sections/document/DocumentHeader.astro';
+import DocumentBody from '../components/sections/document/DocumentBody.astro';
+import DocumentClosing from '../components/sections/document/DocumentClosing.astro';
+import UnderlineLink from '../components/ui/UnderlineLink.astro';
+import { company } from '../data/site/company';
+import { getLegalDocuments, legalHref, type LegalDocument } from '../data/pages/legal';
+import { legalLinks } from '../data/site/navigation';
 
 export const getStaticPaths = (async () => {
 	const legalDocuments = await getLegalDocuments();
@@ -27,8 +31,13 @@ const { legalDocument } = Astro.props;
 	breadcrumbs={[{ name: legalDocument.data.title, path: legalHref(legalDocument) }]}
 	modifiedAt={legalDocument.data.updatedAt}
 >
-	<article data-legal-document>
-		<LegalHeader legalDocument={legalDocument} />
-		<LegalBody legalDocument={legalDocument} />
+	<article data-document>
+		<DocumentHeader entry={legalDocument} />
+		<DocumentBody entry={legalDocument} relatedTitle="Otros documentos" relatedLinks={legalLinks}>
+			<DocumentClosing title="¿Tienes dudas sobre este documento?" text="Escríbenos y te respondemos lo antes posible.">
+				<UnderlineLink tone="accent" href={`mailto:${company.email}`}>{company.email}</UnderlineLink>
+				{company.phone && <UnderlineLink tone="accent" href={company.phone.href}>{company.phone.label}</UnderlineLink>}
+			</DocumentClosing>
+		</DocumentBody>
 	</article>
 </Layout>

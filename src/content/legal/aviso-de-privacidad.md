@@ -1,6 +1,6 @@
 ---
 title: Aviso de privacidad
-description: Qué datos personales recabamos cuando nos contactas, reservas o navegas por este sitio, para qué los usamos y cómo puedes ejercer tus derechos. Incluye nuestra política de cookies.
+description: Qué datos personales recabamos cuando nos contactas o reservas, para qué los usamos y cómo ejercer tus derechos. Incluye la política de cookies.
 updatedAt: 2026-09-25
 ---
 

@@ -1,12 +1,12 @@
 ---
-import { formatUpdatedDate, readingMinutes, updatedIsoDate, type LegalDocument } from '../../../data/legal';
+import { formatUpdatedDate, readingMinutes, updatedIsoDate, type DocumentEntry } from '../../../data/pages/documents';
 
 interface Props {
-	legalDocument: LegalDocument;
+	entry: DocumentEntry;
 }
 
-const { legalDocument } = Astro.props;
-const { title, description } = legalDocument.data;
+const { entry } = Astro.props;
+const { title, description } = entry.data;
 ---
 
 <header class="px-4 pt-16 sm:px-6 md:pt-24">
@@ -30,12 +30,12 @@ const { title, description } = legalDocument.data;
 			<div>
 				<dt class="text-muted">Última actualización</dt>
 				<dd class="mt-1 font-medium text-primary">
-					<time datetime={updatedIsoDate(legalDocument)}>{formatUpdatedDate(legalDocument)}</time>
+					<time datetime={updatedIsoDate(entry)}>{formatUpdatedDate(entry)}</time>
 				</dd>
 			</div>
 			<div>
 				<dt class="text-muted">Lectura</dt>
-				<dd class="mt-1 font-medium text-primary">{readingMinutes(legalDocument)} min</dd>
+				<dd class="mt-1 font-medium text-primary">{readingMinutes(entry)} min</dd>
 			</div>
 		</dl>
 	</div>

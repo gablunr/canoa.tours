@@ -1,6 +1,6 @@
 ---
 title: Términos y condiciones
-description: Las reglas para usar este sitio y contratar nuestros tours.
+description: 'Las condiciones para reservar nuestras excursiones en Punta Cana: reservas y pagos, cancelaciones, responsabilidad y uso de este sitio.'
 updatedAt: 2026-09-25
 ---
 
