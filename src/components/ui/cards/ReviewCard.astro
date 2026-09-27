@@ -38,7 +38,7 @@ const { author, avatar, rating, text, tourTitle, tourHref, source, date, url, cl
 
 	<figcaption class="mt-8 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
 		<div class="flex items-center gap-3">
-			<Image src={avatar} alt="" widths={[112, 168, 224]} sizes="3.5rem" quality={90} class="size-14 shrink-0 rounded-full object-cover" />
+			<Image src={avatar} alt="" widths={[112, 168, 224]} sizes="3.5rem" class="size-14 shrink-0 rounded-full object-cover" />
 			<div>
 				<p class="font-semibold text-primary">{author}</p>
 				{date && <time datetime={toIsoDate(date)} class="mt-0.5 block text-sm text-muted">{formatLongDate(date)}</time>}

@@ -38,6 +38,15 @@ export default defineConfig({
     }),
   ],
   redirects: legacyRedirects,
+  image: {
+    service: {
+      config: {
+        avif: { quality: 60 },
+        webp: { quality: 78 },
+        jpeg: { quality: 80, mozjpeg: true },
+      },
+    },
+  },
   env: {
     schema: {
       SUPABASE_URL: envField.string({ context: 'client', access: 'public' }),

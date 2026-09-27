@@ -28,7 +28,6 @@ const { titleId, title, image, imageClass } = Astro.props;
 			formats={['avif', 'webp']}
 			widths={[640, 960, 1280, 1920, 2560, 3200]}
 			sizes="100vw"
-			quality={85}
 			pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
 			class:list={['size-full object-cover saturate-110', imageClass]}
 		/>

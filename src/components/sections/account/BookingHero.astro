@@ -43,7 +43,6 @@ const status = details.status as BookingStatus;
 					formats={['avif', 'webp']}
 					widths={[640, 960, 1280, 1792]}
 					sizes="(min-width: 1024px) 64rem, 100vw"
-					quality={85}
 					priority
 					pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
 					class:list={['size-full object-cover brightness-90', status !== 'confirmed' && 'grayscale-[35%]']}
