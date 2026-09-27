@@ -117,6 +117,20 @@ export async function createCheckoutSession(input: {
 	return { id: session.id, url: session.url };
 }
 
+export async function closeUnpaidCheckoutSession(sessionId: string): Promise<boolean> {
+	const session = await stripe.checkout.sessions.retrieve(sessionId);
+	if (session.status === 'complete') return false;
+	if (session.status === 'expired') return true;
+
+	try {
+		await stripe.checkout.sessions.expire(sessionId);
+		return true;
+	} catch (error) {
+		console.error('checkout_session_not_expired', { sessionId, error });
+		return false;
+	}
+}
+
 export async function refundDeposit(
 	bookingId: string,
 	amount: number,

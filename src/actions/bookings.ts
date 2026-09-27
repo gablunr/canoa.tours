@@ -3,13 +3,14 @@ import { z } from 'astro/zod';
 import { bookingPolicy } from '../data/booking/booking-policy';
 import { findActiveProductId, loadBookableProduct, loadPickupOptions, type BookableProduct } from '../lib/booking/catalog';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
-import { createCheckoutSession } from '../lib/booking/payments';
+import { closeUnpaidCheckoutSession, createCheckoutSession } from '../lib/booking/payments';
 import { quoteBooking, type Quote, type QuoteInput } from '../lib/booking/pricing';
 import { siteOrigin } from '../lib/site-origin';
 import { supabaseAdmin } from '../lib/supabase/admin';
 
 const maxPendingBookingsPerCustomer = 2;
 const termsVersion = 'v1';
+const cancelledCheckoutQuery = '?pago=cancelado';
 
 const productKeyInput = z.string().trim().min(1).max(100);
 
@@ -267,6 +268,26 @@ async function expireBooking(bookingId: string) {
 	if (error) console.error('booking_not_expired', { bookingId, error });
 }
 
+async function releaseUnpaidBookings(customerId: string, productId: string) {
+	const { data, error } = await supabaseAdmin
+		.from('bookings')
+		.select('id, stripe_checkout_session_id')
+		.eq('customer_id', customerId)
+		.eq('product_id', productId)
+		.eq('status', 'pending_payment')
+		.gt('expires_at', new Date().toISOString())
+		.not('stripe_checkout_session_id', 'is', null);
+	if (error) throw error;
+
+	await Promise.all(
+		(data ?? []).map(async (booking) => {
+			if (booking.stripe_checkout_session_id && (await closeUnpaidCheckoutSession(booking.stripe_checkout_session_id))) {
+				await expireBooking(booking.id);
+			}
+		}),
+	);
+}
+
 export const bookings = {
 	availability: defineAction({
 		accept: 'json',
@@ -337,17 +358,20 @@ export const bookings = {
 					throw new ActionError({ code: 'BAD_REQUEST', message: 'Indica tu hotel o el lugar donde te recogemos.' });
 				}
 
-				const email = input.email.trim().toLowerCase();
-				const existingCustomer = await findCustomerByEmail(email);
-				if (existingCustomer && (await countActivePendingBookings(existingCustomer.id)) >= maxPendingBookingsPerCustomer) {
-					throw new ActionError({
-						code: 'TOO_MANY_REQUESTS',
-						message: 'Ya tienes dos reservas pendientes de pago. Complétalas o espera unos minutos para hacer otra.',
-					});
-				}
-
 				const { bookable, pickup, coupon, couponValid, quote } = await priceSelection(input);
 				if (input.couponCode && !couponValid) throw bookingActionError('coupon_not_valid');
+
+				const email = input.email.trim().toLowerCase();
+				const existingCustomer = await findCustomerByEmail(email);
+				if (existingCustomer) {
+					await releaseUnpaidBookings(existingCustomer.id, bookable.product.id);
+					if ((await countActivePendingBookings(existingCustomer.id)) >= maxPendingBookingsPerCustomer) {
+						throw new ActionError({
+							code: 'TOO_MANY_REQUESTS',
+							message: 'Ya tienes dos reservas pendientes de pago. Complétalas o espera unos minutos para hacer otra.',
+						});
+					}
+				}
 
 				const customer = await upsertCustomer(existingCustomer, {
 					email,
@@ -404,7 +428,7 @@ export const bookings = {
 							stripeCustomerId: customer.stripe_customer_id,
 						},
 						origin: siteOrigin(context.url),
-						cancelPath: bookable.tourPath,
+						cancelPath: `${bookable.tourPath}${cancelledCheckoutQuery}`,
 					});
 				} catch (checkoutError) {
 					await expireBooking(created.id);
