@@ -1,53 +1,101 @@
 ---
 import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+import { BadgeCheck } from '@lucide/astro';
 import StarRating from '../StarRating.astro';
-import UnderlineLink from '../UnderlineLink.astro';
 import { formatLongDate, toIsoDate } from '../../../lib/format';
+import { imageSource } from '../../../lib/images';
+import type { Review } from '../../../data/reviews/reviews';
 
 interface Props {
-	author: string;
-	avatar: ImageMetadata;
-	rating: number;
-	text: string;
-	tourTitle: string;
-	tourHref: string;
-	source: string;
-	date?: Date;
-	url?: string;
+	review: Review;
+	showTour?: boolean;
 	class?: string;
 }
 
-const { author, avatar, rating, text, tourTitle, tourHref, source, date, url, class: className } = Astro.props;
+const { review, showTour = true, class: className } = Astro.props;
+
+const initials = review.author
+	.split(/\s+/)
+	.filter(Boolean)
+	.slice(0, 2)
+	.map((word) => word.charAt(0).toUpperCase())
+	.join('');
+const textIsLong = review.text.length > 320 || review.text.split('\n').length > 4;
+const expandId = `opinion-${review.id}-completa`;
+const textClass = 'text-[15px] leading-relaxed text-pretty whitespace-pre-line text-secondary';
 ---
 
 <figure class:list={['flex h-full flex-col rounded-[1.75rem] bg-chip p-7 lg:p-8', className]}>
 	<div class="flex flex-wrap items-center justify-between gap-3">
-		<StarRating rating={rating} />
-		<a
-			href={tourHref}
-			class="inline-flex rounded-full bg-background px-3 py-1.5 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-primary hover:text-white"
-		>
-			{tourTitle}
-		</a>
+		<StarRating rating={review.rating} />
+		{showTour && (
+			<a
+				href={review.tourHref}
+				class="inline-flex rounded-full bg-background px-3 py-1.5 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-primary hover:text-white"
+			>
+				{review.tourTitle}
+			</a>
+		)}
 	</div>
 
-	<blockquote class="mt-6 flex-1 text-[15px] leading-relaxed text-pretty text-secondary">
-		<p>{text}</p>
+	<blockquote class="mt-6 flex-1">
+		{review.title && <p class="font-semibold tracking-[-0.01em] text-primary">{review.title}</p>}
+		{textIsLong ? (
+			<div class:list={[review.title && 'mt-2']}>
+				<input type="checkbox" id={expandId} class="peer sr-only" />
+				<p class:list={[textClass, 'line-clamp-6 peer-checked:line-clamp-none']}>{review.text}</p>
+				<label
+					for={expandId}
+					class="mt-2 inline-block cursor-pointer rounded-full text-sm font-medium text-accent-strong peer-checked:hidden peer-focus-visible:ring-2 peer-focus-visible:ring-accent hover:text-accent"
+				>
+					Leer completa
+				</label>
+			</div>
+		) : (
+			<p class:list={[textClass, review.title && 'mt-2']}>{review.text}</p>
+		)}
 	</blockquote>
 
-	<figcaption class="mt-8 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-		<div class="flex items-center gap-3">
-			<Image src={avatar} alt="" widths={[112, 168, 224]} sizes="3.5rem" class="size-14 shrink-0 rounded-full object-cover" />
-			<div>
-				<p class="font-semibold text-primary">{author}</p>
-				{date && <time datetime={toIsoDate(date)} class="mt-0.5 block text-sm text-muted">{formatLongDate(date)}</time>}
-			</div>
+	{review.photos.length > 0 && (
+		<ul class="mt-5 flex flex-wrap gap-2" aria-label={`Fotos de ${review.author}`}>
+			{review.photos.map((photo, index) => (
+				<li>
+					<a href={photo.src} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-accent">
+						<Image
+							{...imageSource(photo)}
+							alt={`Foto ${index + 1} de ${review.author}`}
+							widths={[64, 128]}
+							sizes="4rem"
+							class="size-16 object-cover transition-transform duration-300 ease-smooth hover:scale-105"
+						/>
+					</a>
+				</li>
+			))}
+		</ul>
+	)}
+
+	{review.reply && (
+		<div class="mt-5 rounded-2xl bg-background px-4 py-3">
+			<p class="text-xs font-medium text-muted">Respuesta de Canoa Tours</p>
+			<p class="mt-1 text-sm leading-relaxed whitespace-pre-line text-secondary">{review.reply}</p>
 		</div>
-		{url && (
-			<UnderlineLink href={url} tone="accent" target="_blank" rel="noopener">
-				Ver en {source}<span class="sr-only">, reseña de {author}</span>
-			</UnderlineLink>
-		)}
+	)}
+
+	<figcaption class="mt-8 flex items-center gap-3">
+		<span class="flex size-12 shrink-0 items-center justify-center rounded-full bg-background font-semibold text-primary" aria-hidden="true">
+			{initials}
+		</span>
+		<div>
+			<p class="font-semibold text-primary">{review.author}</p>
+			<p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+				<time datetime={toIsoDate(review.date)}>{formatLongDate(review.date)}</time>
+				{review.verified && (
+					<span class="inline-flex items-center gap-1 text-accent-strong">
+						<BadgeCheck size={14} stroke-width={2} aria-hidden="true" />
+						Reserva verificada
+					</span>
+				)}
+			</p>
+		</div>
 	</figcaption>
 </figure>

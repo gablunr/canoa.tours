@@ -1,45 +1,56 @@
 ---
 import RatingBadge from '../../ui/RatingBadge.astro';
 import ReviewCard from '../../ui/cards/ReviewCard.astro';
-import { formatRating, reviewCountLabel, reviewSource, reviewTourHref, reviews } from '../../../data/reviews/reviews';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import { reviewStats, reviews } from '../../../data/reviews/reviews';
+import { routes } from '../../../data/site/routes';
+
+const homeReviewLimit = 6;
+const stats = reviewStats(reviews);
+const latestReviews = reviews.slice(0, homeReviewLimit);
 ---
 
 <section aria-labelledby="reviews-title" class="px-4 pt-24 sm:px-6 lg:pt-32">
 	<div class="mx-auto max-w-6xl">
-		<p data-reveal class="flex justify-center">
-			<RatingBadge
-				rating={reviewSource.rating}
-				ratingLabel={formatRating(reviewSource.rating)}
-				source={reviewSource.name}
-				countLabel={reviewCountLabel(reviewSource.count)}
-				href={reviewSource.url}
-			/>
-		</p>
+		{stats && (
+			<p data-reveal class="flex justify-center">
+				<RatingBadge stats={stats} />
+			</p>
+		)}
 
 		<h2
 			id="reviews-title"
 			data-reveal
-			class="mx-auto mt-6 max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+			class:list={[
+				'mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl',
+				stats && 'mt-6',
+			]}
 		>
 			Opiniones de clientes de Canoa Tours
 		</h2>
 
-		<ul class="mt-10 grid gap-4 max-sm:px-5 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
-			{reviews.map((review) => (
-				<li data-reveal>
-					<ReviewCard
-						author={review.author}
-						avatar={review.avatar}
-						rating={review.rating}
-						text={review.text}
-						tourTitle={review.tourTitle}
-						tourHref={reviewTourHref(review)}
-						source={reviewSource.name}
-						date={review.date}
-						url={review.url}
-					/>
-				</li>
-			))}
-		</ul>
+		{stats ? (
+			<>
+				<ul class="mt-10 grid gap-4 max-sm:px-5 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+					{latestReviews.map((review) => (
+						<li data-reveal>
+							<ReviewCard review={review} />
+						</li>
+					))}
+				</ul>
+				<p data-reveal class="mt-10 text-center">
+					<UnderlineLink href={routes.reviews} tone="accent">Ver todas las opiniones</UnderlineLink>
+				</p>
+			</>
+		) : (
+			<div data-reveal class="mx-auto mt-6 max-w-xl text-center">
+				<p class="text-[17px] leading-relaxed text-pretty text-secondary">
+					Somos una agencia nueva y estamos juntando nuestras primeras opiniones.
+				</p>
+				<p class="mt-5">
+					<UnderlineLink href={routes.reviews} tone="accent">Cómo funcionan las opiniones</UnderlineLink>
+				</p>
+			</div>
+		)}
 	</div>
 </section>
