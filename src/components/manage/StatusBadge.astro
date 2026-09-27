@@ -1,0 +1,24 @@
+---
+import { bookingStatusLabels } from '../../lib/account/bookings';
+import type { BookingStatus } from '../../lib/supabase/types';
+
+interface Props {
+	status: BookingStatus;
+	class?: string;
+}
+
+const { status, class: className } = Astro.props;
+
+const tones: Record<BookingStatus, string> = {
+	pending_payment: 'bg-ink-100 text-secondary',
+	expired: 'bg-ink-100 text-muted',
+	confirmed: 'bg-accent-soft text-accent-strong',
+	completed: 'bg-ink-200 text-primary',
+	no_show: 'bg-sun-soft text-sun-strong',
+	cancelled: 'bg-[#fbe9e7] text-error',
+};
+---
+
+<span class:list={['inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium whitespace-nowrap', tones[status], className]}>
+	{bookingStatusLabels[status]}
+</span>

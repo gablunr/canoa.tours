@@ -1,0 +1,21 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import ManageHeader from '../components/manage/ManageHeader.astro';
+import type { ManageSectionId } from '../data/manage/sections';
+
+interface Props {
+	title: string;
+	section: ManageSectionId;
+}
+
+const { title, section } = Astro.props;
+---
+
+<BaseLayout title={title} description="Panel del equipo de Canoa Tours." noindex>
+	<ManageHeader slot="header" current={section} />
+	<div class="px-4 pt-10 pb-24 sm:px-6 md:pt-14">
+		<div class="mx-auto max-w-6xl">
+			<slot />
+		</div>
+	</div>
+</BaseLayout>
