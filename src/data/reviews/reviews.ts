@@ -45,7 +45,10 @@ export const reviews: Review[] = publishedReviewRows.flatMap((row) => {
 	];
 });
 
-export const reviewsForTour = (details: TourDetails) => reviews.filter((review) => review.tour === details);
+export const reviewsForTour = (details: TourDetails) => {
+	const productKey = tourProductKey(details);
+	return reviews.filter((review) => tourProductKey(review.tour) === productKey);
+};
 
 export function reviewStats(list: Review[]): ReviewStats | null {
 	if (list.length === 0) return null;
