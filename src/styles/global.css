@@ -223,7 +223,7 @@
       inset 6px -6px 1px -6px var(--glass-soft-shine),
       inset -6px 6px 1px -6px var(--glass-soft-shine),
       inset 0 0 2px color-mix(in oklab, var(--color-black) 45%, transparent),
-      0 4px 12px color-mix(in oklab, var(--color-black) 18%, transparent);
+      var(--glass-drop-shadow, 0 4px 12px color-mix(in oklab, var(--color-black) 18%, transparent));
   }
 
   .liquid-glass::before {

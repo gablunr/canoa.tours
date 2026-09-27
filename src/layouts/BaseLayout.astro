@@ -1,0 +1,84 @@
+---
+import '../styles/global.css';
+import Seo, { type Props as SeoProps } from '../components/layout/Seo.astro';
+import { siteLanguage } from '../lib/seo/seo';
+
+type Props = SeoProps;
+
+const seo = Astro.props;
+
+const criticalFonts = [
+	'InterDisplay-Light',
+	'InterDisplay-Regular',
+	'InterDisplay-Medium',
+	'InterDisplay-SemiBold',
+	'Inter-Regular',
+	'Inter-Medium',
+];
+---
+
+<html lang={siteLanguage}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{criticalFonts.map((font) => (
+			<link rel="preload" href={`/fonts/inter/${font}.woff2`} as="font" type="font/woff2" crossorigin />
+		))}
+		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
+		<script is:inline>
+			(function () {
+				var navigation = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : undefined;
+				var type = navigation ? navigation.type : 'navigate';
+				var fromSite = false;
+				try {
+					fromSite = document.referrer !== '' && new URL(document.referrer).origin === location.origin;
+				} catch (error) {}
+				if (location.hash || type === 'back_forward' || (fromSite && type !== 'reload')) {
+					document.documentElement.classList.add('skip-entrance');
+				}
+			})();
+		</script>
+		<script is:inline>
+			window.addEventListener('pagereveal', (event) => {
+				if (event.viewTransition) document.documentElement.classList.add('page-transition');
+			});
+		</script>
+		<link rel="icon" href="/favicon.ico" sizes="48x48" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<meta name="theme-color" content="#ffffff" />
+		<meta name="generator" content={Astro.generator} />
+		<Seo {...seo} />
+	</head>
+	<body class="flex min-h-dvh flex-col">
+		<slot name="header" />
+		<main class="flex-1 pt-14">
+			<slot />
+		</main>
+		<slot name="footer" />
+		<script>
+			import { initReveal } from '../scripts/ui/reveal';
+
+			initReveal();
+		</script>
+		<script is:inline>
+			(function () {
+				var root = document.documentElement;
+				var reveal = function () {
+					root.classList.remove('fonts-loading');
+				};
+				if (!document.fonts || !document.fonts.load) return reveal();
+				Promise.all([
+					document.fonts.load('300 1em "Inter Display"'),
+					document.fonts.load('400 1em "Inter Display"'),
+					document.fonts.load('500 1em "Inter Display"'),
+					document.fonts.load('600 1em "Inter Display"'),
+					document.fonts.load('400 1em "Inter"'),
+					document.fonts.load('500 1em "Inter"'),
+				]).then(reveal, reveal);
+				setTimeout(reveal, 1500);
+			})();
+		</script>
+	</body>
+</html>
