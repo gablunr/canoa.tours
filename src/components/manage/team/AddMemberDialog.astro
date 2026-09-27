@@ -1,0 +1,41 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { staffRoleOptions } from './team-data';
+---
+
+<Dialog size="lg" aria-labelledby="nuevo-miembro-titulo" data-member-dialog>
+	<h2 id="nuevo-miembro-titulo" class="text-xl font-semibold tracking-[-0.03em]">Añadir miembro</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Entra con un enlace mágico que le llega a ese email, sin contraseña.</p>
+
+	<form class="mt-6 grid gap-5" data-member-form>
+		<TextField label="Email" name="email" type="email" required autocomplete="off" spellcheck="false" placeholder="nombre@canoa.tours" />
+
+		<fieldset>
+			<legend class="text-sm font-medium text-primary">Rol</legend>
+			<div class="mt-2 grid gap-2.5">
+				{staffRoleOptions.map((option) => (
+					<label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-background p-4 transition-colors duration-300 ease-smooth hover:border-muted has-checked:border-primary has-checked:bg-surface has-focus-visible:ring-2 has-focus-visible:ring-primary has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-background">
+						<input type="radio" name="role" value={option.value} required checked={option.value === 'operations'} class="peer sr-only" />
+						<span
+							class="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border-strong transition-colors duration-300 ease-smooth after:size-1.5 after:rounded-full peer-checked:border-primary peer-checked:after:bg-white peer-checked:bg-primary"
+							aria-hidden="true"
+						></span>
+						<span>
+							<span class="block text-sm font-medium text-primary">{option.label}</span>
+							<span class="mt-0.5 block text-xs text-secondary">{option.description}</span>
+						</span>
+					</label>
+				))}
+			</div>
+		</fieldset>
+
+		<p class="text-sm text-error" role="alert" data-member-form-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-member-dialog-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-member-submit>Añadir</DialogButton>
+		</div>
+	</form>
+</Dialog>

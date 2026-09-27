@@ -1,0 +1,65 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import ChoiceGroup from '../../ui/form/ChoiceGroup.astro';
+import SelectField from '../../ui/form/SelectField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import type { ProductOption } from './coupon-data';
+
+interface Props {
+	productOptions: ProductOption[];
+}
+
+const { productOptions } = Astro.props;
+---
+
+<Dialog size="lg" aria-labelledby="nuevo-cupon-titulo" data-coupon-dialog>
+	<h2 id="nuevo-cupon-titulo" class="text-xl font-semibold tracking-[-0.03em]">Nuevo cupón</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">El cliente lo escribe al reservar. Se aplica sobre el precio de la excursión.</p>
+
+	<form class="mt-6 grid gap-5" data-coupon-form>
+		<TextField
+			label="Código"
+			name="code"
+			required
+			maxlength={32}
+			autocomplete="off"
+			autocapitalize="characters"
+			spellcheck="false"
+			placeholder="VERANO10"
+			hint="Letras, números y guiones bajos."
+			style="text-transform: uppercase"
+		/>
+
+		<fieldset>
+			<legend class="text-sm font-medium text-primary">Tipo de descuento</legend>
+			<div class="mt-2">
+				<ChoiceGroup
+					name="discountType"
+					options={[
+						{ value: 'percent', label: 'Porcentaje' },
+						{ value: 'fixed', label: 'Importe en US$' },
+					]}
+				/>
+			</div>
+		</fieldset>
+
+		<TextField label="Valor" name="discountValue" type="number" required min="0.01" step="0.01" inputmode="decimal" placeholder="10" hint="En porcentaje, hasta 100." data-coupon-value />
+
+		<SelectField label="Excursión" name="productKey" options={productOptions} placeholder="Todas las excursiones" />
+
+		<div class="grid gap-5 sm:grid-cols-2">
+			<TextField label="Válido desde" name="validFrom" type="date" />
+			<TextField label="Válido hasta" name="validTo" type="date" />
+		</div>
+
+		<TextField label="Usos máximos" name="maxRedemptions" type="number" min="1" step="1" inputmode="numeric" hint="Vacío para usos ilimitados." />
+
+		<p class="text-sm text-error" role="alert" data-coupon-form-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-coupon-dialog-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-coupon-submit>Crear cupón</DialogButton>
+		</div>
+	</form>
+</Dialog>

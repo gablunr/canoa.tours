@@ -1,0 +1,162 @@
+---
+import { CalendarRange, Copy, Ticket } from '@lucide/astro';
+import CouponToggle from './CouponToggle.astro';
+import type { CouponNotice, CouponState, CouponSummary } from './coupon-data';
+import { glassGroup, glassOption, glassPanel, glassTile } from '../glass-classes';
+
+interface Props {
+	coupons: CouponSummary[];
+}
+
+const { coupons } = Astro.props;
+
+type CouponFilter = CouponState | 'all';
+
+const activeCount = coupons.filter((coupon) => coupon.state === 'active').length;
+const filters: { id: CouponFilter; label: string; count: number }[] = [
+	{ id: 'active', label: 'Activos', count: activeCount },
+	{ id: 'inactive', label: 'Inactivos', count: coupons.length - activeCount },
+	{ id: 'all', label: 'Todos', count: coupons.length },
+];
+const initialFilter: CouponFilter = activeCount > 0 ? 'active' : 'all';
+const isVisible = (coupon: CouponSummary) => initialFilter === 'all' || coupon.state === initialFilter;
+
+const noticeLabels: Record<Exclude<CouponNotice, null>, string> = {
+	expired: 'Caducado',
+	exhausted: 'Agotado',
+	scheduled: 'Programado',
+};
+const noticeTones: Record<Exclude<CouponNotice, null>, string> = {
+	expired: 'bg-ink-100 text-muted',
+	exhausted: 'bg-sun-soft text-sun-strong',
+	scheduled: 'bg-accent-soft text-accent-strong',
+};
+const noticeClass = 'inline-flex shrink-0 items-center rounded-full px-2.5 text-xs font-medium whitespace-nowrap';
+const codeButton =
+	'inline-flex h-7 max-w-full cursor-pointer items-center gap-1.5 rounded-full bg-white/70 px-2.5 font-mono text-[13px] font-semibold tracking-[0.08em] text-primary outline-none transition-colors duration-300 ease-smooth hover:bg-white focus-visible:ring-2 focus-visible:ring-accent';
+const usageRatio = (coupon: CouponSummary) => (coupon.maxRedemptions ? Math.min(1, coupon.used / coupon.maxRedemptions) : 0);
+const scopeLabel = (coupon: CouponSummary) => coupon.productName ?? 'todas las excursiones';
+const headerCell = 'px-3 py-2.5 text-left text-xs font-medium text-muted first:pl-5 last:pr-5';
+const bodyCell = 'px-3 py-2.5 align-middle first:pl-5 last:pr-5';
+---
+
+<div class="mt-6 grid gap-4" data-coupon-list>
+	<div class="animate-fade-up" style="animation-delay: 120ms">
+		<div class:list={[glassGroup, 'flex w-full overflow-x-auto p-1.5 [scrollbar-width:none] sm:inline-flex sm:w-auto sm:max-w-full']}>
+			<div role="group" aria-label="Filtrar cupones" class="flex w-full gap-1 sm:w-auto">
+				{filters.map((filter) => (
+					<button type="button" data-coupon-filter={filter.id} aria-pressed={filter.id === initialFilter ? 'true' : 'false'} class:list={[glassOption, 'group/filter flex-1 sm:flex-none']}>
+						{filter.label}
+						<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{filter.count}</span>
+					</button>
+				))}
+			</div>
+		</div>
+	</div>
+
+	<p class="text-sm text-error" role="alert" data-coupons-error hidden></p>
+
+	<section aria-label="Cupones" class:list={[glassPanel, 'animate-fade-up overflow-hidden']} style="animation-delay: 180ms">
+		<ul class="grid gap-2 p-3 md:hidden">
+			{coupons.map((coupon) => (
+				<li data-coupon-state={coupon.state} hidden={!isVisible(coupon)}>
+					<div class:list={[glassTile, 'p-4']}>
+						<div class="flex items-center justify-between gap-3">
+							<button
+								type="button"
+								class="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg font-mono text-lg font-semibold tracking-[0.06em] text-primary outline-none transition-colors duration-300 ease-smooth hover:text-accent-strong focus-visible:ring-2 focus-visible:ring-accent"
+								title="Copiar código"
+								data-copy-code={coupon.code}
+							>
+								<span class="truncate" data-copy-label>{coupon.code}</span>
+								<Copy size={14} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+							</button>
+							<CouponToggle code={coupon.code} active={coupon.state === 'active'} hideLabel />
+						</div>
+						<div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+							<p class="min-w-0 text-sm text-secondary">
+								<span class="font-semibold text-primary tabular-nums">{coupon.discountLabel}</span> en {scopeLabel(coupon)}
+							</p>
+							{coupon.notice && <span class:list={[noticeClass, 'h-6', noticeTones[coupon.notice]]}>{noticeLabels[coupon.notice]}</span>}
+						</div>
+						<dl class="mt-3 grid grid-cols-2 gap-3 border-t border-white/60 pt-3">
+							<div class="min-w-0">
+								<dt class="flex items-center gap-1 text-[11px] text-muted">
+									<CalendarRange size={12} stroke-width={1.75} aria-hidden="true" />
+									Vigencia
+								</dt>
+								<dd class="mt-0.5 truncate text-sm text-primary">{coupon.validityLabel}</dd>
+							</div>
+							<div class="min-w-0">
+								<dt class="flex items-center gap-1 text-[11px] text-muted">
+									<Ticket size={12} stroke-width={1.75} aria-hidden="true" />
+									Usos
+								</dt>
+								<dd class="mt-0.5 text-sm text-primary tabular-nums">
+									{coupon.used}
+									<span class="text-muted">{coupon.maxRedemptions === null ? ' / sin límite' : ` / ${coupon.maxRedemptions}`}</span>
+									{coupon.maxRedemptions !== null && (
+										<span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-white/70" aria-hidden="true">
+											<span class:list={['block h-full rounded-full', usageRatio(coupon) >= 1 ? 'bg-sun' : 'bg-accent']} style={`width: ${Math.round(usageRatio(coupon) * 100)}%`}></span>
+										</span>
+									)}
+								</dd>
+							</div>
+						</dl>
+					</div>
+				</li>
+			))}
+		</ul>
+
+		<table class="hidden w-full text-sm md:table">
+			<thead>
+				<tr class="border-b border-white/70">
+					<th scope="col" class={headerCell}>Código</th>
+					<th scope="col" class={headerCell}>Descuento</th>
+					<th scope="col" class={headerCell}>Excursión</th>
+					<th scope="col" class={headerCell}>Vigencia</th>
+					<th scope="col" class={headerCell}>Usos</th>
+					<th scope="col" class={headerCell}>Estado</th>
+				</tr>
+			</thead>
+			<tbody class="divide-y divide-white/70">
+				{coupons.map((coupon) => (
+					<tr class="transition-colors duration-300 ease-smooth hover:bg-white/40" data-coupon-state={coupon.state} hidden={!isVisible(coupon)}>
+						<td class={bodyCell}>
+							<button type="button" class={codeButton} title="Copiar código" data-copy-code={coupon.code}>
+								<span data-copy-label>{coupon.code}</span>
+								<Copy size={12} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+							</button>
+						</td>
+						<td class:list={[bodyCell, 'font-semibold whitespace-nowrap text-primary tabular-nums']}>{coupon.discountLabel}</td>
+						<td class:list={[bodyCell, 'max-w-56']}>
+							<p class:list={['truncate', coupon.productName ? 'text-primary' : 'text-muted']}>{coupon.productName ?? 'Todas'}</p>
+						</td>
+						<td class={bodyCell}>
+							<div class="flex items-center gap-2 whitespace-nowrap">
+								<span class="text-secondary">{coupon.validityLabel}</span>
+								{coupon.notice && <span class:list={[noticeClass, 'h-6', noticeTones[coupon.notice]]}>{noticeLabels[coupon.notice]}</span>}
+							</div>
+						</td>
+						<td class={bodyCell}>
+							<p class="whitespace-nowrap text-primary tabular-nums">
+								{coupon.used}
+								<span class="text-muted">{coupon.maxRedemptions === null ? ' / sin límite' : ` / ${coupon.maxRedemptions}`}</span>
+							</p>
+							{coupon.maxRedemptions !== null && (
+								<span class="mt-1.5 block h-1 w-20 overflow-hidden rounded-full bg-white/70" aria-hidden="true">
+									<span class:list={['block h-full rounded-full', usageRatio(coupon) >= 1 ? 'bg-sun' : 'bg-accent']} style={`width: ${Math.round(usageRatio(coupon) * 100)}%`}></span>
+								</span>
+							)}
+						</td>
+						<td class={bodyCell}>
+							<CouponToggle code={coupon.code} active={coupon.state === 'active'} />
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+
+		<p class="px-5 py-6 text-center text-sm text-muted" data-coupon-filter-empty hidden={coupons.some(isVisible)}>No hay cupones en esta vista.</p>
+	</section>
+</div>

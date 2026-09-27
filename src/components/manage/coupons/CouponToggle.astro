@@ -1,0 +1,24 @@
+---
+interface Props {
+	code: string;
+	active: boolean;
+	hideLabel?: boolean;
+}
+
+const { code, active, hideLabel = false } = Astro.props;
+---
+
+<div class="inline-flex items-center gap-2.5">
+	<button
+		type="button"
+		role="switch"
+		aria-checked={active ? 'true' : 'false'}
+		aria-label={`Cupón ${code} activo`}
+		data-coupon-toggle
+		data-code={code}
+		class="group/toggle relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-ink-200 transition-colors duration-300 ease-smooth outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:pointer-events-none disabled:opacity-60 aria-checked:bg-accent"
+	>
+		<span class="size-5 translate-x-0.5 rounded-full bg-white shadow-sm transition-transform duration-300 ease-smooth group-aria-checked/toggle:translate-x-5.5"></span>
+	</button>
+	{!hideLabel && <span class:list={['text-sm', active ? 'text-primary' : 'text-muted']}>{active ? 'Activo' : 'Inactivo'}</span>}
+</div>

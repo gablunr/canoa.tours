@@ -1,0 +1,55 @@
+---
+import { UserPlus } from '@lucide/astro';
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import AddMemberDialog from '../../components/manage/team/AddMemberDialog.astro';
+import RemoveMemberDialog from '../../components/manage/team/RemoveMemberDialog.astro';
+import TeamMembers from '../../components/manage/team/TeamMembers.astro';
+import { loadTeamMembers, staffRoleOptions } from '../../components/manage/team/team-data';
+import { canOpenSection } from '../../data/manage/sections';
+import { glassPrimaryButton } from '../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'team')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const members = await loadTeamMembers(Astro.locals.supabase, Astro.locals.user?.id ?? null);
+---
+
+<ManageLayout title="Equipo" section="team">
+	<div data-team-page>
+		<ManagePageHeader title="Equipo" description="Quién entra al panel y qué puede hacer.">
+			<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-member-new>
+				<UserPlus size={15} stroke-width={2} aria-hidden="true" />
+				Añadir miembro
+			</button>
+		</ManagePageHeader>
+
+		<div class="mt-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+			<TeamMembers members={members} />
+
+			<aside class="relative isolate animate-fade-up overflow-hidden rounded-[2rem] bg-primary p-6 text-white" style="animation-delay: 180ms">
+				<h2 class="text-lg font-semibold tracking-[-0.02em]">Roles</h2>
+				<dl class="mt-4 grid gap-4">
+					{staffRoleOptions.map((option) => (
+						<div>
+							<dt class="text-sm font-medium">{option.label}</dt>
+							<dd class="mt-0.5 text-sm text-muted-on-dark">{option.description}</dd>
+						</div>
+					))}
+				</dl>
+				<p class="mt-5 border-t border-white/15 pt-4 text-xs leading-relaxed text-muted-on-dark">Cada persona entra con un enlace mágico que le llega a su email.</p>
+				<span class="glass-rim opacity-60 [--rim-width:2px]" aria-hidden="true"></span>
+			</aside>
+		</div>
+
+		<AddMemberDialog />
+		<RemoveMemberDialog />
+	</div>
+</ManageLayout>
+
+<script>
+	import { initTeamPage } from '../../scripts/manage/team';
+
+	document.querySelectorAll<HTMLElement>('[data-team-page]').forEach(initTeamPage);
+</script>

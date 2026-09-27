@@ -1,0 +1,14 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+---
+
+<Dialog aria-labelledby="quitar-miembro-titulo" data-remove-dialog>
+	<h2 id="quitar-miembro-titulo" class="text-xl font-semibold tracking-[-0.03em]">¿Quitar a <span class="break-all" data-remove-email></span>?</h2>
+	<p class="mt-3 text-sm leading-relaxed text-secondary">Pierde el acceso al panel. Sus reservas como cliente no cambian.</p>
+	<p class="mt-3 text-sm text-error" role="alert" data-remove-error hidden></p>
+	<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+		<DialogButton data-remove-close>Volver</DialogButton>
+		<DialogButton variant="danger" data-remove-confirm>Sí, quitar</DialogButton>
+	</div>
+</Dialog>

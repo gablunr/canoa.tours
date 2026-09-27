@@ -1,0 +1,30 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import { staffRoleOptions, type TeamMember } from './team-data';
+
+interface Props {
+	member: TeamMember;
+}
+
+const { member } = Astro.props;
+---
+
+<div class="flex items-center gap-3">
+	<div class="relative">
+		<select
+			aria-label={`Rol de ${member.email}`}
+			data-member-role
+			data-user-id={member.userId}
+			data-saved-role={member.role}
+			disabled={member.isCurrentUser}
+			title={member.isCurrentUser ? 'No puedes cambiar tu propio rol.' : undefined}
+			class="block h-10 w-44 cursor-pointer appearance-none rounded-full border border-border-strong bg-background pr-10 pl-4 text-sm text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:cursor-default disabled:opacity-60"
+		>
+			{staffRoleOptions.map((option) => (
+				<option value={option.value} selected={option.value === member.role}>{option.label}</option>
+			))}
+		</select>
+		<ChevronDown size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+	</div>
+	<span class="text-xs text-success" role="status" data-member-role-status data-user-id={member.userId}></span>
+</div>

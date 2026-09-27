@@ -1,0 +1,48 @@
+---
+import { Plus, TicketPercent } from '@lucide/astro';
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import CouponFormDialog from '../../components/manage/coupons/CouponFormDialog.astro';
+import CouponList from '../../components/manage/coupons/CouponList.astro';
+import { loadCoupons, loadProductOptions } from '../../components/manage/coupons/coupon-data';
+import { canOpenSection } from '../../data/manage/sections';
+import { glassButton, glassPanel, glassPrimaryButton } from '../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'coupons')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const [coupons, productOptions] = await Promise.all([loadCoupons(), loadProductOptions()]);
+---
+
+<ManageLayout title="Cupones" section="coupons">
+	<div data-coupons-page>
+		<ManagePageHeader title="Cupones" description="Descuentos que el cliente aplica al reservar.">
+			<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-coupon-new>
+				<Plus size={15} stroke-width={2} aria-hidden="true" />
+				Nuevo cupón
+			</button>
+		</ManagePageHeader>
+
+		{coupons.length > 0 ? (
+			<CouponList coupons={coupons} />
+		) : (
+			<section class:list={[glassPanel, 'mt-6 flex animate-fade-up flex-col items-center p-8 text-center sm:p-10']} style="animation-delay: 120ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-primary [--glass-drop-shadow:0_0_#0000]">
+					<TicketPercent size={20} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<h2 class="mt-5 text-lg font-semibold tracking-[-0.02em] text-primary">Todavía no hay cupones</h2>
+				<p class="mt-2 max-w-sm text-sm leading-relaxed text-secondary">Crea uno para una campaña, un socio o un cliente que repite.</p>
+				<button type="button" class:list={[glassButton, 'mt-6']} data-coupon-new>Crear el primero</button>
+			</section>
+		)}
+
+		<CouponFormDialog productOptions={productOptions} />
+	</div>
+</ManageLayout>
+
+<script>
+	import { initCouponsPage } from '../../scripts/manage/coupons';
+
+	document.querySelectorAll<HTMLElement>('[data-coupons-page]').forEach(initCouponsPage);
+</script>
