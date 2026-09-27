@@ -98,11 +98,19 @@ export function spanishTranslation(translations: ProductTranslationRow[] | null 
 
 export const tourPathFor = (destinationSlug: string, tourSlug: string) => `/${destinationSlug}/${tourSlug}`;
 
-export async function loadBookingDetails(ref: { id?: string; code?: string }): Promise<BookingDetails | null> {
-	if (!ref.id && !ref.code) return null;
+type BookingDetailsRef = { id: string } | { code: string } | { checkoutSessionId: string };
 
-	const query = supabaseAdmin.from('bookings').select(bookingDetailsSelect);
-	const { data, error } = await (ref.id ? query.eq('id', ref.id) : query.eq('code', ref.code ?? '')).maybeSingle();
+function bookingDetailsFilter(ref: BookingDetailsRef): { column: string; value: string } {
+	if ('id' in ref) return { column: 'id', value: ref.id };
+	if ('code' in ref) return { column: 'code', value: ref.code };
+	return { column: 'stripe_checkout_session_id', value: ref.checkoutSessionId };
+}
+
+export async function loadBookingDetails(ref: BookingDetailsRef): Promise<BookingDetails | null> {
+	const filter = bookingDetailsFilter(ref);
+	if (!filter.value) return null;
+
+	const { data, error } = await supabaseAdmin.from('bookings').select(bookingDetailsSelect).eq(filter.column, filter.value).maybeSingle();
 
 	if (error) throw error;
 	if (!data) return null;
