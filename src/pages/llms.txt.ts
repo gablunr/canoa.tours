@@ -11,7 +11,7 @@ import { bookingBenefitSummary, bookingBenefits } from '../data/booking/booking-
 import { bookingStepSummary, bookingSteps } from '../data/booking/booking-steps';
 import { faqSummary, faqs } from '../data/booking/faq';
 import { mostBookedHref, mostBookedSummary, mostBookedTours } from '../data/tours/most-booked';
-import { reviewSource, reviewSourceSummary, reviewSummary, reviews } from '../data/reviews/reviews';
+import { reviewStats, reviewStatsSummary, reviewSummary, reviews } from '../data/reviews/reviews';
 import { getLegalDocuments, legalHref } from '../data/pages/legal';
 import { documentHref } from '../data/pages/documents';
 import { getHelpDocument } from '../data/pages/help';
@@ -27,6 +27,13 @@ const publishedGuides = (silo: Parameters<typeof siloGuides>[0]) => siloGuides(s
 const guideLink = (guide: Guide) => link(guide.title, guideHref(guide), guide.description);
 
 const section = (title: string, lines: string[]) => (lines.length > 0 ? [`## ${title}`, '', ...lines, ''] : []);
+
+const reviewLimit = 20;
+
+const reviewLines = () => {
+	const stats = reviewStats(reviews);
+	return stats ? [`- Nota media: ${reviewStatsSummary(stats)}`, ...reviews.slice(0, reviewLimit).map((review) => `- ${reviewSummary(review)}`)] : [];
+};
 
 export const GET: APIRoute = async () => {
 	const legalDocuments = await getLegalDocuments();
@@ -72,10 +79,7 @@ export const GET: APIRoute = async () => {
 			'Por qué reservar con Canoa Tours',
 			bookingBenefits.map((benefit) => `- ${bookingBenefitSummary(benefit)}`),
 		),
-		...section('Opiniones de clientes', [
-			`- Nota media: ${reviewSourceSummary(reviewSource)}`,
-			...reviews.map((review) => `- ${reviewSummary(review)}`),
-		]),
+		...section('Opiniones de clientes', reviewLines()),
 		...section('Cómo reservar', [
 			...bookingSteps.map(bookingStepSummary),
 			link(howToBookDocument.data.title, documentHref(howToBookDocument), howToBookDocument.data.description),
