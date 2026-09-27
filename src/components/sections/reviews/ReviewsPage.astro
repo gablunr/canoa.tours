@@ -1,8 +1,10 @@
 ---
 import { getImage } from 'astro:assets';
-import { ChevronLeft, ChevronRight, MessageSquareText } from '@lucide/astro';
+import { MessageSquareText } from '@lucide/astro';
 import PageSection from '../page/PageSection.astro';
 import Button from '../../ui/Button.astro';
+import ClientPagination from '../../ui/ClientPagination.astro';
+import FilterPills from '../../ui/FilterPills.astro';
 import RatingBadge from '../../ui/RatingBadge.astro';
 import ReviewCard from '../../ui/cards/ReviewCard.astro';
 import ReviewFormFields from '../account/ReviewFormFields.astro';
@@ -37,8 +39,6 @@ const pickerFilters = [
 	{ value: 'reviewed', label: 'Ya opinadas' },
 	{ value: 'all', label: 'Todas' },
 ];
-const pageButton =
-	'liquid-glass flex size-9 cursor-pointer items-center justify-center bg-white/60 text-[13px] font-medium text-secondary tabular-nums transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 aria-[current=page]:bg-primary aria-[current=page]:text-white';
 ---
 
 {stats && (
@@ -73,27 +73,8 @@ const pageButton =
 
 			<div class="grid gap-5" data-picker-state="list" hidden>
 				<div class="flex flex-wrap items-center gap-3 max-lg:justify-center">
-					<fieldset class="flex flex-wrap gap-2 max-lg:justify-center" data-picker-filter>
-						<legend class="sr-only">Filtrar tus reservas</legend>
-						{pickerFilters.map((filter) => (
-							<label class="liquid-glass inline-flex h-9 cursor-pointer items-center gap-1.5 bg-white/60 px-4 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent">
-								<input type="radio" name="review-picker-filter" value={filter.value} checked={filter.value === 'pending'} class="sr-only" />
-								{filter.label}
-								<span class="tabular-nums opacity-60" data-picker-filter-count={filter.value}></span>
-							</label>
-						))}
-					</fieldset>
-					<nav aria-label="Páginas de tus reservas" class="lg:ml-auto" data-picker-pagination hidden>
-						<div class="flex items-center gap-1">
-							<button type="button" class={pageButton} aria-label="Página anterior" data-picker-page-previous>
-								<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
-							</button>
-							<div class="flex items-center gap-1" data-picker-pages></div>
-							<button type="button" class={pageButton} aria-label="Página siguiente" data-picker-page-next>
-								<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
-							</button>
-						</div>
-					</nav>
+					<FilterPills legend="Filtrar tus reservas" name="review-picker-filter" options={pickerFilters} checked="pending" />
+					<ClientPagination label="Páginas de tus reservas" class="lg:ml-auto" />
 				</div>
 
 				<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tus excursiones realizadas" aria-live="polite" data-picker-options></ul>
@@ -133,9 +114,6 @@ const pageButton =
 			</p>
 
 			<script type="application/json" data-tour-thumbnails set:html={JSON.stringify(tourThumbnails)} />
-			<template data-picker-page-template>
-				<button type="button" class={pageButton}></button>
-			</template>
 		</div>
 	</PageSection>
 </div>

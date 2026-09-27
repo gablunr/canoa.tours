@@ -1,0 +1,28 @@
+---
+interface FilterOption {
+	value: string;
+	label: string;
+	count?: number;
+}
+
+interface Props {
+	legend: string;
+	name: string;
+	options: FilterOption[];
+	checked: string;
+	class?: string;
+}
+
+const { legend, name, options, checked, class: className } = Astro.props;
+---
+
+<fieldset class:list={['flex flex-wrap gap-2 max-lg:justify-center', className]} data-filter-pills>
+	<legend class="sr-only">{legend}</legend>
+	{options.map((option) => (
+		<label class="liquid-glass inline-flex h-9 cursor-pointer items-center gap-1.5 bg-white/60 px-4 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent">
+			<input type="radio" name={name} value={option.value} checked={option.value === checked} class="sr-only" />
+			{option.label}
+			<span class="tabular-nums opacity-60" data-filter-count={option.value}>{option.count}</span>
+		</label>
+	))}
+</fieldset>

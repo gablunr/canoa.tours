@@ -1,4 +1,4 @@
-import { paginationItems } from '../../lib/account/pagination';
+import { createClientPagination } from '../ui/client-pagination';
 
 interface ReviewableBooking {
 	code: string;
@@ -43,13 +43,9 @@ export async function initReviewPicker(root: HTMLElement) {
 	const states = Array.from(root.querySelectorAll<HTMLElement>('[data-picker-state]'));
 	const options = root.querySelector<HTMLElement>('[data-picker-options]');
 	const template = root.querySelector<HTMLTemplateElement>('[data-picker-option-template]');
-	const filterGroup = root.querySelector<HTMLElement>('[data-picker-filter]');
+	const filterGroup = root.querySelector<HTMLElement>('[data-filter-pills]');
 	const filterEmpty = root.querySelector<HTMLElement>('[data-picker-filter-empty]');
-	const pagination = root.querySelector<HTMLElement>('[data-picker-pagination]');
-	const pageList = root.querySelector<HTMLElement>('[data-picker-pages]');
-	const pageTemplate = root.querySelector<HTMLTemplateElement>('[data-picker-page-template]');
-	const previousButton = root.querySelector<HTMLButtonElement>('[data-picker-page-previous]');
-	const nextButton = root.querySelector<HTMLButtonElement>('[data-picker-page-next]');
+	const paginationNav = root.querySelector<HTMLElement>('[data-client-pagination]');
 	const formPanel = root.querySelector<HTMLElement>('[data-picker-form]');
 	const formTitle = root.querySelector<HTMLElement>('[data-picker-form-title]');
 	const codeInput = root.querySelector<HTMLInputElement>('[data-review-code]');
@@ -127,8 +123,8 @@ export async function initReviewPicker(root: HTMLElement) {
 		options.append(item);
 	}
 
-	for (const counter of root.querySelectorAll<HTMLElement>('[data-picker-filter-count]')) {
-		const filter = counter.dataset.pickerFilterCount ?? '';
+	for (const counter of root.querySelectorAll<HTMLElement>('[data-filter-count]')) {
+		const filter = counter.dataset.filterCount ?? '';
 		if (isPickerFilter(filter)) counter.textContent = String(bookings.filter(filterMatches[filter]).length);
 	}
 
@@ -140,30 +136,13 @@ export async function initReviewPicker(root: HTMLElement) {
 	const selectedFilterInput = filterInput(activeFilter);
 	if (selectedFilterInput) selectedFilterInput.checked = true;
 
-	const renderPages = (totalPages: number) => {
-		if (!pagination || !pageList || !pageTemplate) return;
-		pagination.hidden = totalPages <= 1;
-		if (previousButton) previousButton.disabled = currentPage <= 1;
-		if (nextButton) nextButton.disabled = currentPage >= totalPages;
-
-		pageList.replaceChildren(
-			...paginationItems(currentPage, totalPages, 5).map((entry) => {
-				if (entry.kind === 'gap') {
-					const gap = document.createElement('span');
-					gap.className = 'flex size-9 items-center justify-center text-[13px] text-muted';
-					gap.setAttribute('aria-hidden', 'true');
-					gap.textContent = '…';
-					return gap;
-				}
-				const pageButton = pageTemplate.content.firstElementChild?.cloneNode(true) as HTMLButtonElement;
-				pageButton.textContent = String(entry.page);
-				pageButton.setAttribute('aria-label', `Página ${entry.page}`);
-				if (entry.page === currentPage) pageButton.setAttribute('aria-current', 'page');
-				pageButton.addEventListener('click', () => goToPage(entry.page));
-				return pageButton;
-			}),
-		);
-	};
+	const pagination = paginationNav
+		? createClientPagination(paginationNav, (page) => {
+				currentPage = page;
+				render();
+				pagination?.focusCurrent();
+			})
+		: undefined;
 
 	const render = () => {
 		const visible = bookings.filter(filterMatches[activeFilter]);
@@ -177,13 +156,7 @@ export async function initReviewPicker(root: HTMLElement) {
 			filterEmpty.textContent = filterEmptyMessages[activeFilter];
 			filterEmpty.hidden = visible.length > 0;
 		}
-		renderPages(totalPages);
-	};
-
-	const goToPage = (page: number) => {
-		currentPage = page;
-		render();
-		pageList?.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+		pagination?.render(currentPage, totalPages);
 	};
 
 	filterGroup?.addEventListener('change', (event) => {
@@ -193,8 +166,6 @@ export async function initReviewPicker(root: HTMLElement) {
 		currentPage = 1;
 		render();
 	});
-	previousButton?.addEventListener('click', () => goToPage(currentPage - 1));
-	nextButton?.addEventListener('click', () => goToPage(currentPage + 1));
 
 	render();
 	show('list');

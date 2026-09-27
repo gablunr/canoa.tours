@@ -1,0 +1,28 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+
+interface Props {
+	label: string;
+	class?: string;
+}
+
+const { label, class: className } = Astro.props;
+
+const pageButton =
+	'liquid-glass flex size-9 cursor-pointer items-center justify-center bg-white/60 text-[13px] font-medium text-secondary tabular-nums transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 aria-[current=page]:bg-primary aria-[current=page]:text-white';
+---
+
+<nav aria-label={label} class={className} data-client-pagination hidden>
+	<div class="flex items-center gap-1">
+		<button type="button" class={pageButton} aria-label="Página anterior" data-pagination-previous>
+			<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+		<div class="flex items-center gap-1" data-pagination-pages></div>
+		<button type="button" class={pageButton} aria-label="Página siguiente" data-pagination-next>
+			<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+	</div>
+	<template data-pagination-page-template>
+		<button type="button" class={pageButton}></button>
+	</template>
+</nav>
