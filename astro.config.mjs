@@ -20,7 +20,11 @@ const watchContentTokenSources = {
   },
 };
 
-const builtPage = builtPageReader(new URL('./dist/', import.meta.url));
+const builtPage = builtPageReader(
+  new URL('./dist/client/', import.meta.url),
+  new URL('./.vercel/output/static/', import.meta.url),
+  new URL('./dist/', import.meta.url),
+);
 
 export default defineConfig({
   site: 'https://canoa.tours',

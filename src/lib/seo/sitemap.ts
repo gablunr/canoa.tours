@@ -9,24 +9,24 @@ const noindexMeta = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/;
 
 const dateModifiedField = /"dateModified":"([^"]+)"/;
 
-function htmlFileFor(outDir: URL, pageUrl: string) {
+function htmlFileFor(outDirs: URL[], pageUrl: string) {
 	const pathname = decodeURIComponent(new URL(pageUrl).pathname).replace(/\/+$/, '');
-	return new URL(`.${pathname}/index.html`, outDir);
+	return outDirs.map((outDir) => new URL(`.${pathname}/index.html`, outDir)).find((htmlFile) => existsSync(htmlFile));
 }
 
-function readBuiltPage(outDir: URL, pageUrl: string): BuiltPage {
-	const htmlFile = htmlFileFor(outDir, pageUrl);
-	if (!existsSync(htmlFile)) return { isIndexable: false };
+function readBuiltPage(outDirs: URL[], pageUrl: string): BuiltPage {
+	const htmlFile = htmlFileFor(outDirs, pageUrl);
+	if (!htmlFile) return { isIndexable: false };
 
 	const html = readFileSync(htmlFile, 'utf8');
 	return { isIndexable: !noindexMeta.test(html), lastModified: html.match(dateModifiedField)?.[1] };
 }
 
-export function builtPageReader(outDir: URL) {
+export function builtPageReader(...outDirs: URL[]) {
 	const pages = new Map<string, BuiltPage>();
 
 	return (pageUrl: string) => {
-		const page = pages.get(pageUrl) ?? readBuiltPage(outDir, pageUrl);
+		const page = pages.get(pageUrl) ?? readBuiltPage(outDirs, pageUrl);
 		pages.set(pageUrl, page);
 		return page;
 	};
