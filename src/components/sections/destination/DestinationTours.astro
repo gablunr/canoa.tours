@@ -1,0 +1,51 @@
+---
+import PageSection from '../page/PageSection.astro';
+import TourCard from '../../ui/cards/TourCard.astro';
+import type { PillarPage } from '../../../data/pillars/pillar-page';
+import { durationLabel, scheduleLabel, tourDeparture, tourDetailsHref, tourPhoto } from '../../../data/tours/tours';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	page: PillarPage;
+}
+
+const { tours, toursTitle } = Astro.props.page;
+const count = tours.length;
+const pair = count <= 2;
+const listClass = [
+	'-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 md:-mx-12 md:scroll-px-12 md:px-12 lg:mx-0 lg:grid lg:snap-none lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden',
+	pair ? 'sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0' : count === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4',
+];
+const itemClass = [
+	'w-[78%] max-w-xs shrink-0 snap-start lg:w-auto lg:max-w-none',
+	pair ? 'sm:w-auto sm:max-w-none' : 'sm:w-[42%] md:w-[38%]',
+];
+const frameClass = count <= 3 ? 'aspect-[4/5] lg:aspect-auto lg:h-[26rem]' : undefined;
+const sizes = pair
+	? '(min-width: 1024px) 39rem, (min-width: 640px) 84vw, 146vw'
+	: count === 3
+		? '(min-width: 1024px) 39rem, (min-width: 768px) 71vw, (min-width: 640px) 79vw, 146vw'
+		: '(min-width: 1152px) 43rem, (min-width: 1024px) 62vw, (min-width: 768px) 71vw, (min-width: 640px) 79vw, 146vw';
+---
+
+<PageSection id="excursiones" title={toursTitle}>
+	<ul class:list={listClass}>
+		{tours.map((details) => (
+			<li data-reveal class:list={itemClass}>
+				<TourCard
+					href={tourDetailsHref(details)}
+					title={details.title}
+					badge={durationLabel(details)}
+					price={formatPrice(details.price)}
+					priceUnit={details.priceUnit}
+					schedule={scheduleLabel(details.days)}
+					departure={tourDeparture(details)}
+					image={tourPhoto(details)}
+					sizes={sizes}
+					frameClass={frameClass}
+					glowClass="max-lg:hidden"
+				/>
+			</li>
+		))}
+	</ul>
+</PageSection>

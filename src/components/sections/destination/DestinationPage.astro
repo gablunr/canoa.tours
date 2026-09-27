@@ -1,0 +1,69 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import CatalogCta from '../catalog/CatalogCta.astro';
+import Faq from '../home/Faq.astro';
+import SiloGuides from '../guides/SiloGuides.astro';
+import DestinationHeader from './DestinationHeader.astro';
+import DestinationComparison from './DestinationComparison.astro';
+import DestinationTours from './DestinationTours.astro';
+import DestinationOverview from './DestinationOverview.astro';
+import EdgeWaves from '../../ui/EdgeWaves.astro';
+import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
+import { pillarPage } from '../../../data/pillars/pillar-page';
+import { routes } from '../../../data/site/routes';
+import { destinationImage, type Destination } from '../../../data/tours/destinations';
+import { pillarGraph } from '../../../lib/seo/pillar-schema';
+import { canonicalUrl } from '../../../lib/seo/seo';
+
+interface Props {
+	destination: Destination;
+}
+
+const { destination } = Astro.props;
+const page = pillarPage(destination);
+const { content } = page;
+const url = canonicalUrl(page.href);
+const schema = await pillarGraph(page, url);
+const image = destinationImage(destination);
+const doubtSubject = destination.kind === 'place' ? `las excursiones a ${destination.name}` : `las excursiones de ${destination.name.toLowerCase()}`;
+---
+
+<Layout
+	title={content.seoTitle}
+	description={content.description}
+	image={image && { src: image, alt: content.imageAlt }}
+	pageType={['CollectionPage', 'FAQPage']}
+	about={schema.about}
+	mainEntity={schema.mainEntity}
+	graph={schema.graph}
+	modifiedAt={page.updatedAt}
+	breadcrumbs={[
+		{ name: 'Excursiones', path: routes.catalog },
+		{ name: destination.name, path: page.href },
+	]}
+	footerOverlapsPhoto
+>
+	<EdgeWaves />
+	<LiquidWarpFilter />
+	<article data-destination>
+		<DestinationHeader page={page} />
+		<DestinationComparison page={page} />
+		<DestinationTours page={page} />
+		<DestinationOverview page={page} />
+		<SiloGuides destination={destination} id="guias" title={page.guidesTitle} rail />
+	</article>
+	<Faq
+		id="preguntas"
+		title={page.faqTitle}
+		intro={content.faqIntro}
+		items={page.faqs}
+		split
+		whatsappMessage={`Hola, tengo una duda sobre ${doubtSubject}.`}
+	/>
+	<CatalogCta
+		titleId="destination-cta-title"
+		title={content.cta.title}
+		text={content.cta.text}
+		whatsappMessage={content.cta.whatsappMessage}
+	/>
+</Layout>

@@ -1,0 +1,68 @@
+---
+import PageSection from '../page/PageSection.astro';
+import type { PillarPage } from '../../../data/pillars/pillar-page';
+import { destinationToursTitle } from '../../../data/tours/tours';
+
+interface Props {
+	page: PillarPage;
+}
+
+const { page } = Astro.props;
+const { destination, content } = page;
+
+const cell = 'border-t border-border/60 py-3 pr-4 pl-4 align-top text-secondary max-lg:border-0 max-lg:p-0';
+const labeledCell = `${cell} max-lg:before:mb-0.5 max-lg:before:block max-lg:before:text-xs max-lg:before:text-muted max-lg:before:content-[attr(data-label)]`;
+const headCell = 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted';
+---
+
+<PageSection id="comparar" title={content.comparisonTitle} intro={content.comparisonIntro}>
+	<div data-reveal class="lg:overflow-x-auto">
+		<table class="w-full border-separate border-spacing-0 text-left text-sm max-lg:block lg:min-w-[56rem]">
+			<caption class="sr-only">
+				{destinationToursTitle(destination)} comparadas por precio, duración, días de salida, qué incluyen y para quién son
+			</caption>
+			<thead class="max-lg:sr-only">
+				<tr>
+					<th scope="col" class:list={[headCell, 'w-48']}>Excursión</th>
+					<th scope="col" class:list={[headCell, 'w-32']}>Precio desde</th>
+					<th scope="col" class:list={[headCell, 'w-32']}>Duración</th>
+					<th scope="col" class:list={[headCell, 'w-36']}>Salidas</th>
+					<th scope="col" class={headCell}>Qué incluye</th>
+					<th scope="col" class={headCell}>Para quién</th>
+				</tr>
+			</thead>
+			<tbody class="max-lg:grid max-lg:gap-3 md:max-lg:grid-cols-2">
+				{page.rows.map((row) => (
+					<tr class="max-lg:relative max-lg:grid max-lg:grid-cols-6 max-lg:content-start max-lg:gap-x-4 max-lg:gap-y-3 max-lg:rounded-3xl max-lg:border max-lg:border-border/60 max-lg:bg-background max-lg:p-5 max-lg:transition-colors max-lg:duration-300 max-lg:ease-smooth max-lg:hover:border-primary/40 max-lg:has-[a:focus-visible]:ring-2 max-lg:has-[a:focus-visible]:ring-accent md:max-lg:[&:last-child:nth-child(odd)]:col-span-2">
+						<th scope="row" class:list={[cell, 'font-normal max-lg:col-span-4 max-lg:self-center']}>
+							<a
+								href={row.href}
+								class="font-medium text-primary underline decoration-accent/40 decoration-1 underline-offset-[0.2em] outline-none transition-colors duration-300 ease-smooth hover:decoration-accent-strong max-lg:text-[15px] max-lg:leading-snug max-lg:no-underline max-lg:after:absolute max-lg:after:inset-0 max-lg:after:rounded-3xl lg:focus-visible:ring-2 lg:focus-visible:ring-accent"
+							>
+								{row.title}
+							</a>
+						</th>
+						<td class:list={[cell, 'max-lg:col-span-2 max-lg:text-right lg:whitespace-nowrap']}>
+							<span class="font-medium text-primary max-lg:font-display max-lg:text-lg max-lg:leading-tight max-lg:font-semibold">{row.price}</span>
+							<span class="block text-xs text-muted">{row.priceUnit}</span>
+							{row.childPrice && <span class="block text-xs text-muted max-lg:hidden">{row.childPrice}</span>}
+						</td>
+						<td class:list={[labeledCell, 'max-lg:col-span-3']} data-label="Duración">{row.duration}</td>
+						<td class:list={[labeledCell, 'max-lg:col-span-3']} data-label="Salidas">{row.days}</td>
+						<td class:list={[cell, 'text-primary max-lg:col-span-6 max-lg:border-t max-lg:border-border/60 max-lg:pt-3']}>{row.includes}</td>
+						<td class:list={[cell, 'max-lg:col-span-6']}>
+							{row.bestFor}
+							{(row.notes.length > 0 || row.childPrice) && (
+								<span class="mt-1 block text-xs text-muted">
+									{row.childPrice && <span class="lg:hidden">{row.childPrice}. </span>}
+									{row.notes.length > 0 && `${row.notes.join('. ')}.`}
+								</span>
+							)}
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+	{page.tableNote && <p class="mt-4 text-xs text-muted max-lg:text-center">{page.tableNote}</p>}
+</PageSection>

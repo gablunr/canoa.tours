@@ -1,0 +1,57 @@
+---
+import PageSection from '../page/PageSection.astro';
+import GuideBlocks from '../guides/GuideBlocks.astro';
+import type { PillarPage } from '../../../data/pillars/pillar-page';
+
+interface Props {
+	page: PillarPage;
+}
+
+const { destination, content } = Astro.props.page;
+const facts = content.facts ?? [];
+const factsTitle = destination.kind === 'place' ? `${destination.name} en datos` : 'Datos útiles';
+---
+
+{content.sections.length > 0 && (
+	<PageSection id="como-es" title={content.overviewTitle}>
+		{facts.length > 0 ? (
+			<div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
+				<aside
+					aria-labelledby="destination-facts-title"
+					data-reveal
+					class="rounded-[1.75rem] border border-border/60 bg-surface/60 p-6 lg:sticky lg:top-36 lg:col-start-2 lg:row-start-1 lg:self-start"
+				>
+					<p id="destination-facts-title" class="text-sm font-medium text-primary">{factsTitle}</p>
+					<dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+						{facts.map((fact) => (
+							<div>
+								<dt class="text-xs text-muted">{fact.label}</dt>
+								<dd class="mt-0.5 text-[15px] font-medium text-primary">
+									{fact.value}
+									{fact.note && <span class="block text-xs font-normal text-muted">{fact.note}</span>}
+								</dd>
+							</div>
+						))}
+					</dl>
+				</aside>
+				<div data-reveal class="document-content mx-auto w-full max-w-3xl lg:col-start-1 lg:row-start-1 lg:mx-0">
+					{content.sections.map((section) => (
+						<Fragment>
+							<h3>{section.title}</h3>
+							<GuideBlocks blocks={section.blocks} />
+						</Fragment>
+					))}
+				</div>
+			</div>
+		) : (
+			<div data-reveal class="document-content mx-auto max-w-3xl lg:mx-0">
+				{content.sections.map((section) => (
+					<Fragment>
+						<h3>{section.title}</h3>
+						<GuideBlocks blocks={section.blocks} />
+					</Fragment>
+				))}
+			</div>
+		)}
+	</PageSection>
+)}

@@ -1,0 +1,25 @@
+---
+import type { GetStaticPaths } from 'astro';
+import DestinationPage from '../../components/sections/destination/DestinationPage.astro';
+import { destinations, type Destination } from '../../data/tours/destinations';
+import { getLegalDocuments } from '../../data/pages/legal';
+import { routes } from '../../data/site/routes';
+
+export const getStaticPaths = (async () => {
+	const reservedPaths = ['404', 'llms.txt', 'robots.txt', 'site.webmanifest', 'fonts', 'images', '_astro'];
+	const legalIds = (await getLegalDocuments()).map((document) => document.id);
+	const reserved = new Set([...Object.values(routes).map((path) => path.slice(1)), ...legalIds, ...reservedPaths]);
+	for (const destination of destinations) {
+		if (reserved.has(destination.slug)) throw new Error(`El destino ${destination.name} usa una ruta que ya existe: /${destination.slug}`);
+	}
+	return destinations.map((destination) => ({ params: { destination: destination.slug }, props: { destination } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+	destination: Destination;
+}
+
+const { destination } = Astro.props;
+---
+
+<DestinationPage destination={destination} />

@@ -1,0 +1,31 @@
+---
+import FactGrid from '../../ui/FactGrid.astro';
+import HeroBreadcrumb from '../../ui/HeroBreadcrumb.astro';
+import SectionNav from '../../ui/SectionNav.astro';
+import PhotoHero from '../page/PhotoHero.astro';
+import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
+import type { PillarPage } from '../../../data/pillars/pillar-page';
+import { routes } from '../../../data/site/routes';
+import { destinationImage } from '../../../data/tours/destinations';
+import { formatLongDate, toIsoDate } from '../../../lib/format';
+
+interface Props {
+	page: PillarPage;
+}
+
+const { page } = Astro.props;
+const { destination, content } = page;
+const image = destinationImage(destination) ?? palmBeach;
+---
+
+<PhotoHero title={page.heading} image={image} imageAlt={content.imageAlt} introClass="max-w-3xl" compact dim>
+	<HeroBreadcrumb slot="badge" items={[{ label: 'Excursiones', href: routes.catalog }, { label: destination.name }]} />
+	{page.answer}
+	<div slot="actions" class="mt-10 w-full animate-fade-up" style="animation-delay: 790ms">
+		<FactGrid facts={page.keyFacts} overPhoto />
+		<p class="mt-5 text-xs text-white/75 drop-shadow-md">
+			Actualizado el <time datetime={toIsoDate(page.updatedAt)}>{formatLongDate(page.updatedAt)}</time>
+		</p>
+		<SectionNav label="En esta página" links={page.navLinks} overPhoto class="mt-8 px-0 sm:px-0" />
+	</div>
+</PhotoHero>
