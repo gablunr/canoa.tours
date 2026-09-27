@@ -1,0 +1,71 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import { dialCodes } from '../../../data/site/dial-codes';
+import { countryOptions } from '../../../lib/account/countries';
+
+interface Props {
+	name?: string;
+	label?: string;
+	hint?: string;
+	requiredMessage?: string;
+	invalidMessage?: string;
+}
+
+const {
+	name = 'phone',
+	label = 'Teléfono',
+	hint,
+	requiredMessage = 'Escribe tu teléfono.',
+	invalidMessage = 'Revisa el teléfono: entre 6 y 15 dígitos.',
+} = Astro.props;
+
+const defaultCountry = 'ES';
+const inputId = `field-${name}`;
+const prefixId = `${inputId}-prefix`;
+const hintId = `${inputId}-hint`;
+const errorId = `${inputId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+
+const prefixOptions = countryOptions
+	.filter((option) => dialCodes[option.value])
+	.map((option) => ({ value: option.value, label: `${option.label} (+${dialCodes[option.value]})` }));
+---
+
+<div data-field data-phone-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
+	<label for={inputId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">{label}</label>
+	<div
+		class="mt-2 flex h-12 w-full overflow-hidden rounded-2xl border border-border-strong bg-background transition-colors duration-300 ease-smooth hover:border-muted focus-within:border-primary has-[[data-phone-number][aria-invalid]]:border-error"
+	>
+		<div class="relative flex shrink-0 items-center gap-1.5 border-r border-border pr-3 pl-4 transition-colors duration-300 ease-smooth focus-within:bg-surface hover:bg-surface">
+			<span data-prefix-label class="text-base text-primary tabular-nums" aria-hidden="true">+{dialCodes[defaultCountry]}</span>
+			<ChevronDown size={16} stroke-width={1.75} class="text-muted" aria-hidden="true" />
+			<select
+				id={prefixId}
+				data-phone-prefix
+				aria-label="Prefijo"
+				autocomplete="tel-country-code"
+				class="absolute inset-0 cursor-pointer appearance-none opacity-0"
+			>
+				{prefixOptions.map((option) => (
+					<option value={option.value} selected={option.value === defaultCountry}>{option.label}</option>
+				))}
+			</select>
+		</div>
+		<input
+			id={inputId}
+			type="tel"
+			data-phone-number
+			required
+			inputmode="tel"
+			autocomplete="tel-national"
+			pattern="\+?[\s\-]*(\d[\s\-]*){6,15}"
+			data-required-message={requiredMessage}
+			data-invalid-message={invalidMessage}
+			aria-describedby={describedBy}
+			class="block min-w-0 flex-1 bg-transparent px-4 text-base text-primary placeholder:text-subtle focus:outline-none"
+		/>
+	</div>
+	<input type="hidden" name={name} />
+	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
+	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+</div>
