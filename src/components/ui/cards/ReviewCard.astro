@@ -20,53 +20,61 @@ const initials = review.author
 	.slice(0, 2)
 	.map((word) => word.charAt(0).toUpperCase())
 	.join('');
-const textIsLong = review.text.length > 320 || review.text.split('\n').length > 4;
+const textIsLong = review.text.length > 220 || review.text.split('\n').length > 3;
 const expandId = `opinion-${review.id}-completa`;
 const textClass = 'text-[15px] leading-relaxed text-pretty whitespace-pre-line text-secondary';
 ---
 
-<figure class:list={['flex h-full flex-col rounded-[1.75rem] bg-chip p-7 lg:p-8', className]}>
-	<div class="flex flex-wrap items-center justify-between gap-3">
-		<StarRating rating={review.rating} />
-		{showTour && (
-			<a
-				href={review.tourHref}
-				class="inline-flex rounded-full bg-background px-3 py-1.5 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-primary hover:text-white"
-			>
-				{review.tourTitle}
-			</a>
-		)}
-	</div>
+<figure class:list={['flex h-full flex-col rounded-[1.5rem] bg-chip p-5 sm:p-6', className]}>
+	<figcaption class="flex items-center gap-3">
+		<span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-background text-sm font-semibold text-primary" aria-hidden="true">
+			{initials}
+		</span>
+		<div class="min-w-0">
+			<p class="truncate font-semibold text-primary">{review.author}</p>
+			<p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted">
+				<time datetime={toIsoDate(review.date)}>{formatLongDate(review.date)}</time>
+				{review.verified && (
+					<span class="inline-flex items-center gap-1 text-accent-strong">
+						<BadgeCheck size={13} stroke-width={2} aria-hidden="true" />
+						Reserva verificada
+					</span>
+				)}
+			</p>
+		</div>
+	</figcaption>
 
-	<blockquote class="mt-6 flex-1">
+	<StarRating rating={review.rating} size={14} class="mt-4" />
+
+	<blockquote class="mt-2">
 		{review.title && <p class="font-semibold tracking-[-0.01em] text-primary">{review.title}</p>}
 		{textIsLong ? (
-			<div class:list={[review.title && 'mt-2']}>
+			<div class:list={[review.title && 'mt-1']}>
 				<input type="checkbox" id={expandId} class="peer sr-only" />
-				<p class:list={[textClass, 'line-clamp-6 peer-checked:line-clamp-none']}>{review.text}</p>
+				<p class:list={[textClass, 'line-clamp-4 peer-checked:line-clamp-none']}>{review.text}</p>
 				<label
 					for={expandId}
-					class="mt-2 inline-block cursor-pointer rounded-full text-sm font-medium text-accent-strong peer-checked:hidden peer-focus-visible:ring-2 peer-focus-visible:ring-accent hover:text-accent"
+					class="mt-1 inline-block cursor-pointer rounded-full text-sm font-medium text-accent-strong peer-checked:hidden peer-focus-visible:ring-2 peer-focus-visible:ring-accent hover:text-accent"
 				>
 					Leer completa
 				</label>
 			</div>
 		) : (
-			<p class:list={[textClass, review.title && 'mt-2']}>{review.text}</p>
+			<p class:list={[textClass, review.title && 'mt-1']}>{review.text}</p>
 		)}
 	</blockquote>
 
 	{review.photos.length > 0 && (
-		<ul class="mt-5 flex flex-wrap gap-2" aria-label={`Fotos de ${review.author}`}>
+		<ul class="mt-4 flex flex-wrap gap-2" aria-label={`Fotos de ${review.author}`}>
 			{review.photos.map((photo, index) => (
 				<li>
 					<a href={photo.src} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-accent">
 						<Image
 							{...imageSource(photo)}
 							alt={`Foto ${index + 1} de ${review.author}`}
-							widths={[64, 128]}
-							sizes="4rem"
-							class="size-16 object-cover transition-transform duration-300 ease-smooth hover:scale-105"
+							widths={[56, 112]}
+							sizes="3.5rem"
+							class="size-14 object-cover transition-transform duration-300 ease-smooth hover:scale-105"
 						/>
 					</a>
 				</li>
@@ -75,27 +83,20 @@ const textClass = 'text-[15px] leading-relaxed text-pretty whitespace-pre-line t
 	)}
 
 	{review.reply && (
-		<div class="mt-5 rounded-2xl bg-background px-4 py-3">
+		<div class="mt-4 rounded-2xl bg-background px-3.5 py-2.5">
 			<p class="text-xs font-medium text-muted">Respuesta de Canoa Tours</p>
-			<p class="mt-1 text-sm leading-relaxed whitespace-pre-line text-secondary">{review.reply}</p>
+			<p class="mt-0.5 text-sm leading-relaxed whitespace-pre-line text-secondary">{review.reply}</p>
 		</div>
 	)}
 
-	<figcaption class="mt-8 flex items-center gap-3">
-		<span class="flex size-12 shrink-0 items-center justify-center rounded-full bg-background font-semibold text-primary" aria-hidden="true">
-			{initials}
-		</span>
-		<div>
-			<p class="font-semibold text-primary">{review.author}</p>
-			<p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm text-muted">
-				<time datetime={toIsoDate(review.date)}>{formatLongDate(review.date)}</time>
-				{review.verified && (
-					<span class="inline-flex items-center gap-1 text-accent-strong">
-						<BadgeCheck size={14} stroke-width={2} aria-hidden="true" />
-						Reserva verificada
-					</span>
-				)}
-			</p>
-		</div>
-	</figcaption>
+	{showTour && (
+		<p class="mt-auto pt-4">
+			<a
+				href={review.tourHref}
+				class="inline-flex rounded-full bg-background px-3 py-1.5 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-primary hover:text-white"
+			>
+				{review.tourTitle}
+			</a>
+		</p>
+	)}
 </figure>
