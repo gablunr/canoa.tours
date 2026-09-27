@@ -1,6 +1,7 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { TEAM_EMAIL } from 'astro:env/server';
 import { z } from 'astro/zod';
+import { customerIdForUser, findOwnedBooking, isBookingOwner } from '../lib/account/bookings';
 import { loadBookingDetails, type BookingDetails } from '../lib/booking/booking-details';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
 import { refundDeposit } from '../lib/booking/payments';
@@ -44,21 +45,9 @@ function failWithDbError(error: unknown): never {
 
 const bookingNotFound = () => new ActionError({ code: 'NOT_FOUND', message: 'No encontramos esa reserva en tu cuenta.' });
 
-async function customerIdForUser(userId: string): Promise<string | null> {
-	const { data, error } = await supabaseAdmin.from('customers').select('id').eq('auth_user_id', userId).maybeSingle();
-	if (error) failWithDbError(error);
-	return data?.id ?? null;
-}
-
-function isOwner(details: BookingDetails, customerId: string | null, email: string) {
-	return (customerId !== null && details.customerId === customerId) || details.customerEmail.toLowerCase() === email;
-}
-
 async function ownedBooking(user: { userId: string; email: string }, code: string): Promise<BookingDetails> {
-	const details = await loadBookingDetails({ code });
+	const details = await findOwnedBooking({ id: user.userId, email: user.email }, code).catch(failWithDbError);
 	if (!details) throw bookingNotFound();
-	const customerId = await customerIdForUser(user.userId);
-	if (!isOwner(details, customerId, user.email)) throw bookingNotFound();
 	return details;
 }
 
@@ -182,8 +171,8 @@ export const account = {
 			const hasValidToken = Boolean(input.token) && verifyBookingToken(details.code, 'review', input.token ?? '');
 			let isLoggedInOwner = false;
 			if (!hasValidToken && user?.email) {
-				const customerId = await customerIdForUser(user.id);
-				isLoggedInOwner = isOwner(details, customerId, user.email.toLowerCase());
+				const customerId = await customerIdForUser(user.id).catch(failWithDbError);
+				isLoggedInOwner = isBookingOwner(details, customerId, user.email);
 			}
 			if (!hasValidToken && !isLoggedInOwner) {
 				throw new ActionError({ code: 'FORBIDDEN', message: 'Este enlace para opinar no es válido.' });
