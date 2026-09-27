@@ -1,0 +1,43 @@
+---
+import PageSection from '../page/PageSection.astro';
+import Button from '../../ui/Button.astro';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+import { cancellationsLink, contactLink } from '../../../data/site/navigation';
+
+const { whatsapp } = company;
+const questionMessage = 'Hola, estoy pensando en reservar la excursión [nombre] para el [fecha] y tengo una pregunta';
+
+const inlineLink =
+	'text-accent-strong underline decoration-accent/40 decoration-1 underline-offset-[0.2em] transition-colors duration-300 ease-smooth hover:decoration-accent-strong';
+---
+
+<PageSection id="reviews-after-title" title="Si ya hiciste tu excursión con nosotros">
+	<div data-reveal class="grid max-w-3xl gap-5 text-[17px] max-lg:mx-auto max-lg:text-center leading-relaxed text-pretty text-secondary">
+		<p>
+			Muy pronto vas a poder dejar la tuya aquí. A otros viajeros les sirve lo concreto: qué tour hiciste, cómo fue la recogida, qué
+			te gustó y qué cambiarías.
+		</p>
+		<p>
+			Si algo salió mal, también queremos saberlo. Y si prefieres contárnoslo en privado,{' '}
+			<a href={contactLink.href} class={inlineLink}>escríbenos</a>.
+		</p>
+	</div>
+</PageSection>
+
+<PageSection id="reviews-before-title" title="Si todavía no reservaste" class="pb-16 lg:pb-24">
+	<div data-reveal class="flex flex-col gap-8 max-lg:items-center max-lg:text-center lg:flex-row lg:items-center lg:justify-between">
+		<p class="max-w-2xl text-[17px] leading-relaxed text-pretty text-secondary">
+			Mientras tanto, en cada excursión puedes ver qué incluye y cuánto cuesta la recogida desde tu hotel. Si te preocupa tener que
+			cancelar o que el tour se mueva por mal tiempo, lo explicamos en{' '}
+			<a href={cancellationsLink.href} class={inlineLink}>cancelaciones y cambios</a>. Y si quieres hablar con alguien antes de
+			reservar, escríbenos por WhatsApp.
+		</p>
+		{whatsapp && (
+			<Button href={whatsappMessageHref(whatsapp, questionMessage)} size="lg" class="shrink-0 gap-2.5">
+				<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+				Escríbenos por WhatsApp
+			</Button>
+		)}
+	</div>
+</PageSection>

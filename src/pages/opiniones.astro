@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/page/PageHeader.astro';
+import ReviewsPage from '../components/sections/reviews/ReviewsPage.astro';
+import EdgeWaves from '../components/ui/EdgeWaves.astro';
+import { reviewsLink } from '../data/site/navigation';
+import { reviewsIntro } from '../data/reviews/reviews-page';
+---
+
+<Layout title="Opiniones de clientes sobre nuestras excursiones" description={reviewsIntro} breadcrumbs={[{ name: reviewsLink.label, path: reviewsLink.href }]}>
+	<EdgeWaves />
+	<PageHeader title={reviewsLink.label} intro={reviewsIntro} />
+	<ReviewsPage />
+</Layout>
