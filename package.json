@@ -13,6 +13,7 @@
     "astro": "node ./node_modules/astro/bin/astro.mjs"
   },
   "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.2",
     "@astrojs/sitemap": "^3.7.4",
     "@astrojs/vercel": "^11.0.10",
     "@lucide/astro": "^1.47.0",

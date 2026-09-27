@@ -1,15 +1,25 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { fillContentTokens } from './data/guides/content-tokens';
+
+const text = z.string().transform(fillContentTokens);
+
+const documentSchema = z.object({
+	title: text,
+	description: text,
+	summary: text.optional(),
+	updatedAt: z.coerce.date(),
+});
 
 const legal = defineCollection({
 	loader: glob({ pattern: '*.md', base: './src/content/legal' }),
-	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		summary: z.string().optional(),
-		updatedAt: z.coerce.date(),
-	}),
+	schema: documentSchema,
 });
 
-export const collections = { legal };
+const help = defineCollection({
+	loader: glob({ pattern: '*.md', base: './src/content/help' }),
+	schema: documentSchema,
+});
+
+export const collections = { legal, help };
