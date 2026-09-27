@@ -87,7 +87,7 @@ const textClass = 'text-[15px] leading-relaxed text-pretty whitespace-pre-line t
 		</span>
 		<div>
 			<p class="font-semibold text-primary">{review.author}</p>
-			<p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+			<p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm text-muted">
 				<time datetime={toIsoDate(review.date)}>{formatLongDate(review.date)}</time>
 				{review.verified && (
 					<span class="inline-flex items-center gap-1 text-accent-strong">
