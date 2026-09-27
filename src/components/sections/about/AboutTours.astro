@@ -1,0 +1,39 @@
+---
+import PageSection from '../page/PageSection.astro';
+import { tourDetailsNote, tourGroups } from '../../../data/pages/about';
+import { findDestination, tourHref } from '../../../data/tours/destinations';
+---
+
+<PageSection id="about-tours-title" title="Qué excursiones tenemos" intro={tourDetailsNote}>
+	<ul class="grid gap-4 lg:grid-cols-3">
+		{tourGroups.map((group) => {
+			const groupDestinations = group.destinationIds.map(findDestination);
+			const showNames = groupDestinations.length > 1;
+			return (
+				<li data-reveal class="flex flex-col rounded-[1.75rem] bg-surface p-7 max-lg:text-center sm:px-10 lg:p-8">
+					<h3 class="text-2xl leading-[1.1] font-semibold tracking-[-0.03em] text-primary">{group.title}</h3>
+					<p class="mt-3 text-[15px] leading-relaxed text-pretty text-secondary">{group.text}</p>
+					<div class="mt-8 grid gap-5 border-t border-border/60 pt-6">
+						{groupDestinations.map((destination) => (
+							<div>
+								{showNames && <p class="text-sm font-medium text-primary">{destination.name}</p>}
+								<ul class:list={['flex flex-wrap gap-1.5 max-lg:justify-center', showNames && 'mt-2']}>
+									{destination.tours.map((tour) => (
+										<li>
+											<a
+												href={tourHref(destination, tour)}
+												class="inline-flex rounded-full border border-border/70 bg-background px-3 py-1 text-[13px] text-secondary transition-colors duration-300 ease-smooth hover:border-primary hover:text-primary"
+											>
+												{tour.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						))}
+					</div>
+				</li>
+			);
+		})}
+	</ul>
+</PageSection>

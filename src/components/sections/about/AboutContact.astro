@@ -1,0 +1,26 @@
+---
+import PageSection from '../page/PageSection.astro';
+import Button from '../../ui/Button.astro';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+
+const { whatsapp } = company;
+const recommendationRequest = 'Hola, viajo del [fecha] al [fecha] y me hospedo en [hotel]. ¿Qué excursiones me recomiendan?';
+---
+
+<PageSection id="about-contact-title" title="¿Hablamos?" class="pb-16 lg:pb-24">
+	<div data-reveal class="flex flex-col gap-8 max-lg:items-center max-lg:text-center lg:flex-row lg:items-center lg:justify-between">
+		<p class="max-w-2xl text-[17px] leading-relaxed text-pretty text-secondary">
+			Si no sabes qué excursión elegir, escríbenos con las fechas de tu viaje y el hotel donde te hospedas, y te decimos qué opciones
+			tienes.
+		</p>
+		<div class="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-4">
+			{whatsapp && (
+				<Button href={whatsappMessageHref(whatsapp, recommendationRequest)} size="lg" class="gap-2.5">
+					<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+					Escríbenos por WhatsApp
+				</Button>
+			)}
+		</div>
+	</div>
+</PageSection>

@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/page/PageHeader.astro';
+import AboutTours from '../components/sections/about/AboutTours.astro';
+import AboutDepartures from '../components/sections/about/AboutDepartures.astro';
+import AboutPromises from '../components/sections/about/AboutPromises.astro';
+import AboutContact from '../components/sections/about/AboutContact.astro';
+import EdgeWaves from '../components/ui/EdgeWaves.astro';
+import { aboutIntro } from '../data/pages/about';
+import { aboutLink } from '../data/site/navigation';
+---
+
+<Layout
+	title="Quiénes somos: agencia de excursiones en Punta Cana"
+	description="Canoa Tours es una agencia de excursiones en República Dominicana, con tours de día completo, de medio día y de noche desde Punta Cana y Bayahibe." pageType="AboutPage" breadcrumbs={[{ name: aboutLink.label, path: aboutLink.href }]}>
+	<EdgeWaves />
+	<PageHeader title={aboutLink.label} intro={aboutIntro} />
+	<AboutTours />
+	<AboutDepartures />
+	<AboutPromises />
+	<AboutContact />
+</Layout>

@@ -1,0 +1,35 @@
+---
+import type { ImageMetadata } from 'astro';
+import type { ComponentProps } from 'astro/types';
+import PageSection from '../page/PageSection.astro';
+import BenefitCard from '../../ui/cards/BenefitCard.astro';
+import wallet from '../../../assets/images/icons-3d/wallet.png';
+import calendar from '../../../assets/images/icons-3d/calendar.png';
+import chat from '../../../assets/images/icons-3d/chat.png';
+import { aboutPromises, type AboutPromiseId } from '../../../data/pages/about';
+
+type PromiseLayout = {
+	image: ImageMetadata;
+	tone: ComponentProps<typeof BenefitCard>['tone'];
+	span: string;
+};
+
+const layouts: Record<AboutPromiseId, PromiseLayout> = {
+	'clear-prices': { image: wallet, tone: 'night', span: 'sm:col-span-2' },
+	cancellation: { image: calendar, tone: 'sand', span: '' },
+	'someone-answers': { image: chat, tone: 'teal', span: 'lg:col-span-3' },
+};
+---
+
+<PageSection id="about-promises-title" title="Lo que puedes esperar">
+	<ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		{aboutPromises.map((promise) => {
+			const { image, tone, span } = layouts[promise.id];
+			return (
+				<li data-reveal class={span}>
+					<BenefitCard image={image} tone={tone} title={promise.title} text={promise.text} />
+				</li>
+			);
+		})}
+	</ul>
+</PageSection>

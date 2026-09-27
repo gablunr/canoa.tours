@@ -1,0 +1,39 @@
+---
+import PageSection from '../page/PageSection.astro';
+import { departurePorts, distanceLabel } from '../../../data/tours/departure-ports';
+import { findDestination } from '../../../data/tours/destinations';
+import { pickupZonesLink } from '../../../data/site/navigation';
+
+const inlineLink =
+	'text-accent-strong underline decoration-accent/40 decoration-1 underline-offset-[0.2em] transition-colors duration-300 ease-smooth hover:decoration-accent-strong';
+---
+
+<PageSection id="about-departures-title" title="De dónde salen y dónde te recogemos">
+	<div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+		<div data-reveal class="grid content-start gap-5 text-[17px] leading-relaxed text-pretty text-secondary max-lg:mx-auto max-lg:max-w-2xl max-lg:text-center">
+			<p>
+				Recogemos en hoteles de Punta Cana y Bayahibe. Los autobuses de todas las excursiones salen desde Bávaro, así que desde
+				Bávaro y Arena Gorda no hay cargo extra; desde Uvero Alto, Cap Cana, Cabeza de Toro o Macao suele haberlo. Busca tu hotel en{' '}
+				<a href={pickupZonesLink.href} class={inlineLink}>zonas de recogida</a>.
+			</p>
+			<p>
+				Los tours a las islas embarcan en otros puertos, y el trayecto en autobús hasta el puerto ya forma parte de la excursión.
+			</p>
+		</div>
+
+		<ul data-reveal class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+			{Object.values(departurePorts).map((port) => (
+				<li class="flex items-center justify-between gap-4 rounded-[1.5rem] border border-border/60 px-6 py-5 sm:flex-col sm:items-start lg:flex-row lg:items-center lg:justify-between">
+					<div>
+						<p class="font-medium text-primary">{findDestination(port.destinationId).name}</p>
+						<p class="mt-0.5 text-sm text-muted">Embarque en {port.port}</p>
+					</div>
+					<p class="font-display text-3xl font-semibold tracking-[-0.03em] text-primary tabular-nums">
+						{distanceLabel(port)}
+						<span class="sr-only">desde Punta Cana</span>
+					</p>
+				</li>
+			))}
+		</ul>
+	</div>
+</PageSection>
