@@ -23,7 +23,7 @@ const watchContentTokenSources = {
 const builtPage = builtPageReader(new URL('./dist/', import.meta.url));
 
 export default defineConfig({
-  site: 'https://canoatours.com',
+  site: 'https://canoa.tours',
   trailingSlash: 'never',
   adapter: vercel(),
   integrations: [
