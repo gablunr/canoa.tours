@@ -1,0 +1,58 @@
+---
+import { Picture } from 'astro:assets';
+import { ArrowLeft } from '@lucide/astro';
+import GlassBadge from '../../ui/GlassBadge.astro';
+import { bookingPhoto, bookingStatusLabels } from '../../../lib/account/bookings';
+import type { BookingDetails } from '../../../lib/booking/booking-details';
+import type { BookingStatus } from '../../../lib/supabase/types';
+
+interface Props {
+	details: BookingDetails;
+	showBackLink: boolean;
+}
+
+const { details, showBackLink } = Astro.props;
+const photo = bookingPhoto(details.productKey);
+const status = details.status as BookingStatus;
+---
+
+<div class="px-4 pt-8 sm:px-6 sm:pt-12">
+	<div class="mx-auto max-w-5xl">
+		{showBackLink && (
+			<a
+				href="/account"
+				class="inline-flex animate-fade-up items-center gap-2 text-sm font-medium text-muted transition-colors duration-300 ease-smooth hover:text-primary"
+				style="animation-delay: 60ms"
+			>
+				<ArrowLeft size={16} stroke-width={1.75} aria-hidden="true" />
+				Mis reservas
+			</a>
+		)}
+
+		<header
+			class:list={[
+				'relative isolate flex min-h-[15rem] animate-fade-up flex-col justify-end overflow-hidden rounded-[2rem] bg-primary p-6 text-white sm:min-h-[20rem] sm:p-8',
+				showBackLink && 'mt-5',
+			]}
+			style="animation-delay: 120ms"
+		>
+			{photo && (
+				<Picture
+					src={photo}
+					alt=""
+					formats={['avif', 'webp']}
+					widths={[640, 960, 1280, 1792]}
+					sizes="(min-width: 1024px) 64rem, 100vw"
+					quality={85}
+					priority
+					pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
+					class:list={['size-full object-cover brightness-90', status !== 'confirmed' && 'grayscale-[35%]']}
+				/>
+			)}
+			<div class="absolute inset-0 -z-10 bg-linear-to-t from-primary/80 via-primary/20 to-transparent" aria-hidden="true"></div>
+			<GlassBadge overPhoto class="absolute top-5 left-5">{bookingStatusLabels[status]}</GlassBadge>
+			<h1 class="max-w-3xl text-3xl leading-[1.05] font-semibold tracking-[-0.04em] text-balance sm:text-5xl">{details.productName}</h1>
+			<span class="glass-rim [--rim-width:3px]" aria-hidden="true"></span>
+		</header>
+	</div>
+</div>

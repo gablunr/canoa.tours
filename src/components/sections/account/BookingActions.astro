@@ -1,0 +1,147 @@
+---
+import { CalendarClock, ChevronDown, CircleX, MessageCircle, Star } from '@lucide/astro';
+import Button from '../../ui/Button.astro';
+import { bookingPolicy } from '../../../data/booking/booking-policy';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+import type { BookingDetails } from '../../../lib/booking/booking-details';
+import type { SelfServiceCheck } from '../../../lib/booking/self-service';
+import { formatMoney } from '../../../lib/email/templates/layout';
+
+interface Props {
+	details: BookingDetails;
+	canManage: boolean;
+	changeDate: SelfServiceCheck;
+	cancel: SelfServiceCheck;
+	reviewHref: string | null;
+}
+
+const { details, canManage, changeDate, cancel, reviewHref } = Astro.props;
+const isActive = details.status === 'confirmed';
+const canSelfManage = isActive && canManage;
+const whatsappHref = company.whatsapp ? whatsappMessageHref(company.whatsapp, `Hola, tengo una consulta sobre mi reserva ${details.code}.`) : null;
+const refundAmount = Math.max(details.depositAmount - details.insuranceTotal, 0);
+const changesLeft = Math.max(bookingPolicy.maxDateChanges - details.dateChangesCount, 0);
+const signInHref = `/account/sign-in?next=${encodeURIComponent(`/account/bookings/${details.code}`)}`;
+const cardTitle = 'text-lg font-semibold tracking-[-0.02em] text-primary';
+const actionTile =
+	'liquid-glass grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-3xl bg-white/60 p-4 backdrop-blur-xl backdrop-saturate-150 sm:items-start sm:gap-y-1 sm:p-6';
+const actionTileWithButton = `${actionTile} sm:grid-cols-[auto_minmax(0,1fr)_auto]`;
+const iconClass = 'liquid-glass flex size-10 shrink-0 items-center justify-center bg-ink-200/55 text-primary sm:row-span-2';
+const actionTitle = 'font-semibold tracking-[-0.01em] text-primary';
+const actionBody = 'col-span-2 text-sm leading-relaxed text-secondary sm:col-span-1 sm:col-start-2';
+const actionButton = 'col-span-2 sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:row-start-1 sm:self-center';
+---
+
+<div class="grid gap-4" data-booking-actions data-code={details.code} data-product-id={details.productId} data-current-date={details.tourDate}>
+	{reviewHref && (
+		<section class="relative isolate flex flex-col overflow-hidden rounded-[2rem] bg-primary p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-8">
+			<div>
+				<h2 class="text-lg font-semibold tracking-[-0.02em]">¿Qué tal fue {details.productName}?</h2>
+				<p class="mt-2 text-sm leading-relaxed text-muted-on-dark">Tu opinión ayuda a otros viajeros a elegir su excursión.</p>
+			</div>
+			<Button href={reviewHref} variant="on-dark" class="mt-6 shrink-0 gap-2 sm:mt-0">
+				<Star size={16} stroke-width={2} aria-hidden="true" />
+				Dejar mi opinión
+			</Button>
+			<span class="glass-rim opacity-60 [--rim-width:2px]" aria-hidden="true"></span>
+		</section>
+	)}
+
+	{isActive && !canManage && (
+		<section class="flex flex-col rounded-[2rem] bg-surface p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-8">
+			<div>
+				<h2 class={cardTitle}>¿Necesitas cambiar algo?</h2>
+				<p class="mt-2 text-sm leading-relaxed text-secondary">Entra en tu cuenta para cambiar la fecha o cancelar la reserva.</p>
+			</div>
+			<Button href={signInHref} class="mt-6 shrink-0 sm:mt-0">Entrar en mi cuenta</Button>
+		</section>
+	)}
+
+	{(canSelfManage || whatsappHref) && (
+		<section aria-labelledby="gestionar-reserva" class="rounded-[2rem] bg-surface p-4 sm:p-8">
+			<h2 id="gestionar-reserva" class:list={[cardTitle, 'px-2 pt-2 sm:p-0']}>{canSelfManage ? 'Gestiona tu reserva' : '¿Necesitas ayuda?'}</h2>
+
+			<div class="mt-4 grid gap-4 sm:mt-5 sm:gap-5">
+				{canSelfManage && (
+					<>
+						<div class={actionTile}>
+							<span class={iconClass}><CalendarClock size={18} stroke-width={1.75} aria-hidden="true" /></span>
+							<h3 id="cambiar-fecha" class:list={[actionTitle, 'scroll-mt-28']}>Cambiar la fecha</h3>
+							<div class={actionBody}>
+								{changeDate.allowed ? (
+									<form data-change-date-form>
+										<p>{changesLeft === 1 ? 'Te queda 1 cambio.' : `Te quedan ${changesLeft} cambios.`} Solo aparecen los días con plazas.</p>
+										<label for="nueva-fecha" class="sr-only">Nueva fecha</label>
+										<div class="mt-4 flex flex-col gap-3 sm:flex-row">
+											<div class="relative min-w-0 flex-1">
+												<select
+													id="nueva-fecha"
+													name="tourDate"
+													required
+													disabled
+													data-date-select
+													class="block h-12 w-full appearance-none rounded-2xl border border-border-strong bg-background pr-11 pl-4 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:opacity-60"
+												>
+													<option value="">Cargando fechas…</option>
+												</select>
+												<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+											</div>
+											<Button type="submit" class="shrink-0" data-change-date-submit>Cambiar fecha</Button>
+										</div>
+										<p class="mt-3 text-error" role="alert" data-change-date-error hidden></p>
+									</form>
+								) : (
+									<p>{changeDate.reason}</p>
+								)}
+							</div>
+						</div>
+
+						<div class={cancel.allowed ? actionTileWithButton : actionTile}>
+							<span class={iconClass}><CircleX size={18} stroke-width={1.75} aria-hidden="true" /></span>
+							<h3 id="cancelar-reserva" class={actionTitle}>Cancelar la reserva</h3>
+							<p class={actionBody}>
+								{cancel.allowed ? `Te devolvemos ${formatMoney(refundAmount)} a la tarjeta con la que pagaste. El seguro no se reembolsa.` : cancel.reason}
+							</p>
+							{cancel.allowed && (
+								<Button variant="outline" class={actionButton} data-cancel-open>Cancelar reserva</Button>
+							)}
+						</div>
+					</>
+				)}
+
+				{whatsappHref && (
+					<div class={actionTileWithButton}>
+						<span class={iconClass}><MessageCircle size={18} stroke-width={1.75} aria-hidden="true" /></span>
+						<h3 class={actionTitle}>¿Tienes dudas?</h3>
+						<p class={actionBody}>Escríbenos por WhatsApp y te ayudamos. Tu código ya va en el mensaje.</p>
+						<Button href={whatsappHref} target="_blank" rel="noopener" variant="outline" class={actionButton}>Abrir WhatsApp</Button>
+					</div>
+				)}
+			</div>
+
+			{canSelfManage && cancel.allowed && (
+				<dialog
+					class="m-auto w-[calc(100%-2rem)] max-w-md rounded-[2rem] bg-background p-6 text-primary shadow-2xl backdrop:bg-primary/60 backdrop:backdrop-blur-sm sm:p-8"
+					aria-labelledby="confirmar-cancelacion"
+					data-cancel-dialog
+				>
+					<h3 id="confirmar-cancelacion" class="text-xl font-semibold tracking-[-0.03em]">¿Cancelar {details.productName}?</h3>
+					<p class="mt-3 text-sm leading-relaxed text-secondary">
+						Te devolvemos {formatMoney(refundAmount)} en unos días. Esta acción no se puede deshacer.
+					</p>
+					<p class="mt-3 text-sm text-error" role="alert" data-cancel-error hidden></p>
+					<div class="mt-8 grid gap-3 sm:grid-cols-2">
+						<Button variant="outline" data-cancel-close>Volver</Button>
+						<Button variant="danger" data-cancel-confirm>Sí, cancelar</Button>
+					</div>
+				</dialog>
+			)}
+		</section>
+	)}
+</div>
+
+<script>
+	import { initBookingActions } from '../../../scripts/account/booking-actions';
+
+	document.querySelectorAll<HTMLElement>('[data-booking-actions]').forEach(initBookingActions);
+</script>

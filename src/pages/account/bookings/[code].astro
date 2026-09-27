@@ -1,0 +1,72 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import BookingActions from '../../../components/sections/account/BookingActions.astro';
+import BookingHero from '../../../components/sections/account/BookingHero.astro';
+import BookingOverview from '../../../components/sections/account/BookingOverview.astro';
+import BookingPayments from '../../../components/sections/account/BookingPayments.astro';
+import BookingTicket from '../../../components/sections/account/BookingTicket.astro';
+import { company } from '../../../data/site/company';
+import { bookingHasReview, findOwnedBooking, refundedAmount } from '../../../lib/account/bookings';
+import { loadBookingDetails, type BookingDetails } from '../../../lib/booking/booking-details';
+import { canCustomerCancel, canCustomerChangeDate } from '../../../lib/booking/self-service';
+import { signBookingToken, verifyBookingToken } from '../../../lib/booking/tokens';
+
+export const prerender = false;
+
+const code = (Astro.params.code ?? '').toUpperCase();
+const token = Astro.url.searchParams.get('token');
+const { user } = Astro.locals;
+
+let details: BookingDetails | null = user ? await findOwnedBooking(user, code) : null;
+const canManage = details !== null;
+
+if (!details && token && verifyBookingToken(code, 'ticket', token)) {
+	details = await loadBookingDetails({ code });
+}
+
+if (!details) {
+	if (!user) return Astro.redirect(`/account/sign-in?next=${encodeURIComponent(`/account/bookings/${code}`)}`);
+	return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const [refunded, hasReview] = await Promise.all([refundedAmount(details.id), bookingHasReview(details.id)]);
+const reviewHref =
+	details.status === 'completed' && !hasReview
+		? `/account/reviews/new?code=${details.code}&token=${signBookingToken(details.code, 'review')}`
+		: null;
+const hasActions = reviewHref !== null || details.status === 'confirmed' || company.whatsapp !== undefined;
+---
+
+<Layout title={`Reserva ${details.code}`} description={`Tu reserva de ${details.productName} con Canoa Tours.`} noindex>
+	<BookingHero details={details} showBackLink={canManage} />
+
+	<div class="px-4 pt-4 sm:px-6">
+		<div class="mx-auto flex max-w-5xl animate-fade-up flex-col gap-4 lg:grid lg:grid-cols-3 lg:items-start" style="animation-delay: 180ms">
+			<div class="max-lg:contents lg:col-span-2 lg:flex lg:flex-col lg:gap-4">
+				<div class="max-lg:order-2">
+					<BookingOverview details={details} />
+				</div>
+				{hasActions && (
+					<div class="max-lg:order-4">
+						<BookingActions
+							details={details}
+							canManage={canManage}
+							changeDate={canCustomerChangeDate(details)}
+							cancel={canCustomerCancel(details)}
+							reviewHref={reviewHref}
+						/>
+					</div>
+				)}
+			</div>
+
+			<div class="max-lg:contents lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-4">
+				<div class="max-lg:order-1">
+					<BookingTicket details={details} />
+				</div>
+				<div class="max-lg:order-3">
+					<BookingPayments details={details} refunded={refunded} />
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
