@@ -28,7 +28,7 @@ const totals = [
 			<dd data-summary="total" class="font-display text-xl font-semibold tracking-[-0.02em] text-primary tabular-nums">{formatPrice(quote.total)}</dd>
 		</div>
 		{totals.map((row) => (
-			<div class="flex justify-between gap-4">
+			<div data-summary-row={row.key} hidden={row.amount <= 0 && row.key === 'balance'} class="flex justify-between gap-4">
 				<dt class="text-muted">{row.label}</dt>
 				<dd data-summary={row.key} class="font-medium text-primary tabular-nums">{formatPrice(row.amount)}</dd>
 			</div>

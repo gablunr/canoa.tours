@@ -22,7 +22,7 @@ if (!checkout) {
 	return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-const { state, details, resumeUrl } = checkout;
+const { state, details } = checkout;
 const isSettled = state === 'confirmed' || state === 'cancelled';
 const showTicket = state === 'confirmed';
 const showPayments = isSettled;
@@ -37,7 +37,6 @@ const manageHref = isSettled ? ticketUrl(origin, details.code) : undefined;
 		state={state}
 		email={details.customerEmail || undefined}
 		manageHref={manageHref}
-		resumeUrl={resumeUrl}
 		retryHref={details.tourPath}
 		refunded={refunded}
 	/>
@@ -69,10 +68,7 @@ const manageHref = isSettled ? ticketUrl(origin, details.code) : undefined;
 </Layout>
 
 <script>
-	import { clearBookingDrafts, initProcessingReload } from '../../scripts/booking/checkout-return';
+	import { initProcessingReload } from '../../scripts/booking/checkout-return';
 
-	document.querySelectorAll<HTMLElement>('[data-checkout-state]').forEach((root) => {
-		if (root.dataset.checkoutState === 'confirmed') clearBookingDrafts();
-		initProcessingReload(root);
-	});
+	document.querySelectorAll<HTMLElement>('[data-checkout-state]').forEach(initProcessingReload);
 </script>

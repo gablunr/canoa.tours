@@ -133,6 +133,8 @@ export function renderSummary(summary: HTMLElement, quote: Quote, context: Summa
 		const target = summary.querySelector<HTMLElement>(`[data-summary="${key}"]`);
 		if (target) target.textContent = formatPrice(amount);
 	}
+	const balanceRow = summary.querySelector<HTMLElement>('[data-summary-row="balance"]');
+	if (balanceRow) balanceRow.hidden = quote.balanceAmount <= 0;
 
 	summary.toggleAttribute('data-pending', pending);
 	summary.setAttribute('aria-busy', String(pending));

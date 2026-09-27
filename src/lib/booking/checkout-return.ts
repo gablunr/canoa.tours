@@ -7,7 +7,6 @@ export type CheckoutReturnState = 'confirmed' | 'processing' | 'awaiting_payment
 export interface CheckoutReturn {
 	state: CheckoutReturnState;
 	details: BookingDetails;
-	resumeUrl: string | null;
 }
 
 const checkoutSessionIdPattern = /^cs_(test|live)_\w{10,250}$/;
@@ -28,7 +27,7 @@ export async function loadCheckoutReturn(sessionId: string, origin: string): Pro
 	if (!details) return null;
 
 	const state = settledState(details);
-	if (state) return { state, details, resumeUrl: null };
+	if (state) return { state, details };
 
 	const session = await stripe.checkout.sessions.retrieve(sessionId);
 	if (session.metadata?.booking_id !== details.id) return null;
@@ -38,13 +37,13 @@ export async function loadCheckoutReturn(sessionId: string, origin: string): Pro
 			await fulfillDepositCheckout(session, origin);
 		} catch (error) {
 			console.error('checkout_return_not_fulfilled', { sessionId, error });
-			return { state: 'processing', details, resumeUrl: null };
+			return { state: 'processing', details };
 		}
 
 		const fulfilled = (await loadBookingDetails({ id: details.id })) ?? details;
-		return { state: settledState(fulfilled) ?? 'processing', details: fulfilled, resumeUrl: null };
+		return { state: settledState(fulfilled) ?? 'processing', details: fulfilled };
 	}
 
-	if (session.status === 'open') return { state: 'awaiting_payment', details, resumeUrl: session.url };
-	return { state: 'expired', details, resumeUrl: null };
+	if (session.status === 'open') return { state: 'awaiting_payment', details };
+	return { state: 'expired', details };
 }

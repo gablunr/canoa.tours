@@ -8,12 +8,11 @@ interface Props {
 	state: CheckoutReturnState;
 	email?: string;
 	manageHref?: string;
-	resumeUrl?: string | null;
 	retryHref?: string;
 	refunded?: number;
 }
 
-const { state, email, manageHref, resumeUrl, retryHref, refunded = 0 } = Astro.props;
+const { state, email, manageHref, retryHref, refunded = 0 } = Astro.props;
 
 const confirmedBody = email ? `Te hemos enviado los detalles a ${email}.` : 'Te hemos enviado los detalles por email.';
 
@@ -36,8 +35,8 @@ const notices = {
 		icon: CreditCard,
 		tone: 'bg-sun-soft text-sun-strong',
 		title: 'Aún no hemos recibido el pago.',
-		body: null,
-		action: resumeUrl ? { href: resumeUrl, label: 'Completar el pago' } : null,
+		body: 'Si no llegaste a pagar, puedes intentarlo otra vez desde la excursión.',
+		action: retryHref ? { href: `${retryHref}#reservar`, label: 'Volver a intentarlo' } : null,
 	},
 	cancelled: {
 		icon: CircleX,

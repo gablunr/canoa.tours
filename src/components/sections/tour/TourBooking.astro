@@ -55,6 +55,16 @@ const initialQuote = quoteBooking({
 	coupon: null,
 });
 
+const hasBalance = initialQuote.balanceAmount > 0;
+const paymentChoices = [
+	{
+		value: 'deposit',
+		label: 'Pagar el depósito',
+		detail: `${formatPrice(initialQuote.depositAmount)} ahora y ${formatPrice(initialQuote.balanceAmount)} el día de la excursión`,
+	},
+	{ value: 'full', label: 'Pagar todo ahora', detail: formatPrice(initialQuote.total) },
+];
+
 const counters = [
 	{ name: 'adults', label: perGroup ? 'Personas' : 'Adultos', value: 2, min: 1, max: 30, invalidMessage: 'Tiene que ir al menos una persona.' },
 	...(child
@@ -97,15 +107,13 @@ const glassControl =
 		data-deposit-value={details.deposit}
 		data-insurance-price={bookingPolicy.cancellationInsurancePrice}
 	>
-		<div data-booking-notice role="status" hidden class="rounded-[1.25rem] bg-surface p-4 text-sm leading-relaxed text-primary"></div>
-
 		<div data-booking-unavailable hidden class="grid gap-3">
 			<p class="text-[15px] leading-relaxed text-secondary">La reserva online no está disponible para esta excursión.</p>
 			<Button href={supportHref} variant="outline" size="lg" class="w-full">{supportLabel}</Button>
 		</div>
 
 		<section data-step-panel="1" aria-labelledby="booking-step-1-title" class="grid grid-cols-[minmax(0,1fr)] gap-5">
-			<h3 id="booking-step-1-title" tabindex="-1" class={stepTitle}>Paso 1 de 2</h3>
+			<h3 id="booking-step-1-title" tabindex="-1" class={stepTitle}>Paso 1 de 3</h3>
 
 			<DatePicker hint={`Sale: ${daysLabel.toLowerCase()}`} requiredMessage="Elige el día de la excursión." />
 
@@ -151,7 +159,7 @@ const glassControl =
 		</section>
 
 		<section data-step-panel="2" hidden aria-labelledby="booking-step-2-title" class="grid grid-cols-[minmax(0,1fr)] gap-5">
-			<h3 id="booking-step-2-title" tabindex="-1" class={stepTitle}>Paso 2 de 2</h3>
+			<h3 id="booking-step-2-title" tabindex="-1" class={stepTitle}>Paso 2 de 3</h3>
 
 			<div class="flex items-start justify-between gap-4 rounded-[1.25rem] border border-border/60 p-4 text-sm">
 				<p class="min-w-0 leading-relaxed">
@@ -219,25 +227,53 @@ const glassControl =
 				</div>
 			</div>
 
+			<fieldset data-payment-choice hidden={!hasBalance} class="grid gap-2.5">
+				<legend class="mb-2.5 text-sm font-medium text-primary">¿Cómo quieres pagar?</legend>
+				{paymentChoices.map((choice) => (
+					<label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-background p-4 transition-colors duration-300 ease-smooth hover:border-muted has-checked:border-primary has-checked:bg-surface">
+						<input type="radio" name="paymentOption" value={choice.value} checked={choice.value === 'deposit'} class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary" />
+						<span class="min-w-0 text-sm leading-relaxed">
+							<span class="block font-medium text-primary">{choice.label}</span>
+							<span data-payment-detail={choice.value} class="block text-muted">{choice.detail}</span>
+						</span>
+					</label>
+				))}
+			</fieldset>
+
 			<div>
 				<Checkbox name="acceptTerms" required requiredMessage="Acepta los términos para poder reservar.">
 					Acepto los <UnderlineLink tone="accent" href={termsLink?.href} target="_blank">términos</UnderlineLink> y el <UnderlineLink tone="accent" href={privacyLink?.href} target="_blank">aviso de privacidad</UnderlineLink>
 				</Checkbox>
-				<p class="mt-2 text-xs leading-relaxed text-muted">{savedCardNotice}</p>
+				<p data-saved-card-notice hidden={!hasBalance} class="mt-2 text-xs leading-relaxed text-muted">{savedCardNotice}</p>
 			</div>
 
 			<BookingSummary quote={initialQuote} />
 
-			<div>
-				<Button type="submit" size="lg" data-pay class="liquid-glass w-full">Pagar {formatPrice(initialQuote.depositAmount)}</Button>
-				<p data-balance-note class="mt-3 text-center text-xs leading-relaxed text-muted">
-					El resto, <span data-balance-amount>{formatPrice(initialQuote.balanceAmount)}</span>, se paga el día de la excursión.
-				</p>
-			</div>
+			<Button type="submit" size="lg" data-continue-payment class="liquid-glass w-full">Continuar al pago</Button>
 
 			<p data-booking-error role="alert" hidden class="text-sm leading-relaxed text-error"></p>
 
 			<button type="button" data-step-back class:list={[textButton, 'justify-self-center']}>Volver</button>
+		</section>
+
+		<section data-step-panel="3" hidden aria-labelledby="booking-step-3-title" class="grid grid-cols-[minmax(0,1fr)] gap-5">
+			<h3 id="booking-step-3-title" tabindex="-1" class={stepTitle}>Paso 3 de 3</h3>
+
+			<p data-payment-intro class="text-[15px] leading-relaxed text-primary"></p>
+
+			<div>
+				<p data-payment-loading class="flex h-32 animate-pulse items-center justify-center rounded-[1.25rem] bg-surface text-sm text-muted">Cargando el pago…</p>
+				<div data-payment-element></div>
+			</div>
+
+			<p data-payment-error role="alert" hidden class="text-sm leading-relaxed text-error"></p>
+
+			<div>
+				<Button type="submit" size="lg" data-confirm-payment disabled class="liquid-glass w-full">Pagar</Button>
+				<p class="mt-3 text-center text-xs leading-relaxed text-muted">Pago seguro con Stripe. Nosotros nunca vemos los datos de tu tarjeta.</p>
+			</div>
+
+			<button type="button" data-payment-back class:list={[textButton, 'justify-self-center']}>Volver</button>
 		</section>
 	</form>
 

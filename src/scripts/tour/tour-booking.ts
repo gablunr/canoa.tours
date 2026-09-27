@@ -1,13 +1,13 @@
 import { actions, isInputError, type ActionError } from 'astro:actions';
 import { bookingErrorMessage } from '../../lib/booking/errors';
-import { quoteBooking, type Quote } from '../../lib/booking/pricing';
+import { quoteBooking, type PaymentOption, type Quote } from '../../lib/booking/pricing';
 import { localToday, monthBounds, monthOf, shiftMonth } from '../../lib/calendar';
 import { formatPrice } from '../../lib/format';
 import { clearErrorOnInput, setFieldError, validateFields } from '../ui/form-validation';
 import { initPhoneField } from '../ui/phone-field';
 import { readUtm } from '../ui/utm';
 import { createQuoteClient, renderSummary, selectionKey, type BookingSelection, type QuoteOutcome } from './booking-quote';
-import { loadBooking, saveBooking } from './booking-storage';
+import { loadStripeClient, mountPayment, paymentFailedMessage, paymentUnavailableMessage, type MountedPayment } from './booking-payment';
 import { initDatePicker, type CalendarDay } from './date-picker';
 import { initHotelPicker } from './hotel-picker';
 
@@ -32,10 +32,10 @@ const couponErrorMessages = messagesOf(['coupon_not_valid', 'coupon_exhausted'])
 const stepOneFieldNames = new Set(['tourDate', 'adults', 'children', 'infants', 'hotelId', 'hotelName', 'zoneSlug']);
 const hotelFieldNames = new Set(['hotelId', 'hotelName', 'zoneSlug']);
 
-const cancelledPaymentNotice = 'No se completó el pago. Tus datos siguen aquí para intentarlo de nuevo.';
-const dayGoneMessage = 'Ese día ya no está disponible. Elige otro.';
 const payingPeopleMessage = 'Añade al menos un adulto o un niño.';
-const payBusyLabel = 'Preparando el pago…';
+const continueLabel = 'Continuar al pago';
+const continueBusyLabel = 'Preparando el pago…';
+const confirmBusyLabel = 'Procesando el pago…';
 const connectionMessage = 'No hemos podido conectar. Revisa tu conexión e inténtalo de nuevo.';
 
 export function initTourBooking(form: HTMLFormElement) {
@@ -49,17 +49,25 @@ export function initTourBooking(form: HTMLFormElement) {
 
 	const stepOne = form.querySelector<HTMLElement>('[data-step-panel="1"]');
 	const stepTwo = form.querySelector<HTMLElement>('[data-step-panel="2"]');
+	const stepThree = form.querySelector<HTMLElement>('[data-step-panel="3"]');
+	const paymentContainer = form.querySelector<HTMLElement>('[data-payment-element]');
 	const dateRoot = form.querySelector<HTMLElement>('[data-date-picker]');
 	const hotelRoot = form.querySelector<HTMLElement>('[data-hotel-picker]');
 	const phoneRoot = form.querySelector<HTMLElement>('[data-phone-field]');
-	if (!stepOne || !stepTwo || !dateRoot || !hotelRoot || !phoneRoot) return;
+	if (!stepOne || !stepTwo || !stepThree || !paymentContainer || !dateRoot || !hotelRoot || !phoneRoot) return;
 
-	const notice = form.querySelector<HTMLElement>('[data-booking-notice]');
 	const unavailable = form.querySelector<HTMLElement>('[data-booking-unavailable]');
 	const summaries = Array.from(form.querySelectorAll<HTMLElement>('[data-booking-summary]'));
-	const payButton = form.querySelector<HTMLButtonElement>('[data-pay]');
-	const balanceNote = form.querySelector<HTMLElement>('[data-balance-note]');
-	const balanceAmount = form.querySelector<HTMLElement>('[data-balance-amount]');
+	const continueButton = form.querySelector<HTMLButtonElement>('[data-continue-payment]');
+	const paymentChoice = form.querySelector<HTMLElement>('[data-payment-choice]');
+	const paymentOptionInputs = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="paymentOption"]'));
+	const depositDetail = form.querySelector<HTMLElement>('[data-payment-detail="deposit"]');
+	const fullDetail = form.querySelector<HTMLElement>('[data-payment-detail="full"]');
+	const savedCardNotice = form.querySelector<HTMLElement>('[data-saved-card-notice]');
+	const paymentIntro = form.querySelector<HTMLElement>('[data-payment-intro]');
+	const paymentLoading = form.querySelector<HTMLElement>('[data-payment-loading]');
+	const paymentError = form.querySelector<HTMLElement>('[data-payment-error]');
+	const confirmButton = form.querySelector<HTMLButtonElement>('[data-confirm-payment]');
 	const errorMessage = form.querySelector<HTMLElement>('[data-booking-error]');
 	const selectionDate = form.querySelector<HTMLElement>('[data-selection-date]');
 	const selectionDetail = form.querySelector<HTMLElement>('[data-selection-detail]');
@@ -92,10 +100,16 @@ export function initTourBooking(form: HTMLFormElement) {
 
 	let ready = false;
 	let loaded = false;
-	let step: 1 | 2 = 1;
+	let step: 1 | 2 | 3 = 1;
 	let submitting = false;
 	let lastKey: string | null = null;
 	let currentQuote: Quote | null = null;
+	let quotePending = false;
+	let payment: MountedPayment | null = null;
+	let paymentTicket = 0;
+	let paymentAmount = 0;
+	let canConfirm = false;
+	let confirming = false;
 	let quoteProblem: HTMLElement | null = null;
 	let appliedCoupon: { code: string; discount: number } | null = null;
 
@@ -105,16 +119,11 @@ export function initTourBooking(form: HTMLFormElement) {
 
 	function showUnavailable() {
 		quotes.cancel();
+		teardownPayment();
 		stepOne!.hidden = true;
 		stepTwo!.hidden = true;
-		if (notice) notice.hidden = true;
+		stepThree!.hidden = true;
 		if (unavailable) unavailable.hidden = false;
-	}
-
-	function showNotice(message: string | null) {
-		if (!notice) return;
-		notice.textContent = message ?? '';
-		notice.hidden = !message;
 	}
 
 	function showError(message: string | null) {
@@ -228,19 +237,29 @@ export function initTourBooking(form: HTMLFormElement) {
 		});
 	}
 
-	const payLabel = () => `Pagar ${formatPrice(currentQuote?.depositAmount ?? 0)}`;
+	function paymentOptionFor(quote: Quote): PaymentOption {
+		if (quote.balanceAmount <= 0) return 'full';
+		return paymentOptionInputs.find((input) => input.checked)?.value === 'full' ? 'full' : 'deposit';
+	}
+
+	const payableQuote = (quote: Quote, option: PaymentOption): Quote =>
+		option === 'full' ? { ...quote, depositAmount: quote.total, balanceAmount: 0 } : quote;
 
 	function render(quote: Quote, pending: boolean) {
 		currentQuote = quote;
+		quotePending = pending;
+		const option = paymentOptionFor(quote);
 		const hotel = hotelPicker.value();
 		const context = { hasPickup: Boolean(hotel.hotelId || hotel.hotelName), couponCode: appliedCoupon?.code ?? null };
-		for (const summary of summaries) renderSummary(summary, quote, context, pending);
-		if (payButton && !submitting) payButton.textContent = payLabel();
-		if (balanceAmount) balanceAmount.textContent = formatPrice(quote.balanceAmount);
-		if (balanceNote) balanceNote.hidden = quote.balanceAmount <= 0;
+		for (const summary of summaries) renderSummary(summary, payableQuote(quote, option), context, pending);
+		if (paymentChoice) paymentChoice.hidden = quote.balanceAmount <= 0;
+		if (depositDetail) depositDetail.textContent = `${formatPrice(quote.depositAmount)} ahora y ${formatPrice(quote.balanceAmount)} el día de la excursión`;
+		if (fullDetail) fullDetail.textContent = formatPrice(quote.total);
+		if (savedCardNotice) savedCardNotice.hidden = option !== 'deposit';
 	}
 
 	function settle() {
+		quotePending = false;
 		for (const summary of summaries) {
 			summary.removeAttribute('data-pending');
 			summary.setAttribute('aria-busy', 'false');
@@ -331,14 +350,19 @@ export function initTourBooking(form: HTMLFormElement) {
 		if (selectionDetail) selectionDetail.textContent = [listFormatter.format(people), hotel.label ?? hotel.hotelName ?? ''].filter(Boolean).join(', ');
 	}
 
-	function showStep(next: 1 | 2, moveFocus = true) {
+	function showStep(next: 1 | 2 | 3, moveFocus = true) {
 		step = next;
 		stepOne!.hidden = next !== 1;
 		stepTwo!.hidden = next !== 2;
-		if (next === 2) renderSelectionLine();
+		stepThree!.hidden = next !== 3;
+		if (next !== 3) teardownPayment();
+		if (next === 2) {
+			renderSelectionLine();
+			void loadStripeClient();
+		}
 		if (!moveFocus) return;
 
-		const title = (next === 1 ? stepOne : stepTwo)!.querySelector<HTMLElement>('h3');
+		const title = [stepOne, stepTwo, stepThree][next - 1]!.querySelector<HTMLElement>('h3');
 		if (!title) return;
 		title.focus({ preventScroll: true });
 		const bounds = title.getBoundingClientRect();
@@ -350,23 +374,6 @@ export function initTourBooking(form: HTMLFormElement) {
 		setFieldError(field, message);
 		if (field === dateRoot) dateTrigger?.focus();
 		else focusField(field);
-	}
-
-	function persist() {
-		const current = selection();
-		saveBooking(productKey, {
-			tourDate: current.tourDate || undefined,
-			adults: current.adults,
-			children: current.children,
-			infants: current.infants,
-			hotel: hotelPicker.value(),
-			insurance: current.insurance,
-			couponCode: appliedCoupon?.code,
-			leadName: leadNameInput?.value.trim() || undefined,
-			email: emailInput?.value.trim() || undefined,
-			phone: { country: phoneField.country(), number: phoneField.number() },
-			country: countrySelect?.value || undefined,
-		});
 	}
 
 	function continueToDetails() {
@@ -392,15 +399,109 @@ export function initTourBooking(form: HTMLFormElement) {
 			return;
 		}
 
-		persist();
 		showStep(2);
 	}
 
-	function setPayBusy(busy: boolean) {
-		if (!payButton) return;
-		payButton.disabled = busy;
-		payButton.setAttribute('aria-busy', String(busy));
-		payButton.textContent = busy ? payBusyLabel : payLabel();
+	function setContinueBusy(busy: boolean) {
+		if (!continueButton) return;
+		continueButton.disabled = busy;
+		continueButton.setAttribute('aria-busy', String(busy));
+		continueButton.textContent = busy ? continueBusyLabel : continueLabel;
+	}
+
+	function showPaymentError(message: string | null) {
+		if (!paymentError) return;
+		paymentError.textContent = message ?? '';
+		paymentError.hidden = !message;
+	}
+
+	function syncConfirmButton() {
+		if (!confirmButton) return;
+		confirmButton.disabled = confirming || !canConfirm;
+		confirmButton.setAttribute('aria-busy', String(confirming));
+		confirmButton.textContent = confirming ? confirmBusyLabel : `Pagar ${formatPrice(paymentAmount)}`;
+	}
+
+	function teardownPayment() {
+		paymentTicket++;
+		payment?.destroy();
+		payment = null;
+		canConfirm = false;
+		confirming = false;
+		showPaymentError(null);
+		syncConfirmButton();
+	}
+
+	async function startPaymentElement(clientSecret: string) {
+		teardownPayment();
+		const ticket = paymentTicket;
+		const isCurrent = () => ticket === paymentTicket;
+		if (paymentLoading) paymentLoading.hidden = false;
+
+		let mounted: MountedPayment | null = null;
+		try {
+			mounted = await mountPayment(paymentContainer!, clientSecret, {
+				onReady: () => {
+					if (isCurrent() && paymentLoading) paymentLoading.hidden = true;
+				},
+				onCanConfirmChange: (ready) => {
+					if (!isCurrent()) return;
+					canConfirm = ready;
+					syncConfirmButton();
+				},
+				onLoadError: (message) => {
+					if (!isCurrent()) return;
+					if (paymentLoading) paymentLoading.hidden = true;
+					showPaymentError(message);
+				},
+			});
+		} catch {
+			mounted = null;
+		}
+
+		if (!isCurrent()) {
+			mounted?.destroy();
+			return;
+		}
+		if (!mounted) {
+			if (paymentLoading) paymentLoading.hidden = true;
+			showPaymentError(paymentUnavailableMessage);
+			return;
+		}
+		payment = mounted;
+	}
+
+	function openPayment(amount: number, clientSecret: string, option: PaymentOption) {
+		paymentAmount = amount;
+		const balance = option === 'deposit' ? (currentQuote?.balanceAmount ?? 0) : 0;
+		if (paymentIntro) {
+			paymentIntro.textContent =
+				balance > 0
+					? `Vas a pagar ${formatPrice(amount)} y el resto, ${formatPrice(balance)}, el día de la excursión.`
+					: `Vas a pagar ${formatPrice(amount)}.`;
+		}
+		showStep(3);
+		void startPaymentElement(clientSecret);
+	}
+
+	async function confirmPayment() {
+		if (!payment || confirming || !canConfirm) return;
+		const ticket = paymentTicket;
+		confirming = true;
+		showPaymentError(null);
+		syncConfirmButton();
+
+		let message: string | null;
+		try {
+			message = await payment.confirm(emailInput?.value.trim() ?? '');
+		} catch {
+			message = paymentFailedMessage;
+		}
+
+		if (ticket !== paymentTicket || !message) return;
+		confirming = false;
+		syncConfirmButton();
+		showPaymentError(message);
 	}
 
 	function fieldForName(name: string) {
@@ -454,19 +555,20 @@ export function initTourBooking(form: HTMLFormElement) {
 		showError(error.message);
 	}
 
-	async function pay() {
+	async function continueToPayment() {
 		if (submitting) return;
 		showError(null);
 		if (!validateFields(stepTwo!)) return;
 
 		submitting = true;
-		setPayBusy(true);
-		showNotice(null);
+		setContinueBusy(true);
+		const option = currentQuote ? paymentOptionFor(currentQuote) : 'deposit';
 
 		let result: Awaited<ReturnType<typeof actions.bookings.create>> | null = null;
 		try {
 			result = await actions.bookings.create({
 				...selection(),
+				paymentOption: option,
 				leadName: leadNameInput?.value.trim() ?? '',
 				email: emailInput?.value.trim() ?? '',
 				phone: phoneField.value(),
@@ -478,14 +580,12 @@ export function initTourBooking(form: HTMLFormElement) {
 			result = null;
 		}
 
+		submitting = false;
+		setContinueBusy(false);
 		if (result?.data) {
-			persist();
-			location.assign(result.data.checkoutUrl);
+			openPayment(result.data.amount, result.data.clientSecret, option);
 			return;
 		}
-
-		submitting = false;
-		setPayBusy(false);
 		if (result?.error) handleCreateError(result.error);
 		else showError(connectionMessage);
 	}
@@ -521,7 +621,6 @@ export function initTourBooking(form: HTMLFormElement) {
 				lastKey = selectionKey(current);
 				render(quote, false);
 				couponRemove?.focus();
-				persist();
 				return;
 			}
 			setFieldError(couponField, quote.coupon?.message ?? bookingErrorMessage('coupon_not_valid'));
@@ -561,47 +660,6 @@ export function initTourBooking(form: HTMLFormElement) {
 		});
 	}
 
-	const setCount = (input: HTMLInputElement | null, value: number | undefined) => {
-		if (input && value !== undefined) input.value = String(Math.min(Math.max(value, Number(input.min)), Number(input.max)));
-	};
-
-	async function restoreAfterCancelledPayment() {
-		load();
-		showNotice(cancelledPaymentNotice);
-		document.getElementById('reservar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-		const stored = loadBooking(productKey);
-		if (!stored) return;
-
-		setCount(adultsInput, stored.adults);
-		setCount(childrenInput, stored.children);
-		setCount(infantsInput, stored.infants);
-		if (insuranceInput) insuranceInput.checked = Boolean(stored.insurance);
-		if (stored.hotel) hotelPicker.setValue(stored.hotel);
-		if (leadNameInput && stored.leadName) leadNameInput.value = stored.leadName;
-		if (emailInput && stored.email) emailInput.value = stored.email;
-		if (countrySelect && stored.country) countrySelect.value = stored.country;
-		if (stored.phone?.country) phoneField.setCountry(stored.phone.country);
-		if (stored.phone?.number) phoneField.setNumber(stored.phone.number);
-		if (couponInput && stored.couponCode) couponInput.value = stored.couponCode;
-		syncSteppers();
-		update();
-
-		const { tourDate } = stored;
-		if (!tourDate) return;
-		const days = await daysOf(monthOf(tourDate)).catch(() => null);
-		const availabilityUnknown = days === null;
-		if (availabilityUnknown || days.find((day) => day.date === tourDate)?.bookable) {
-			datePicker.setValue(tourDate);
-			update();
-			showStep(2, false);
-			if (stored.couponCode) await applyCoupon();
-			return;
-		}
-		showStep(1, false);
-		setFieldError(dateRoot!, dayGoneMessage);
-	}
-
 	clearErrorOnInput(form);
 	form.addEventListener('input', update);
 	form.addEventListener('change', update);
@@ -613,11 +671,22 @@ export function initTourBooking(form: HTMLFormElement) {
 	form.addEventListener('submit', (event) => {
 		event.preventDefault();
 		if (step === 1) continueToDetails();
-		else void pay();
+		else if (step === 2) void continueToPayment();
+		else void confirmPayment();
 	});
 
 	for (const button of form.querySelectorAll<HTMLButtonElement>('[data-step-back]')) {
 		button.addEventListener('click', () => showStep(1));
+	}
+
+	form.querySelector<HTMLButtonElement>('[data-payment-back]')?.addEventListener('click', () => {
+		if (!confirming) showStep(2);
+	});
+
+	for (const input of paymentOptionInputs) {
+		input.addEventListener('change', () => {
+			if (currentQuote) render(currentQuote, quotePending);
+		});
 	}
 
 	couponApply?.addEventListener('click', () => void applyCoupon());
@@ -631,26 +700,18 @@ export function initTourBooking(form: HTMLFormElement) {
 		showCouponState();
 		update();
 		couponInput?.focus();
-		persist();
 	});
 
 	window.addEventListener('pageshow', (event) => {
 		if (!event.persisted) return;
 		submitting = false;
-		setPayBusy(false);
+		setContinueBusy(false);
+		if (step === 3) showStep(2, false);
 	});
 
 	ready = true;
 	syncSteppers();
 	update();
-
-	const params = new URLSearchParams(location.search);
-	if (params.get('pago') === 'cancelado') {
-		params.delete('pago');
-		const query = params.toString();
-		history.replaceState(history.state, '', `${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
-		void restoreAfterCancelledPayment();
-	}
 }
 
 export function initBookingBar(bar: HTMLElement) {

@@ -1,4 +1,4 @@
-const draftKeyPrefix = 'canoa:booking:';
+const reloadKeyPrefix = 'canoa:booking:checkout-reloads:';
 const reloadDelayMs = 4000;
 const maxReloads = 6;
 
@@ -28,7 +28,7 @@ export function initProcessingReload(root: HTMLElement) {
 	if (root.dataset.checkoutState !== 'processing') return;
 
 	const sessionId = new URL(window.location.href).searchParams.get('session_id') ?? '';
-	const key = `${draftKeyPrefix}checkout-reloads:${sessionId}`;
+	const key = `${reloadKeyPrefix}${sessionId}`;
 	const count = readReloadCount(key);
 
 	if (count >= maxReloads || !writeReloadCount(key, count + 1)) {
@@ -37,13 +37,4 @@ export function initProcessingReload(root: HTMLElement) {
 	}
 
 	window.setTimeout(() => window.location.reload(), reloadDelayMs);
-}
-
-export function clearBookingDrafts() {
-	try {
-		const keys = Array.from({ length: sessionStorage.length }, (_, index) => sessionStorage.key(index));
-		keys.filter((key): key is string => key?.startsWith(draftKeyPrefix) ?? false).forEach((key) => sessionStorage.removeItem(key));
-	} catch {
-		return;
-	}
 }

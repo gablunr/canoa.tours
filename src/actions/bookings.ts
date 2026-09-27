@@ -9,7 +9,6 @@ import { siteOrigin } from '../lib/site-origin';
 import { supabaseAdmin } from '../lib/supabase/admin';
 
 const maxPendingBookingsPerCustomer = 2;
-const cancelledCheckoutQuery = '?pago=cancelado';
 
 const productKeyInput = z.string().trim().min(1).max(100);
 
@@ -28,6 +27,7 @@ const bookingSelectionShape = {
 	zoneSlug: z.string().trim().min(1).max(100).optional(),
 	insurance: z.boolean().default(false),
 	couponCode: z.string().trim().min(1).max(64).optional(),
+	paymentOption: z.enum(['deposit', 'full']).default('deposit'),
 };
 
 const optionalUtmValue = z.string().trim().max(200).optional();
@@ -197,6 +197,7 @@ async function priceSelection(selection: BookingSelection): Promise<PricedSelect
 		insurance: selection.insurance,
 		insurancePricePerPerson: bookingPolicy.cancellationInsurancePrice,
 		coupon: coupon && couponValid ? { type: coupon.discount_type, value: Number(coupon.discount_value) } : null,
+		paymentOption: selection.paymentOption,
 	};
 
 	return { bookable, pickup, coupon, couponValid, quote: quoteBooking(quoteInput) };
@@ -412,7 +413,7 @@ export const bookings = {
 				const created = (createdRows as { id: string; code: string }[] | null)?.[0];
 				if (!created) throw new Error('booking_not_created');
 
-				let checkout: { id: string; url: string };
+				let checkout: { id: string; clientSecret: string };
 				try {
 					checkout = await createCheckoutSession({
 						bookingId: created.id,
@@ -420,6 +421,7 @@ export const bookings = {
 						productName: bookable.name,
 						amount: quote.depositAmount,
 						currency: bookable.product.currency,
+						payInFull: quote.balanceAmount === 0,
 						customer: {
 							id: customer.id,
 							email: customer.email,
@@ -427,7 +429,6 @@ export const bookings = {
 							stripeCustomerId: customer.stripe_customer_id,
 						},
 						origin: siteOrigin(context.url),
-						cancelPath: `${bookable.tourPath}${cancelledCheckoutQuery}`,
 					});
 				} catch (checkoutError) {
 					await expireBooking(created.id);
@@ -439,7 +440,12 @@ export const bookings = {
 					.insert({ booking_id: created.id, type: 'checkout_created', data: { session_id: checkout.id, amount: quote.depositAmount } });
 				if (eventError) console.error('checkout_event_not_recorded', { bookingId: created.id, eventError });
 
-				return { code: created.code, checkoutUrl: checkout.url };
+				return {
+					code: created.code,
+					clientSecret: checkout.clientSecret,
+					amount: quote.depositAmount,
+					currency: bookable.product.currency,
+				};
 			} catch (error) {
 				throw toActionError(error);
 			}

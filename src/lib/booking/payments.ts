@@ -1,5 +1,4 @@
 import Stripe from 'stripe';
-import { savedCardNotice } from '../../data/booking/booking-policy';
 import { sendBookingEmail } from '../email/booking-emails';
 import { stripe } from '../stripe';
 import { supabaseAdmin } from '../supabase/admin';
@@ -67,16 +66,20 @@ export async function createCheckoutSession(input: {
 	productName: string;
 	amount: number;
 	currency: string;
+	payInFull: boolean;
 	customer: { id: string; email: string; name: string; stripeCustomerId: string | null };
 	origin: string;
-	cancelPath: string;
-}): Promise<{ id: string; url: string }> {
+}): Promise<{ id: string; clientSecret: string }> {
 	const stripeCustomerId = await ensureStripeCustomer(input.customer);
 	const metadata = { booking_id: input.bookingId, booking_code: input.bookingCode, kind: 'deposit' };
+	const paymentDescription = input.payInFull
+		? `Reserva ${input.bookingCode}. Pago completo de la excursión.`
+		: `Reserva ${input.bookingCode}. Pago al reservar, el resto se paga el día del tour.`;
 
 	const session = await stripe.checkout.sessions.create(
 		{
 			mode: 'payment',
+			ui_mode: 'elements',
 			customer: stripeCustomerId,
 			client_reference_id: input.bookingId,
 			line_items: [
@@ -85,34 +88,28 @@ export async function createCheckoutSession(input: {
 					price_data: {
 						currency: input.currency.toLowerCase(),
 						unit_amount: toCents(input.amount),
-						product_data: {
-							name: input.productName,
-							description: `Reserva ${input.bookingCode}. Pago al reservar, el resto se paga el día del tour.`,
-						},
+						product_data: { name: input.productName, description: paymentDescription },
 					},
 				},
 			],
 			payment_intent_data: {
-				setup_future_usage: 'off_session',
+				...(input.payInFull ? {} : { setup_future_usage: 'off_session' as const }),
 				description: `Reserva ${input.bookingCode}`,
 				metadata,
 			},
 			metadata,
 			expires_at: Math.floor(Date.now() / 1000) + checkoutSessionLifetimeSeconds,
-			success_url: `${input.origin}/booking/confirmed?session_id={CHECKOUT_SESSION_ID}`,
-			cancel_url: `${input.origin}${input.cancelPath}`,
-			locale: 'es',
-			custom_text: { submit: { message: savedCardNotice } },
+			return_url: `${input.origin}/booking/confirmed?session_id={CHECKOUT_SESSION_ID}`,
 		},
 		{ idempotencyKey: `checkout_deposit_${input.bookingId}` },
 	);
 
-	if (!session.url) throw new Error('checkout_url_missing');
+	if (!session.client_secret) throw new Error('checkout_client_secret_missing');
 
 	const { error } = await supabaseAdmin.from('bookings').update({ stripe_checkout_session_id: session.id }).eq('id', input.bookingId);
 	if (error) throw error;
 
-	return { id: session.id, url: session.url };
+	return { id: session.id, clientSecret: session.client_secret };
 }
 
 export async function closeUnpaidCheckoutSession(sessionId: string): Promise<boolean> {
