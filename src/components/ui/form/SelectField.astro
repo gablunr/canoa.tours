@@ -1,0 +1,51 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import type { HTMLAttributes } from 'astro/types';
+
+interface SelectOption {
+	value: string;
+	label: string;
+}
+
+interface Props extends Omit<HTMLAttributes<'select'>, 'id' | 'class' | 'name'> {
+	label: string;
+	name: string;
+	options: SelectOption[];
+	value?: string;
+	placeholder?: string;
+	hint?: string;
+	requiredMessage?: string;
+}
+
+const { label, name, options, value = '', placeholder, hint, requiredMessage, required, ...attributes } = Astro.props;
+
+const selectId = `field-${name}`;
+const hintId = `${selectId}-hint`;
+const errorId = `${selectId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+---
+
+<div data-field data-required-message={requiredMessage}>
+	<label for={selectId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
+		{label}
+		{!required && <span class="text-xs font-normal text-muted">Opcional</span>}
+	</label>
+	<div class="relative mt-2">
+		<select
+			{...attributes}
+			id={selectId}
+			name={name}
+			required={required}
+			aria-describedby={describedBy}
+			class="block h-12 w-full appearance-none rounded-2xl border border-border-strong bg-background pr-11 pl-4 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
+		>
+			{placeholder !== undefined && <option value="" selected={value === ''}>{placeholder}</option>}
+			{options.map((option) => (
+				<option value={option.value} selected={option.value === value}>{option.label}</option>
+			))}
+		</select>
+		<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+	</div>
+	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
+	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+</div>

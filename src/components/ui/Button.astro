@@ -6,7 +6,7 @@ interface Props extends Omit<HTMLAttributes<'button'>, 'class' | 'type'> {
 	target?: HTMLAttributes<'a'>['target'];
 	rel?: string;
 	type?: 'button' | 'submit';
-	variant?: 'solid' | 'on-dark' | 'outline' | 'outline-on-dark' | 'glass';
+	variant?: 'solid' | 'on-dark' | 'danger' | 'outline' | 'outline-on-dark' | 'glass';
 	size?: 'sm' | 'md' | 'lg';
 	class?: string;
 }
@@ -17,6 +17,7 @@ const Element = href ? 'a' : 'button';
 const variants = {
 	solid: 'bg-accent text-white hover:bg-accent-strong',
 	'on-dark': 'bg-white text-primary hover:bg-white/85',
+	danger: 'bg-error text-white hover:bg-error/85',
 	outline: 'border border-border text-primary hover:border-primary',
 	'outline-on-dark': 'border border-white/35 text-white hover:border-white hover:bg-white/10',
 	glass: 'liquid-glass bg-primary/25 text-white hover:bg-primary/40',
