@@ -1,37 +1,113 @@
 ---
+import { getImage } from 'astro:assets';
+import { MessageSquareText } from '@lucide/astro';
 import PageSection from '../page/PageSection.astro';
 import Button from '../../ui/Button.astro';
+import RatingBadge from '../../ui/RatingBadge.astro';
+import ReviewCard from '../../ui/cards/ReviewCard.astro';
+import ReviewFormFields from '../account/ReviewFormFields.astro';
 import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
 import { company, whatsappMessageHref } from '../../../data/site/company';
 import { cancellationsLink, contactLink } from '../../../data/site/navigation';
+import { routes } from '../../../data/site/routes';
+import { reviewStats, reviews } from '../../../data/reviews/reviews';
+import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
+import { tourDetails, tourPhoto, tourProductKey } from '../../../data/tours/tours';
 
 const { whatsapp } = company;
 const questionMessage = 'Hola, estoy pensando en reservar la excursión [nombre] para el [fecha] y tengo una pregunta';
+const stats = reviewStats(reviews);
+const signInHref = `/account/sign-in?next=${encodeURIComponent(`${routes.reviews}#${reviewFormAnchor}`)}`;
+
+const tourThumbnails = Object.fromEntries(
+	await Promise.all(
+		tourDetails.flatMap((details) => {
+			const photo = tourPhoto(details);
+			if (!photo) return [];
+			return [getImage({ src: photo, width: 160, height: 160, fit: 'cover', format: 'webp' }).then((image) => [tourProductKey(details), image.src])];
+		}),
+	),
+);
 
 const inlineLink =
 	'text-accent-strong underline decoration-accent/40 decoration-1 underline-offset-[0.2em] transition-colors duration-300 ease-smooth hover:decoration-accent-strong';
+const pickerMessage = 'max-w-xl text-[17px] leading-relaxed text-pretty text-secondary';
 ---
 
-<PageSection id="reviews-after-title" title="Si ya hiciste tu excursión con nosotros">
-	<div data-reveal class="grid max-w-3xl gap-5 text-[17px] max-lg:mx-auto max-lg:text-center leading-relaxed text-pretty text-secondary">
-		<p>
-			Muy pronto vas a poder dejar la tuya aquí. A otros viajeros les sirve lo concreto: qué tour hiciste, cómo fue la recogida, qué
-			te gustó y qué cambiarías.
-		</p>
-		<p>
-			Si algo salió mal, también queremos saberlo. Y si prefieres contárnoslo en privado,{' '}
-			<a href={contactLink.href} class={inlineLink}>escríbenos</a>.
-		</p>
-	</div>
-</PageSection>
+{stats && (
+	<PageSection id="reviews-list-title" title="Opiniones publicadas">
+		<p data-reveal class="max-lg:text-center"><RatingBadge stats={stats} /></p>
+		<ul class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+			{reviews.map((review) => (
+				<li data-reveal>
+					<ReviewCard review={review} />
+				</li>
+			))}
+		</ul>
+	</PageSection>
+)}
+
+<div id={reviewFormAnchor} class="scroll-mt-16">
+	<PageSection id="review-form-title" title="¿De qué quieres opinar?" intro="Elige una excursión que ya hiciste con nosotros y cuéntanos qué tal fue.">
+		<div data-reveal data-review-picker class="grid gap-6">
+			<p class={pickerMessage} data-picker-state="loading">Buscando tus reservas…</p>
+
+			<div class="flex flex-col gap-6 max-lg:items-center max-lg:text-center" data-picker-state="signed-out" hidden>
+				<p class={pickerMessage}>Inicia sesión con el email de tu reserva y te mostramos las excursiones que ya hiciste.</p>
+				<Button href={signInHref} class="w-fit">Iniciar sesión</Button>
+			</div>
+
+			<p class={pickerMessage} data-picker-state="empty" hidden>
+				Todavía no tienes excursiones realizadas. Cuando hagas una, podrás opinar aquí.
+				<a href={routes.catalog} class={inlineLink}>Ver excursiones</a>
+			</p>
+
+			<p class={pickerMessage} data-picker-state="error" hidden>No hemos podido cargar tus reservas. Recarga la página para intentarlo de nuevo.</p>
+
+			<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tus excursiones realizadas" data-picker-state="list" data-picker-options hidden></ul>
+
+			<template data-picker-option-template>
+				<li>
+					<button
+						type="button"
+						class="liquid-glass flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-white/60 p-2 pr-4 text-left transition-colors duration-300 ease-smooth hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:cursor-default disabled:opacity-55 disabled:hover:bg-white/60 aria-pressed:bg-accent-soft aria-pressed:ring-2 aria-pressed:ring-accent"
+						aria-pressed="false"
+						data-picker-option
+					>
+						<span class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ink-100 text-muted">
+							<MessageSquareText size={20} stroke-width={1.75} aria-hidden="true" data-picker-option-icon />
+							<img alt="" width="56" height="56" loading="lazy" decoding="async" class="size-full object-cover" data-picker-option-image hidden />
+						</span>
+						<span class="min-w-0">
+							<span class="block truncate font-medium text-primary" data-picker-option-name></span>
+							<span class="mt-0.5 block text-sm text-muted" data-picker-option-date></span>
+						</span>
+					</button>
+				</li>
+			</template>
+
+			<div class="rounded-[2rem] bg-surface p-5 sm:p-7" data-picker-form hidden>
+				<h3 class="text-2xl leading-[1.1] font-semibold tracking-[-0.03em] text-balance text-primary outline-none" tabindex="-1" data-picker-form-title></h3>
+				<div class="mt-6">
+					<ReviewFormFields code="" suggestedAuthor="" doneHref="/account" doneLabel="Ver mis reservas" />
+				</div>
+			</div>
+
+			<p class="text-[15px] leading-relaxed text-pretty text-muted max-lg:text-center">
+				Si algo salió mal y prefieres contárnoslo en privado, <a href={contactLink.href} class={inlineLink}>escríbenos</a>.
+			</p>
+
+			<script type="application/json" data-tour-thumbnails set:html={JSON.stringify(tourThumbnails)} />
+		</div>
+	</PageSection>
+</div>
 
 <PageSection id="reviews-before-title" title="Si todavía no reservaste" class="pb-16 lg:pb-24">
 	<div data-reveal class="flex flex-col gap-8 max-lg:items-center max-lg:text-center lg:flex-row lg:items-center lg:justify-between">
 		<p class="max-w-2xl text-[17px] leading-relaxed text-pretty text-secondary">
-			Mientras tanto, en cada excursión puedes ver qué incluye y cuánto cuesta la recogida desde tu hotel. Si te preocupa tener que
-			cancelar o que el tour se mueva por mal tiempo, lo explicamos en{' '}
-			<a href={cancellationsLink.href} class={inlineLink}>cancelaciones y cambios</a>. Y si quieres hablar con alguien antes de
-			reservar, escríbenos por WhatsApp.
+			En cada excursión puedes ver qué incluye y cuánto cuesta la recogida desde tu hotel. Si te preocupa tener que cancelar o que el
+			tour se mueva por mal tiempo, lo explicamos en <a href={cancellationsLink.href} class={inlineLink}>cancelaciones y cambios</a>. Y si
+			quieres hablar con alguien antes de reservar, escríbenos por WhatsApp.
 		</p>
 		{whatsapp && (
 			<Button href={whatsappMessageHref(whatsapp, questionMessage)} size="lg" class="shrink-0 gap-2.5">
@@ -41,3 +117,9 @@ const inlineLink =
 		)}
 	</div>
 </PageSection>
+
+<script>
+	import { initReviewPicker } from '../../../scripts/reviews/review-picker';
+
+	document.querySelectorAll<HTMLElement>('[data-review-picker]').forEach(initReviewPicker);
+</script>

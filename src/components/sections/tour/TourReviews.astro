@@ -5,6 +5,7 @@ import RatingBadge from '../../ui/RatingBadge.astro';
 import ReviewCard from '../../ui/cards/ReviewCard.astro';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
 import { reviewStats, reviewsForTour } from '../../../data/reviews/reviews';
+import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
 import type { TourDetails } from '../../../data/tours/tours';
 import { routes } from '../../../data/site/routes';
 
@@ -17,7 +18,7 @@ const { details } = Astro.props;
 const tourReviewLimit = 6;
 const tourReviews = reviewsForTour(details);
 const stats = reviewStats(tourReviews);
-const reviewFormHref = `${routes.reviews}#opinar`;
+const reviewFormHref = `${routes.reviews}#${reviewFormAnchor}`;
 ---
 
 <TourSection id="opiniones" title="Opiniones">
