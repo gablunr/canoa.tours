@@ -1,0 +1,43 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { paginationItems } from '../../../lib/account/pagination';
+import { bookingsSearch, type BookingsFilters } from '../../../lib/manage/bookings-query';
+import { glassCircle, glassCircleDisabled, glassGroup } from '../glass-classes';
+
+interface Props {
+	filters: BookingsFilters;
+	totalPages: number;
+	summary: string;
+}
+
+const { filters, totalPages, summary } = Astro.props;
+const current = Math.min(filters.page, totalPages);
+const pageHref = (page: number) => `/manage/bookings${bookingsSearch(filters, { page })}`;
+---
+
+<div class="mt-4 flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-between" style="animation-delay: 220ms">
+	<p class="px-2 text-xs text-muted tabular-nums">{summary}</p>
+	{totalPages > 1 && (
+		<nav class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']} aria-label="Páginas de reservas">
+			{current > 1 ? (
+				<a href={pageHref(current - 1)} class={glassCircle} aria-label="Página anterior"><ChevronLeft size={16} stroke-width={2} aria-hidden="true" /></a>
+			) : (
+				<span class={glassCircleDisabled} aria-hidden="true"><ChevronLeft size={16} stroke-width={2} /></span>
+			)}
+			{paginationItems(current, totalPages).map((item) =>
+				item.kind === 'gap' ? (
+					<span class="flex size-8 items-center justify-center text-[13px] text-muted sm:size-9" aria-hidden="true">…</span>
+				) : (
+					<a href={pageHref(item.page)} class={glassCircle} aria-current={item.page === current ? 'page' : undefined} aria-label={`Página ${item.page}`}>
+						{item.page}
+					</a>
+				),
+			)}
+			{current < totalPages ? (
+				<a href={pageHref(current + 1)} class={glassCircle} aria-label="Página siguiente"><ChevronRight size={16} stroke-width={2} aria-hidden="true" /></a>
+			) : (
+				<span class={glassCircleDisabled} aria-hidden="true"><ChevronRight size={16} stroke-width={2} /></span>
+			)}
+		</nav>
+	)}
+</div>

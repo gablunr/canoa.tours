@@ -1,0 +1,82 @@
+---
+import { ChevronDown, Search } from '@lucide/astro';
+import { bookingStatusLabels } from '../../../lib/account/bookings';
+import { bookingStatuses, bookingsSearch, type BookingsFilters, type ProductOption } from '../../../lib/manage/bookings-query';
+import { glassButton, glassButtonPrimary, glassControl, glassGroup, glassOption } from '../glass-classes';
+
+interface Props {
+	filters: BookingsFilters;
+	products: ProductOption[];
+}
+
+const { filters, products } = Astro.props;
+
+const views = [
+	{ id: 'upcoming', label: 'Próximas' },
+	{ id: 'all', label: 'Todas' },
+] as const;
+
+const hasFilters = Boolean(filters.q || filters.status !== 'all' || filters.product);
+const fieldControl = [glassControl, 'relative min-w-0 hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent'];
+const selectClass = 'h-full w-full min-w-0 cursor-pointer appearance-none truncate rounded-full bg-transparent pr-9 pl-4 outline-none';
+const chevronClass = 'pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted';
+---
+
+<div class="flex animate-fade-up flex-col gap-5 lg:flex-row lg:items-center lg:gap-3" style="animation-delay: 120ms">
+	<nav aria-label="Vista de reservas" class="flex shrink-0 gap-2 self-center lg:self-auto">
+		{views.map((view) => (
+			<a href={`/manage/bookings${bookingsSearch(filters, { view: view.id, page: 1 })}`} class={glassOption} aria-current={filters.view === view.id ? 'page' : undefined}>
+				{view.label}
+			</a>
+		))}
+	</nav>
+
+	<form method="get" action="/manage/bookings" role="search" class:list={[glassGroup, 'flex min-w-0 flex-1 flex-col gap-2.5 rounded-[1.75rem] p-2.5 sm:flex-row sm:gap-2 sm:rounded-full']} data-bookings-filters>
+		<input type="hidden" name="view" value={filters.view} />
+		<label class:list={[...fieldControl, 'sm:flex-1']}>
+			<span class="sr-only">Buscar</span>
+			<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+			<input
+				type="search"
+				name="q"
+				value={filters.q}
+				placeholder="Código, nombre, teléfono o email"
+				class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-10 font-normal outline-none placeholder:text-muted"
+			/>
+		</label>
+		<label class:list={[...fieldControl, 'sm:w-44']}>
+			<span class="sr-only">Estado</span>
+			<select name="status" class={selectClass} data-auto-submit>
+				<option value="all" selected={filters.status === 'all'}>Todos los estados</option>
+				{bookingStatuses.map((status) => (
+					<option value={status} selected={filters.status === status}>{bookingStatusLabels[status]}</option>
+				))}
+			</select>
+			<ChevronDown size={16} stroke-width={1.75} class={chevronClass} aria-hidden="true" />
+		</label>
+		<label class:list={[...fieldControl, 'sm:w-52']}>
+			<span class="sr-only">Excursión</span>
+			<select name="product" class={selectClass} data-auto-submit>
+				<option value="" selected={!filters.product}>Todas las excursiones</option>
+				{products.map((product) => (
+					<option value={product.key} selected={filters.product === product.key}>{product.name}</option>
+				))}
+			</select>
+			<ChevronDown size={16} stroke-width={1.75} class={chevronClass} aria-hidden="true" />
+		</label>
+		<div class="flex gap-2.5 sm:gap-2">
+			<button type="submit" class:list={[glassButtonPrimary, 'flex-1']}>Filtrar</button>
+			{hasFilters && (
+				<a href={`/manage/bookings${bookingsSearch({ ...filters, q: '', status: 'all', product: '', page: 1 })}`} class={glassButton}>
+					Limpiar
+				</a>
+			)}
+		</div>
+	</form>
+</div>
+
+<script>
+	import { initBookingsFilters } from '../../../scripts/manage/bookings-list';
+
+	document.querySelectorAll<HTMLFormElement>('[data-bookings-filters]').forEach(initBookingsFilters);
+</script>

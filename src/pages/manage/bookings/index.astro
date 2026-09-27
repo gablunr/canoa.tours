@@ -1,0 +1,60 @@
+---
+import { Ticket } from '@lucide/astro';
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
+import BookingsFilterBar from '../../../components/manage/bookings/BookingsFilterBar.astro';
+import BookingsTable from '../../../components/manage/bookings/BookingsTable.astro';
+import BookingsPagination from '../../../components/manage/bookings/BookingsPagination.astro';
+import { canOpenSection } from '../../../data/manage/sections';
+import { localToday } from '../../../lib/account/bookings';
+import { bookingsPageSize, bookingsSearch, loadBookingsPage, loadProductOptions, readBookingsFilters } from '../../../lib/manage/bookings-query';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'bookings')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const { supabase } = Astro.locals;
+const filters = readBookingsFilters(Astro.url.searchParams);
+const today = localToday();
+
+const [products, { rows, total }] = await Promise.all([loadProductOptions(supabase), loadBookingsPage(supabase, filters, today)]);
+
+const totalPages = Math.max(1, Math.ceil(total / bookingsPageSize));
+if (filters.page > totalPages) return Astro.redirect(`/manage/bookings${bookingsSearch(filters, { page: totalPages })}`);
+
+const firstShown = (filters.page - 1) * bookingsPageSize + 1;
+const lastShown = firstShown + rows.length - 1;
+const countLabel = total === 1 ? '1 reserva' : `${total.toLocaleString('es')} reservas`;
+const resultSummary = totalPages > 1 ? `${firstShown} a ${lastShown} de ${countLabel}` : countLabel;
+const hasFilters = Boolean(filters.q || filters.status !== 'all' || filters.product);
+const emptyMessage = hasFilters
+	? 'Prueba con otra búsqueda o quita algún filtro.'
+	: filters.view === 'upcoming'
+		? 'No hay excursiones por delante ahora mismo.'
+		: 'Todavía no hay reservas.';
+---
+
+<ManageLayout title="Reservas" section="bookings">
+	<ManagePageHeader title="Reservas" description="Busca una reserva, revisa su estado y gestiona cambios." />
+
+	<div class="mt-6">
+		<BookingsFilterBar filters={filters} products={products} />
+	</div>
+
+	<div class="mt-4">
+		{rows.length > 0 ? (
+			<>
+				<BookingsTable rows={rows} backSearch={bookingsSearch(filters)} today={today} />
+				<BookingsPagination filters={filters} totalPages={totalPages} summary={resultSummary} />
+			</>
+		) : (
+			<section class="flex animate-fade-up flex-col items-center rounded-[1.75rem] bg-surface px-6 py-10 text-center sm:px-10" style="animation-delay: 180ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+					<Ticket size={22} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<h2 class="mt-5 text-xl font-semibold tracking-[-0.03em] text-primary">No hay reservas</h2>
+				<p class="mx-auto mt-2 max-w-md text-sm text-secondary">{emptyMessage}</p>
+			</section>
+		)}
+	</div>
+</ManageLayout>

@@ -1,0 +1,227 @@
+---
+import { ChevronLeft, Mail, MessageCircle, Phone, ShieldCheck } from '@lucide/astro';
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
+import StatusBadge from '../../../components/manage/StatusBadge.astro';
+import BookingActionsCard from '../../../components/manage/bookings/BookingActionsCard.astro';
+import BookingHistoryCard from '../../../components/manage/bookings/BookingHistoryCard.astro';
+import BookingPaymentsCard from '../../../components/manage/bookings/BookingPaymentsCard.astro';
+import BookingPickupCard from '../../../components/manage/bookings/BookingPickupCard.astro';
+import { canOpenSection } from '../../../data/manage/sections';
+import { formatBookingDate, localToday } from '../../../lib/account/bookings';
+import { loadBookingDetails } from '../../../lib/booking/booking-details';
+import { formatMoney, peopleSummary } from '../../../lib/email/templates/layout';
+import { backSearchFrom, formatDateTime, loadBookingExtras, loadHistory, loadPayments, loadPickupOptions } from '../../../lib/manage/bookings-query';
+import type { BookingStatus } from '../../../lib/supabase/types';
+import { glassChipButton, glassPanel, surfacePanel } from '../../../components/manage/glass-classes';
+
+export const prerender = false;
+
+const notFound = () => new Response(null, { status: 404, statusText: 'Not Found' });
+
+if (!canOpenSection(Astro.locals.staffRole, 'bookings')) return notFound();
+
+const code = (Astro.params.code ?? '').trim().toUpperCase();
+if (!/^[A-Z0-9]{4,20}$/.test(code)) return notFound();
+
+const { supabase } = Astro.locals;
+const [details, extras] = await Promise.all([loadBookingDetails({ code }), loadBookingExtras(supabase, code)]);
+if (!details || !extras) return notFound();
+
+const today = localToday();
+const [payments, history, pickupOptions] = await Promise.all([
+	loadPayments(supabase, details.id),
+	loadHistory(supabase, details.id),
+	details.status === 'confirmed' ? loadPickupOptions(supabase, details.productId) : Promise.resolve({ zones: [], hotels: [] }),
+]);
+
+const status = details.status as BookingStatus;
+const backHref = `/manage/bookings${backSearchFrom(Astro.url.searchParams.get('back'))}`;
+const shortDayFormatter = new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const shortDay = (isoDate: string) => {
+	const formatted = shortDayFormatter.format(new Date(`${isoDate}T00:00:00Z`)).replaceAll('.', '');
+	return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
+
+const succeeded = payments.filter((payment) => payment.status === 'succeeded');
+const paidOnline = succeeded.filter((payment) => payment.kind !== 'refund').reduce((sum, payment) => sum + payment.amount, 0);
+const refunded = succeeded.filter((payment) => payment.kind === 'refund').reduce((sum, payment) => sum + payment.amount, 0);
+
+const moneyRows = [
+	{ label: 'Subtotal', value: formatMoney(details.subtotal), show: true },
+	{ label: 'Recogida', value: formatMoney(details.pickupTotal), show: details.pickupTotal > 0 },
+	{ label: 'Seguro', value: formatMoney(details.insuranceTotal), show: details.insuranceTotal > 0 },
+	{ label: 'Descuento', value: `−${formatMoney(details.discountTotal)}`, show: details.discountTotal > 0 },
+].filter((row) => row.show);
+
+const phoneDigits = details.leadPhone?.replace(/\D/g, '') ?? '';
+const whatsappHref = phoneDigits.length >= 7 ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(`Hola ${details.leadName}, te escribimos de Canoa Tours por tu reserva ${details.code}.`)}` : null;
+const customerPhone = extras.customerPhone && extras.customerPhone !== details.leadPhone ? extras.customerPhone : null;
+
+const providerRows = [
+	{ label: 'Enviada', value: extras.providerSentAt },
+	{ label: 'Confirmada', value: extras.providerConfirmedAt },
+];
+
+const keyFacts = [
+	{ label: 'Fecha', value: shortDay(details.tourDate), title: formatBookingDate(details.tourDate) },
+	{ label: 'Salida', value: details.startTime, title: undefined },
+	{ label: 'Personas', value: peopleSummary(details), title: undefined },
+	{ label: 'A cobrar el día', value: details.balanceAmount > 0 ? formatMoney(details.balanceAmount) : 'Pagado', title: undefined },
+];
+
+const cardTitle = 'text-base font-semibold tracking-[-0.02em] text-primary';
+const providerChip = (value: string | null) => (value ? 'bg-accent-soft text-accent-strong' : 'bg-sun-soft text-sun-strong');
+---
+
+<ManageLayout title={`Reserva ${details.code}`} section="bookings">
+	<div class="grid gap-4">
+		<a
+			href={backHref}
+			class="inline-flex w-fit animate-fade-up items-center gap-1.5 rounded-full text-sm font-medium text-secondary outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent"
+			style="animation-delay: 30ms"
+		>
+			<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+			Reservas
+		</a>
+
+		<ManagePageHeader title={details.code} description={details.productName}>
+			<StatusBadge status={status} class="h-8 px-3.5 text-sm" />
+		</ManagePageHeader>
+
+		<dl class:list={[glassPanel, 'grid animate-fade-up grid-cols-2 gap-x-4 gap-y-3 px-5 py-3.5 sm:flex sm:items-center sm:gap-0 sm:justify-self-start sm:rounded-full sm:px-2 sm:py-1.5']} style="animation-delay: 90ms">
+			{keyFacts.map((fact) => (
+				<div class="min-w-0 sm:border-l sm:border-white/70 sm:px-5 sm:py-1 sm:first:border-l-0" title={fact.title}>
+					<dt class="text-xs text-muted">{fact.label}</dt>
+					<dd class="truncate text-base leading-tight font-semibold tracking-[-0.02em] text-primary tabular-nums">{fact.value}</dd>
+				</div>
+			))}
+		</dl>
+
+		<div class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:items-start">
+			<div class="grid animate-fade-up gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-1" style="animation-delay: 120ms">
+				<section aria-labelledby="cliente-reserva" class:list={[surfacePanel, 'p-5']}>
+					<h2 id="cliente-reserva" class={cardTitle}>Cliente</h2>
+					<p class="mt-3 text-[15px] font-semibold text-primary">{details.leadName}</p>
+					{details.customerName !== details.leadName && <p class="text-xs text-muted">Cuenta a nombre de {details.customerName}</p>}
+					<dl class="mt-2 divide-y divide-border text-sm">
+						<div class="flex items-baseline justify-between gap-4 py-2">
+							<dt class="shrink-0 text-muted">Email</dt>
+							<dd class="min-w-0 truncate text-right text-primary" title={details.customerEmail}>{details.customerEmail}</dd>
+						</div>
+						{details.leadPhone && (
+							<div class="flex items-baseline justify-between gap-4 py-2">
+								<dt class="shrink-0 text-muted">Teléfono</dt>
+								<dd class="min-w-0 text-right text-primary tabular-nums">{details.leadPhone}</dd>
+							</div>
+						)}
+						{customerPhone && (
+							<div class="flex items-baseline justify-between gap-4 py-2">
+								<dt class="shrink-0 text-muted">Tel. de la cuenta</dt>
+								<dd class="min-w-0 text-right text-primary tabular-nums">{customerPhone}</dd>
+							</div>
+						)}
+						<div class="flex items-baseline justify-between gap-4 py-2">
+							<dt class="shrink-0 text-muted">Reservada</dt>
+							<dd class="min-w-0 text-right text-primary">{formatDateTime(extras.createdAt)}</dd>
+						</div>
+						{details.dateChangesCount > 0 && (
+							<div class="flex items-baseline justify-between gap-4 py-2">
+								<dt class="shrink-0 text-muted">Cambios de fecha</dt>
+								<dd class="text-right text-primary tabular-nums">{details.dateChangesCount}</dd>
+							</div>
+						)}
+						{extras.cancelledAt && (
+							<div class="flex items-baseline justify-between gap-4 py-2">
+								<dt class="shrink-0 text-muted">Cancelada</dt>
+								<dd class="min-w-0 text-right text-error">{formatDateTime(extras.cancelledAt)}</dd>
+							</div>
+						)}
+					</dl>
+					<div class="mt-3 flex flex-wrap gap-1.5">
+						{whatsappHref && (
+							<a href={whatsappHref} target="_blank" rel="noopener" class:list={[glassChipButton, 'flex-1 sm:flex-none']}>
+								<MessageCircle size={14} stroke-width={1.75} aria-hidden="true" />
+								WhatsApp
+							</a>
+						)}
+						{details.leadPhone && (
+							<a href={`tel:${details.leadPhone.replace(/[^\d+]/g, '')}`} class:list={[glassChipButton, 'flex-1 sm:flex-none']}>
+								<Phone size={14} stroke-width={1.75} aria-hidden="true" />
+								Llamar
+							</a>
+						)}
+						<a href={`mailto:${details.customerEmail}`} class:list={[glassChipButton, 'flex-1 sm:flex-none']}>
+							<Mail size={14} stroke-width={1.75} aria-hidden="true" />
+							Email
+						</a>
+					</div>
+				</section>
+
+				<BookingPickupCard details={details} pickupNote={extras.pickupNote} />
+			</div>
+
+			<div class="grid gap-4 lg:col-start-2 lg:row-span-3 lg:row-start-1">
+				<BookingActionsCard details={details} today={today} zones={pickupOptions.zones} hotels={pickupOptions.hotels} currentZoneId={extras.zoneId} />
+
+				<section aria-labelledby="importes-reserva" class="relative isolate animate-fade-up overflow-hidden rounded-[1.75rem] bg-primary p-5 text-white" style="animation-delay: 210ms">
+					<div class="flex items-center justify-between gap-2">
+						<h2 id="importes-reserva" class="text-base font-semibold tracking-[-0.02em]">Importes</h2>
+						{details.hasInsurance && (
+							<span class="inline-flex h-6 items-center gap-1 rounded-full bg-white/15 px-2.5 text-xs font-medium">
+								<ShieldCheck size={12} stroke-width={2} aria-hidden="true" />
+								Con seguro
+							</span>
+						)}
+					</div>
+					<dl class="mt-3 grid gap-2 text-sm">
+						{moneyRows.map((row) => (
+							<div class="flex items-center justify-between gap-4">
+								<dt class="text-muted-on-dark">{row.label}</dt>
+								<dd class="tabular-nums">{row.value}</dd>
+							</div>
+						))}
+						<div class="flex items-center justify-between gap-4 border-t border-white/15 pt-2.5 font-semibold">
+							<dt>Total</dt>
+							<dd class="tabular-nums">{formatMoney(details.total)}</dd>
+						</div>
+						<div class="flex items-center justify-between gap-4">
+							<dt class="text-muted-on-dark">Pagado online</dt>
+							<dd class="tabular-nums">{formatMoney(paidOnline)}</dd>
+						</div>
+						{refunded > 0 && (
+							<div class="flex items-center justify-between gap-4">
+								<dt class="text-muted-on-dark">Reembolsado</dt>
+								<dd class="tabular-nums">−{formatMoney(refunded)}</dd>
+							</div>
+						)}
+						<div class="mt-1 flex items-center justify-between gap-4 rounded-2xl bg-white/10 px-3 py-2.5">
+							<dt class="font-medium">A cobrar el día</dt>
+							<dd class="text-lg font-semibold tabular-nums">{formatMoney(details.balanceAmount)}</dd>
+						</div>
+					</dl>
+					<span class="glass-rim opacity-60 [--rim-width:2px]" aria-hidden="true"></span>
+				</section>
+
+				<section aria-labelledby="proveedor-reserva" class:list={[surfacePanel, 'animate-fade-up p-5']} style="animation-delay: 240ms">
+					<h2 id="proveedor-reserva" class={cardTitle}>Proveedor</h2>
+					<dl class="mt-2 divide-y divide-border text-sm">
+						{providerRows.map((row) => (
+							<div class="flex items-center justify-between gap-4 py-2">
+								<dt class="text-muted">{row.label}</dt>
+								<dd class:list={['inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium tabular-nums', providerChip(row.value)]}>{row.value ? formatDateTime(row.value) : 'Pendiente'}</dd>
+							</div>
+						))}
+					</dl>
+				</section>
+			</div>
+
+			<div class="animate-fade-up lg:col-start-1 lg:row-start-2" style="animation-delay: 150ms">
+				<BookingPaymentsCard payments={payments} />
+			</div>
+			<div class="animate-fade-up lg:col-start-1 lg:row-start-3" style="animation-delay: 180ms">
+				<BookingHistoryCard entries={history} />
+			</div>
+		</div>
+	</div>
+</ManageLayout>

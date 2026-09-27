@@ -1,0 +1,98 @@
+---
+import { Check, CheckCheck, Circle } from '@lucide/astro';
+import StatusBadge from '../StatusBadge.astro';
+import { formatMoney } from '../../../lib/email/templates/layout';
+import type { BookingListRow } from '../../../lib/manage/bookings-query';
+
+interface Props {
+	rows: BookingListRow[];
+	backSearch: string;
+	today: string;
+}
+
+const { rows, backSearch, today } = Astro.props;
+
+const dayFormatter = new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const dayWithYearFormatter = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+const tourDay = (isoDate: string) => {
+	const formatter = isoDate.slice(0, 4) === today.slice(0, 4) ? dayFormatter : dayWithYearFormatter;
+	const formatted = formatter.format(new Date(`${isoDate}T00:00:00Z`));
+	return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
+
+const providerState = (row: BookingListRow) => {
+	if (row.providerConfirmed) return { icon: CheckCheck, label: 'Confirmada por el proveedor', tone: 'text-accent' };
+	if (row.providerSent) return { icon: Check, label: 'Enviada al proveedor', tone: 'text-accent' };
+	return { icon: Circle, label: 'Sin enviar al proveedor', tone: 'text-border-strong' };
+};
+
+const detailHref = (code: string) => `/manage/bookings/${code}${backSearch ? `?back=${encodeURIComponent(backSearch)}` : ''}`;
+const headerCell = 'px-3 py-2.5 text-left text-xs font-medium text-muted first:pl-5 last:pr-5';
+const bodyCell = 'px-3 py-2.5 first:pl-5 last:pr-5';
+---
+
+<div class="liquid-glass animate-fade-up overflow-hidden rounded-[1.75rem] bg-ink-200/45 backdrop-blur-xl backdrop-saturate-150 [--glass-drop-shadow:0_0_#0000]" style="animation-delay: 180ms">
+	<table class="hidden w-full text-sm md:table">
+		<thead>
+			<tr class="border-b border-white/70">
+				<th scope="col" class={headerCell}>Código</th>
+				<th scope="col" class={headerCell}>Cliente</th>
+				<th scope="col" class={headerCell}>Excursión</th>
+				<th scope="col" class={headerCell}>Fecha</th>
+				<th scope="col" class={headerCell}>Estado</th>
+				<th scope="col" class:list={[headerCell, 'text-right']}>Total</th>
+			</tr>
+		</thead>
+		<tbody class="divide-y divide-white/70">
+			{rows.map((row) => {
+				const provider = providerState(row);
+				const ProviderIcon = provider.icon;
+				return (
+					<tr class="relative transition-colors duration-300 ease-smooth hover:bg-white/50">
+						<td class={bodyCell}>
+							<a href={detailHref(row.code)} class="text-[13px] font-medium tracking-[0.02em] text-primary tabular-nums outline-none after:absolute after:inset-0 focus-visible:underline">
+								{row.code}
+							</a>
+						</td>
+						<td class:list={[bodyCell, 'max-w-48']}>
+							<p class="truncate font-medium text-primary">{row.leadName}</p>
+						</td>
+						<td class:list={[bodyCell, 'max-w-64']}>
+							<p class="truncate text-secondary">{row.productName}</p>
+						</td>
+						<td class:list={[bodyCell, 'whitespace-nowrap text-secondary tabular-nums']}>{tourDay(row.tourDate)}</td>
+						<td class={bodyCell}>
+							<div class="flex items-center gap-2">
+								<span class:list={['inline-flex w-4 shrink-0 justify-center', provider.tone]} title={provider.label}>
+									<ProviderIcon size={ProviderIcon === Circle ? 12 : 16} stroke-width={2} aria-hidden="true" />
+									<span class="sr-only">{provider.label}</span>
+								</span>
+								<StatusBadge status={row.status} />
+							</div>
+						</td>
+						<td class:list={[bodyCell, 'text-right font-medium whitespace-nowrap text-primary tabular-nums']}>{formatMoney(row.total)}</td>
+					</tr>
+				);
+			})}
+		</tbody>
+	</table>
+
+	<ul class="divide-y divide-white/70 md:hidden">
+		{rows.map((row) => (
+			<li>
+				<a href={detailHref(row.code)} class="block px-5 py-3 transition-colors duration-300 ease-smooth hover:bg-white/50">
+					<div class="flex items-center justify-between gap-3">
+						<p class="truncate text-sm font-medium text-primary">{row.leadName}</p>
+						<StatusBadge status={row.status} />
+					</div>
+					<div class="mt-1 flex items-center justify-between gap-3 text-xs">
+						<p class="truncate text-muted">{tourDay(row.tourDate)}, {row.productName}</p>
+						<span class="shrink-0 font-medium text-primary tabular-nums">{formatMoney(row.total)}</span>
+					</div>
+				</a>
+			</li>
+		))}
+	</ul>
+
+</div>

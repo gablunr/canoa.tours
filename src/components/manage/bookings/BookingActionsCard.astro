@@ -1,0 +1,199 @@
+---
+import { CalendarClock, ChevronDown, CircleCheck, CircleX, CloudRain, Mail, MapPin, UserX } from '@lucide/astro';
+import BookingDialog from './BookingDialog.astro';
+import type { BookingDetails } from '../../../lib/booking/booking-details';
+import { formatMoney } from '../../../lib/email/templates/layout';
+import type { HotelOption, PickupZoneOption } from '../../../lib/manage/bookings-query';
+import { surfacePanel } from '../glass-classes';
+
+interface Props {
+	details: BookingDetails;
+	today: string;
+	zones: PickupZoneOption[];
+	hotels: HotelOption[];
+	currentZoneId: string | null;
+}
+
+const { details, today, zones, hotels, currentZoneId } = Astro.props;
+
+const isConfirmed = details.status === 'confirmed';
+const tourStarted = details.tourDate <= today;
+const canSetOutcome = ['confirmed', 'completed', 'no_show'].includes(details.status) && tourStarted;
+const canComplete = canSetOutcome && details.status !== 'completed';
+const canMarkNoShow = canSetOutcome && details.status !== 'no_show';
+const canChangePickup = isConfirmed && zones.length > 0;
+
+const refundChoices = [
+	{ value: 'none', label: 'Sin reembolso', amount: 0 },
+	{ value: 'deposit_without_insurance', label: 'Anticipo sin seguro', amount: Math.max(0, details.depositAmount - details.insuranceTotal) },
+	{ value: 'full', label: 'Todo el anticipo', amount: details.depositAmount },
+];
+
+const emailChoices = [
+	{ value: 'confirmed', label: 'Confirmación de la reserva' },
+	{ value: 'tour_reminder', label: 'Recordatorio del tour' },
+];
+
+const zoneLabel = (zone: PickupZoneOption) => `${zone.name}, ${zone.feePerPerson > 0 ? `${formatMoney(zone.feePerPerson)} por persona` : 'sin coste'}`;
+
+const actionButtons = [
+	{ show: canComplete, dialog: 'mark-completed', label: 'Marcar realizada', icon: CircleCheck },
+	{ show: canMarkNoShow, dialog: 'mark-no-show', label: 'No presentado', icon: UserX },
+	{ show: isConfirmed, dialog: 'change-date', label: 'Cambiar fecha', icon: CalendarClock },
+	{ show: isConfirmed, dialog: 'move-weather', label: 'Mover por clima', icon: CloudRain },
+	{ show: canChangePickup, dialog: 'pickup-zone', label: 'Cambiar recogida', icon: MapPin },
+	{ show: isConfirmed, dialog: 'resend-email', label: 'Reenviar email', icon: Mail },
+].filter((button) => button.show);
+const canCancel = isConfirmed;
+const actionButton =
+	'flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-2xl bg-white/70 px-4 text-left text-sm font-medium outline-none transition-colors duration-300 ease-smooth hover:bg-white focus-visible:ring-2 focus-visible:ring-accent';
+
+const fieldLabel = 'text-sm font-medium text-primary';
+const controlBase =
+	'block h-12 w-full appearance-none rounded-2xl border border-border-strong bg-background px-4 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:opacity-60';
+const fieldControl = `mt-2 ${controlBase}`;
+const choiceRow =
+	'flex cursor-pointer items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm transition-colors duration-300 ease-smooth hover:border-muted has-checked:border-primary has-checked:bg-surface';
+---
+
+<section
+	aria-labelledby="acciones-reserva"
+	class:list={[surfacePanel, 'animate-fade-up p-5']}
+	style="animation-delay: 180ms"
+	data-booking-manage
+	data-code={details.code}
+	data-product-id={details.productId}
+	data-current-date={details.tourDate}
+	data-today={today}
+>
+	<h2 id="acciones-reserva" class="text-base font-semibold tracking-[-0.02em] text-primary">Acciones</h2>
+
+	{actionButtons.length > 0 || canCancel ? (
+		<div class="mt-3 grid gap-1.5">
+			{actionButtons.map((button) => (
+				<button type="button" data-dialog-open={button.dialog} class:list={[actionButton, 'text-primary']}>
+					<button.icon size={16} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+					{button.label}
+				</button>
+			))}
+			{canCancel && (
+				<button type="button" data-dialog-open="cancel" class:list={[actionButton, 'mt-2 text-error']}>
+					<CircleX size={16} stroke-width={1.75} class="shrink-0" aria-hidden="true" />
+					Cancelar reserva
+				</button>
+			)}
+		</div>
+	) : (
+		<p class="mt-2 text-sm leading-relaxed text-secondary">No hay acciones disponibles para esta reserva.</p>
+	)}
+
+	{isConfirmed && (
+		<BookingDialog name="change-date" action="changeDate" title="Cambiar la fecha" description="Solo aparecen los días con plazas en los próximos tres meses. El cliente recibe un email." submitLabel="Cambiar fecha" busyLabel="Cambiando…">
+			<label class="block">
+				<span class={fieldLabel}>Nueva fecha</span>
+				<span class="relative mt-2 block">
+					<select name="tourDate" required disabled class:list={[controlBase, 'pr-11']} data-date-select>
+						<option value="">Cargando fechas…</option>
+					</select>
+					<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+				</span>
+			</label>
+		</BookingDialog>
+	)}
+
+	{isConfirmed && (
+		<BookingDialog name="move-weather" action="moveForWeather" title="Mover por clima" description="Mueve la reserva a cualquier fecha aunque no queden plazas. El cupo no se comprueba y el cliente recibe un email." submitLabel="Mover reserva" busyLabel="Moviendo…">
+			<label class="block">
+				<span class={fieldLabel}>Nueva fecha</span>
+				<input type="date" name="tourDate" required min={today} class={fieldControl} />
+			</label>
+		</BookingDialog>
+	)}
+
+	{canChangePickup && (
+		<BookingDialog name="pickup-zone" action="setPickupZone" title="Cambiar la recogida" description="El total se recalcula con la tarifa de la nueva zona." submitLabel="Guardar recogida" busyLabel="Guardando…">
+			<label class="block">
+				<span class={fieldLabel}>Zona</span>
+				<span class="relative mt-2 block">
+					<select name="zoneId" required class:list={[controlBase, 'pr-11']} data-zone-select>
+						{zones.map((zone) => (
+							<option value={zone.id} selected={zone.id === currentZoneId}>{zoneLabel(zone)}</option>
+						))}
+					</select>
+					<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+				</span>
+			</label>
+			<label class="block">
+				<span class={fieldLabel}>Hotel</span>
+				<span class="relative mt-2 block">
+					<select name="hotelId" class:list={[controlBase, 'pr-11']} data-hotel-select data-hotels={JSON.stringify(hotels)}>
+						<option value="">Mantener el hotel actual</option>
+					</select>
+					<ChevronDown size={18} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+				</span>
+			</label>
+		</BookingDialog>
+	)}
+
+	{isConfirmed && (
+		<BookingDialog name="resend-email" action="resendEmail" title="Reenviar un email" description={`Se envía a ${details.customerEmail}.`} submitLabel="Enviar email" busyLabel="Enviando…">
+			<fieldset class="grid gap-2">
+				<legend class:list={[fieldLabel, 'mb-2']}>Email</legend>
+				{emailChoices.map((choice, index) => (
+					<label class={choiceRow}>
+						<input type="radio" name="kind" value={choice.value} checked={index === 0} class="size-4 accent-primary" />
+						{choice.label}
+					</label>
+				))}
+			</fieldset>
+		</BookingDialog>
+	)}
+
+	{canComplete && (
+		<BookingDialog name="mark-completed" action="markCompleted" title="Marcar como realizada" description="La reserva pasa a realizada y el cliente podrá dejar su opinión." submitLabel="Marcar realizada" busyLabel="Guardando…" />
+	)}
+
+	{canMarkNoShow && (
+		<BookingDialog
+			name="mark-no-show"
+			action="markNoShow"
+			title="Marcar como no presentado"
+			description={details.balanceAmount > 0 ? `Se intentará cobrar el saldo de ${formatMoney(details.balanceAmount)} al cliente.` : 'La reserva pasa a no presentado.'}
+			submitLabel="Marcar no presentado"
+			busyLabel="Guardando…"
+			danger
+		/>
+	)}
+
+	{isConfirmed && (
+		<BookingDialog name="cancel" action="cancel" title={`¿Cancelar ${details.code}?`} description="El cliente recibe un email con la cancelación. No se puede deshacer." submitLabel="Sí, cancelar" busyLabel="Cancelando…" danger>
+			<fieldset class="grid gap-2">
+				<legend class:list={[fieldLabel, 'mb-2']}>Reembolso</legend>
+				{refundChoices.map((choice) => (
+					<label class={choiceRow}>
+						<input type="radio" name="refund" value={choice.value} checked={choice.value === 'deposit_without_insurance'} class="size-4 accent-primary" />
+						<span class="flex-1">{choice.label}</span>
+						<span class="font-medium tabular-nums">{formatMoney(choice.amount)}</span>
+					</label>
+				))}
+			</fieldset>
+			<label class="block">
+				<span class={fieldLabel}>Motivo</span>
+				<textarea
+					name="reason"
+					required
+					minlength={3}
+					maxlength={500}
+					rows={3}
+					class="mt-2 block w-full rounded-2xl border border-border-strong bg-background px-4 py-3 text-base text-primary transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none"
+				></textarea>
+			</label>
+		</BookingDialog>
+	)}
+</section>
+
+<script>
+	import { initBookingManage } from '../../../scripts/manage/bookings-detail';
+
+	document.querySelectorAll<HTMLElement>('[data-booking-manage]').forEach(initBookingManage);
+</script>
