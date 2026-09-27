@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AccountHeader from '../../components/sections/account/AccountHeader.astro';
+import Button from '../../components/ui/Button.astro';
+import SelectField from '../../components/ui/form/SelectField.astro';
+import TextField from '../../components/ui/form/TextField.astro';
+import { loadCustomerBookings, loadCustomerProfile } from '../../lib/account/bookings';
+import { countryOptions } from '../../lib/account/countries';
+
+export const prerender = false;
+
+const { supabase, user } = Astro.locals;
+if (!user) return Astro.redirect('/account/sign-in?next=/account/profile');
+
+const customer = await loadCustomerProfile(supabase, user.id);
+const bookingCount = customer ? (await loadCustomerBookings(supabase, customer.id)).length : 0;
+
+const notSet = 'Sin indicar';
+const countryLabel = (code: string | null) => countryOptions.find((option) => option.value === code)?.label ?? notSet;
+const memberSince = customer
+	? new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric', timeZone: 'America/Santo_Domingo' }).format(new Date(customer.createdAt))
+	: null;
+
+const facts = customer
+	? [
+			{ label: 'Teléfono', value: customer.phone ?? notSet, field: 'phone' },
+			{ label: 'País', value: countryLabel(customer.country), field: 'country' },
+			{ label: 'Cliente desde', value: memberSince ?? '', field: null },
+			{ label: 'Reservas', value: String(bookingCount), field: null },
+		]
+	: [];
+---
+
+<Layout title="Tu perfil" description="Tus datos de contacto en Canoa Tours." noindex>
+	<AccountHeader current="profile" title="Tu perfil" intro="Los datos que usamos para contactarte antes del tour." />
+
+	<div class="px-4 pt-10 sm:px-6 md:pt-12">
+		<div class="mx-auto grid max-w-5xl animate-fade-up gap-4 lg:grid-cols-5" style="animation-delay: 240ms" data-profile>
+			<section aria-labelledby="tus-datos" class="relative isolate flex flex-col overflow-hidden rounded-[2rem] bg-primary p-6 text-white sm:p-8 lg:col-span-2">
+				<h2 id="tus-datos" class="text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance" data-profile-value="fullName">
+					{customer?.fullName ?? 'Tus datos'}
+				</h2>
+				<p class="mt-1 truncate text-sm text-muted-on-dark">{user.email}</p>
+
+				{customer ? (
+					<dl class="mt-8 divide-y divide-white/10">
+						{facts.map((fact) => (
+							<div class="flex justify-between gap-6 py-3 text-sm">
+								<dt class="text-muted-on-dark">{fact.label}</dt>
+								<dd class="text-right font-medium" data-profile-value={fact.field ?? undefined}>{fact.value}</dd>
+							</div>
+						))}
+					</dl>
+				) : (
+					<p class="mt-8 text-sm leading-relaxed text-muted-on-dark">Tu perfil se crea con tu primera reserva.</p>
+				)}
+
+				<p class="mt-auto pt-8 text-xs leading-relaxed text-muted-on-dark">
+					Entras con este email, así que no se puede cambiar desde aquí. Si lo necesitas, escríbenos.
+				</p>
+
+				<span class="glass-rim opacity-60 [--rim-width:2px]" aria-hidden="true"></span>
+			</section>
+
+			<section aria-labelledby="editar-datos" class="rounded-[2rem] bg-surface p-6 sm:p-8 lg:col-span-3">
+				<h2 id="editar-datos" class="text-lg font-semibold tracking-[-0.02em] text-primary">Editar tus datos</h2>
+				<p class="mt-1 text-sm text-secondary">Revisa que el teléfono sea correcto: te escribimos por ahí para confirmarte la hora de recogida.</p>
+
+				{customer ? (
+					<form class="mt-6 grid gap-5 sm:grid-cols-2" novalidate data-profile-form>
+						<div class="sm:col-span-2">
+							<TextField
+								label="Nombre y apellidos"
+								name="fullName"
+								autocomplete="name"
+								value={customer.fullName}
+								required
+								minlength={2}
+								maxlength={120}
+								requiredMessage="Escribe tu nombre."
+								invalidMessage="Escribe al menos dos letras."
+							/>
+						</div>
+						<TextField
+							label="Teléfono"
+							name="phone"
+							type="tel"
+							autocomplete="tel"
+							value={customer.phone ?? ''}
+							maxlength={30}
+							placeholder="+34 600 000 000"
+							hint="Con prefijo de país."
+						/>
+						<SelectField label="País" name="country" options={countryOptions} value={customer.country ?? ''} placeholder="Elige tu país" />
+
+						<div class="flex flex-col-reverse gap-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+							<div class="min-h-5 text-sm">
+								<p class="text-error" role="alert" data-profile-error hidden></p>
+								<p class="text-success" role="status" data-profile-saved hidden>Cambios guardados.</p>
+							</div>
+							<Button type="submit" class="w-full sm:w-fit" data-profile-submit>Guardar cambios</Button>
+						</div>
+					</form>
+				) : (
+					<p class="mt-6 text-sm leading-relaxed text-secondary">Cuando hagas tu primera reserva podrás editar aquí tu nombre, teléfono y país.</p>
+				)}
+			</section>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { initProfileForm } from '../../scripts/account/profile';
+
+	document.querySelectorAll<HTMLElement>('[data-profile]').forEach(initProfileForm);
+</script>
