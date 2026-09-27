@@ -1,0 +1,29 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ReviewForm from '../../../components/sections/account/ReviewForm.astro';
+import { bookingHasReview, findOwnedBooking } from '../../../lib/account/bookings';
+import { loadBookingDetails, type BookingDetails } from '../../../lib/booking/booking-details';
+import { verifyBookingToken } from '../../../lib/booking/tokens';
+
+export const prerender = false;
+
+const code = (Astro.url.searchParams.get('code') ?? '').toUpperCase();
+const token = Astro.url.searchParams.get('token') ?? '';
+const { user } = Astro.locals;
+const selfPath = `/account/reviews/new?code=${code}`;
+
+let details: BookingDetails | null = null;
+if (code && token && verifyBookingToken(code, 'review', token)) details = await loadBookingDetails({ code });
+if (!details && code && user) details = await findOwnedBooking(user, code);
+
+if (!details) {
+	if (!user) return Astro.redirect(`/account/sign-in?next=${encodeURIComponent(selfPath)}`);
+	return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const alreadyReviewed = await bookingHasReview(details.id);
+---
+
+<Layout title="Tu opinión" description={`Cuéntanos qué tal fue ${details.productName}.`} noindex>
+	<ReviewForm details={details} token={token} alreadyReviewed={alreadyReviewed} signedIn={Boolean(user)} />
+</Layout>
