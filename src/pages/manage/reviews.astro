@@ -1,0 +1,156 @@
+---
+import { CheckCheck, MessageSquareText, Plus } from '@lucide/astro';
+import { SUPABASE_URL } from 'astro:env/client';
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import ReviewCard, { type ModerationReview, type ReviewStatus } from '../../components/manage/reviews/ReviewCard.astro';
+import ReplyDialog from '../../components/manage/reviews/ReplyDialog.astro';
+import ManualReviewDialog from '../../components/manage/reviews/ManualReviewDialog.astro';
+import ReviewsPagination from '../../components/manage/reviews/ReviewsPagination.astro';
+import BulkPublishDialog from '../../components/manage/reviews/BulkPublishDialog.astro';
+import { canOpenSection } from '../../data/manage/sections';
+import { glassButton, glassButtonPrimary, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'reviews')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const pageSize = 12;
+
+const statusTabs: { id: ReviewStatus; label: string; emptyMessage: string }[] = [
+	{ id: 'pending', label: 'Pendientes', emptyMessage: 'No hay opiniones pendientes de revisar.' },
+	{ id: 'published', label: 'Publicadas', emptyMessage: 'Todavía no hay opiniones publicadas.' },
+	{ id: 'rejected', label: 'Rechazadas', emptyMessage: 'No hay opiniones rechazadas.' },
+];
+
+const requestedStatus = Astro.url.searchParams.get('status');
+const activeTab = statusTabs.find((tab) => tab.id === requestedStatus) ?? statusTabs[0];
+const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+
+const supabase = Astro.locals.supabase;
+
+const countFor = async (status: ReviewStatus) => {
+	const { count, error } = await supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', status);
+	if (error) throw error;
+	return count ?? 0;
+};
+
+const [pendingCount, publishedCount, rejectedCount, productsResult] = await Promise.all([
+	countFor('pending'),
+	countFor('published'),
+	countFor('rejected'),
+	supabase.from('products').select('key, product_translations(name, locale)').order('key'),
+]);
+if (productsResult.error) throw productsResult.error;
+
+const counts: Record<ReviewStatus, number> = { pending: pendingCount, published: publishedCount, rejected: rejectedCount };
+const totalPages = Math.max(1, Math.ceil(counts[activeTab.id] / pageSize));
+const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
+const rangeStart = (currentPage - 1) * pageSize;
+
+const reviewsResult = await supabase
+	.from('reviews')
+	.select(
+		'id, status, author_name, rating, title, body, reply, created_at, booking:bookings!reviews_booking_id_fkey(code), product:products(key, product_translations(name, locale)), review_photos(storage_path, position)',
+	)
+	.eq('status', activeTab.id)
+	.order('created_at', { ascending: false })
+	.range(rangeStart, rangeStart + pageSize - 1);
+if (reviewsResult.error) throw reviewsResult.error;
+
+const spanishName = (product: { key: string; product_translations: { name: string; locale: string }[] } | null) =>
+	product ? (product.product_translations.find((translation) => translation.locale === 'es')?.name ?? product.key) : 'Excursión';
+const publicMediaUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/media/${path}`;
+
+const reviews: ModerationReview[] = reviewsResult.data.map((row) => ({
+	id: row.id,
+	status: row.status,
+	authorName: row.author_name,
+	rating: row.rating,
+	title: row.title,
+	body: row.body,
+	reply: row.reply,
+	productName: spanishName(row.product),
+	bookingCode: row.booking?.code ?? null,
+	createdAt: row.created_at,
+	photoUrls: [...row.review_photos].sort((first, second) => first.position - second.position).map((photo) => publicMediaUrl(photo.storage_path)),
+}));
+
+const productOptions = productsResult.data
+	.map((product) => ({ value: product.key, label: spanishName(product) }))
+	.sort((first, second) => first.label.localeCompare(second.label, 'es'));
+
+const canBulkPublish = activeTab.id === 'pending' && reviews.length > 0;
+
+
+const hrefFor = (status: ReviewStatus, page = 1) => {
+	const params = new URLSearchParams();
+	if (status !== 'pending') params.set('status', status);
+	if (page > 1) params.set('page', String(page));
+	const query = params.toString();
+	return query ? `/manage/reviews?${query}` : '/manage/reviews';
+};
+
+
+---
+
+<ManageLayout title="Opiniones" section="reviews">
+	<div class="grid gap-4" data-review-moderation>
+		<ManagePageHeader title="Opiniones" description="Revisa lo que dejan los viajeros antes de publicarlo.">
+			<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-manual-open>
+				<Plus size={15} stroke-width={2} aria-hidden="true" />
+				Añadir opinión
+			</button>
+		</ManagePageHeader>
+
+		<div class="mt-2 flex animate-fade-up flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style="animation-delay: 100ms">
+			<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 overflow-x-auto p-1.5 [scrollbar-width:none] sm:w-auto']}>
+				{statusTabs.map((tab) => (
+					<a href={hrefFor(tab.id)} class:list={[glassOption, 'group/tab flex-1 sm:flex-none']} aria-current={tab.id === activeTab.id ? 'page' : undefined}>
+						{tab.label}
+						<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{counts[tab.id]}</span>
+					</a>
+				))}
+			</nav>
+			{canBulkPublish && (
+				<div class:list={[glassGroup, 'flex w-full gap-1.5 p-1.5 sm:w-auto']} data-bulk-bar>
+					<label class:list={[glassButton, 'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent']}>
+						<input type="checkbox" autocomplete="off" class="size-4 cursor-pointer accent-primary outline-none" data-select-all />
+						Todas
+					</label>
+					<button type="button" class:list={[glassButtonPrimary, 'flex-1 sm:flex-none']} disabled data-bulk-publish>
+						<CheckCheck size={15} stroke-width={1.75} aria-hidden="true" />
+						<span data-bulk-label>Publicar seleccionadas</span>
+					</button>
+				</div>
+			)}
+		</div>
+
+		{reviews.length === 0 ? (
+			<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 160ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+					<MessageSquareText size={20} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<p class="mt-4 text-sm text-secondary">{activeTab.emptyMessage}</p>
+			</div>
+		) : (
+			<div class="grid gap-3 sm:gap-4 lg:grid-cols-2">
+				{reviews.map((review, index) => (
+					<ReviewCard review={review} selectable={canBulkPublish} delay={140 + Math.min(index, 8) * 40} />
+				))}
+			</div>
+		)}
+
+		<ReviewsPagination currentPage={currentPage} totalPages={totalPages} hrefForPage={(page) => hrefFor(activeTab.id, page)} />
+
+		<ReplyDialog />
+		<ManualReviewDialog products={productOptions} />
+		{canBulkPublish && <BulkPublishDialog />}
+	</div>
+</ManageLayout>
+
+<script>
+	import { initReviewModeration } from '../../scripts/manage/reviews';
+
+	document.querySelectorAll<HTMLElement>('[data-review-moderation]').forEach(initReviewModeration);
+</script>

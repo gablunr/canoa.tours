@@ -1,0 +1,18 @@
+---
+import { CheckCheck } from '@lucide/astro';
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+---
+
+<Dialog aria-labelledby="publicar-en-bloque" data-bulk-dialog>
+	<h2 id="publicar-en-bloque" class="text-xl font-semibold tracking-[-0.03em]" data-bulk-title>¿Publicar las opiniones?</h2>
+	<p class="mt-3 text-sm leading-relaxed text-secondary">Aparecerán en la web en unos minutos. Luego puedes retirar cualquiera desde Publicadas.</p>
+	<p class="mt-3 text-sm text-error" role="alert" data-bulk-error hidden></p>
+	<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+		<DialogButton data-bulk-close>Volver</DialogButton>
+		<DialogButton variant="primary" data-bulk-confirm>
+			<CheckCheck size={15} stroke-width={1.75} aria-hidden="true" />
+			<span data-button-label>Sí, publicar</span>
+		</DialogButton>
+	</div>
+</Dialog>

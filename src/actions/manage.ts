@@ -469,6 +469,27 @@ export const manage = {
 		},
 	}),
 
+	publishReviews: defineAction({
+		input: z.object({
+			reviewIds: z.array(z.uuid()).min(1).max(100),
+		}),
+		handler: async ({ reviewIds }, context) => {
+			requireStaff(context);
+
+			const { data, error } = await supabaseAdmin
+				.from('reviews')
+				.update({ status: 'published', published_at: new Date().toISOString() })
+				.in('id', reviewIds)
+				.neq('status', 'published')
+				.select('id');
+			if (error) failWithDbError(error);
+
+			const published = data?.length ?? 0;
+			if (published > 0) await triggerRebuild();
+			return { published };
+		},
+	}),
+
 	createManualReview: defineAction({
 		input: z.object({
 			productKey,

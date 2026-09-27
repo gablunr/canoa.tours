@@ -1,0 +1,27 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+---
+
+<Dialog size="lg" aria-labelledby="responder-opinion" data-reply-dialog>
+	<form method="dialog" data-reply-form>
+		<h2 id="responder-opinion" class="text-xl font-semibold tracking-[-0.03em]">Responder a la opinión</h2>
+		<p class="mt-2 text-sm leading-relaxed text-secondary" data-reply-hint></p>
+		<label for="respuesta-opinion" class="mt-6 block text-sm font-medium text-primary">Respuesta</label>
+		<textarea
+			id="respuesta-opinion"
+			name="reply"
+			rows="6"
+			maxlength="2000"
+			class="mt-2 block w-full resize-y rounded-2xl border border-border-strong bg-white/90 px-4 py-3 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none"
+			placeholder="Gracias por contarnos tu experiencia."
+			data-reply-text
+		></textarea>
+		<p class="mt-2 text-xs text-muted">Si la dejas vacía, se borra la respuesta.</p>
+		<p class="mt-3 text-sm text-error" role="alert" data-reply-error hidden></p>
+		<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-reply-close>Volver</DialogButton>
+			<DialogButton type="submit" variant="primary" data-reply-submit>Guardar respuesta</DialogButton>
+		</div>
+	</form>
+</Dialog>

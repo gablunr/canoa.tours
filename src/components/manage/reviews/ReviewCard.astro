@@ -1,0 +1,131 @@
+---
+import { ArrowUpRight, Check, MessageSquareReply, X } from '@lucide/astro';
+import StarRating from '../../ui/StarRating.astro';
+import { glassChipButton, glassChipPrimaryButton, glassPanel, glassTile } from '../glass-classes';
+
+export type ReviewStatus = 'pending' | 'published' | 'rejected';
+
+export interface ModerationReview {
+	id: string;
+	status: ReviewStatus;
+	authorName: string;
+	rating: number;
+	title: string | null;
+	body: string;
+	reply: string | null;
+	productName: string;
+	bookingCode: string | null;
+	createdAt: string;
+	photoUrls: string[];
+}
+
+interface Props {
+	review: ModerationReview;
+	selectable?: boolean;
+	delay?: number;
+}
+
+const { review, selectable = false, delay = 0 } = Astro.props;
+
+const dateFormatter = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Santo_Domingo' });
+const createdLabel = dateFormatter.format(new Date(review.createdAt)).replace('.', '');
+const replyTargetStatus = review.status === 'rejected' ? 'rejected' : 'published';
+const replyButtonLabel = review.reply ? 'Editar respuesta' : 'Responder';
+const bodyIsLong = review.body.length > 220 || review.body.split('\n').length > 3;
+const expandId = `opinion-${review.id}-completa`;
+const metaChip = 'inline-flex h-6 max-w-full min-w-0 items-center rounded-full bg-white/70 px-2.5 text-xs';
+const bodyClass = 'text-sm leading-relaxed whitespace-pre-line text-secondary';
+---
+
+<article
+	class:list={[glassPanel, 'flex animate-fade-up flex-col p-4 transition-shadow duration-300 ease-smooth sm:p-5 has-[[data-review-select]:checked]:ring-2 has-[[data-review-select]:checked]:ring-accent/70']}
+	style={`animation-delay: ${delay}ms`}
+	data-review
+	data-review-id={review.id}
+	data-review-status={review.status}
+>
+	<div class="flex items-center justify-between gap-3">
+		<div class="flex items-center gap-2">
+			{selectable && (
+				<label class="-m-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent">
+					<input type="checkbox" value={review.id} autocomplete="off" class="size-4 cursor-pointer accent-primary outline-none" aria-label={`Seleccionar la opinión de ${review.authorName}`} data-review-select />
+				</label>
+			)}
+			<StarRating rating={review.rating} size={14} />
+		</div>
+		<p class="shrink-0 text-xs text-muted">{createdLabel}</p>
+	</div>
+
+	{review.title && <h2 class="mt-2 text-[15px] font-semibold tracking-[-0.02em] text-primary">{review.title}</h2>}
+
+	{bodyIsLong ? (
+		<div class:list={[review.title ? 'mt-1' : 'mt-2']}>
+			<input type="checkbox" id={expandId} class="peer sr-only" />
+			<p class:list={[bodyClass, 'line-clamp-3 peer-checked:line-clamp-none']}>{review.body}</p>
+			<label
+				for={expandId}
+				class="mt-1 inline-block cursor-pointer rounded-full text-xs font-medium text-accent peer-checked:hidden peer-focus-visible:ring-2 peer-focus-visible:ring-accent hover:text-accent-strong"
+			>
+				Leer completa
+			</label>
+		</div>
+	) : (
+		<p class:list={[bodyClass, review.title ? 'mt-1' : 'mt-2']}>{review.body}</p>
+	)}
+
+	<div class="mt-3 flex flex-wrap items-center gap-1.5">
+		<span class:list={[metaChip, 'font-medium text-primary']}><span class="truncate">{review.authorName}</span></span>
+		<span class:list={[metaChip, 'text-secondary']}><span class="truncate">{review.productName}</span></span>
+		{review.bookingCode ? (
+			<a
+				href={`/manage/bookings/${review.bookingCode}`}
+				class:list={[metaChip, 'gap-1 font-medium text-accent outline-none transition-colors duration-300 ease-smooth hover:bg-white focus-visible:ring-2 focus-visible:ring-accent']}
+				title={`Reserva ${review.bookingCode}`}
+			>
+				Ir a reserva
+				<ArrowUpRight size={12} stroke-width={2} aria-hidden="true" />
+			</a>
+		) : (
+			<span class:list={[metaChip, 'font-medium text-muted']}>Manual</span>
+		)}
+	</div>
+
+	{review.photoUrls.length > 0 && (
+		<ul class="mt-3 flex flex-wrap gap-1.5" aria-label="Fotos de la opinión">
+			{review.photoUrls.map((url, index) => (
+				<li>
+					<a href={url} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-accent">
+						<img src={url} alt={`Foto ${index + 1} de ${review.authorName}`} loading="lazy" decoding="async" width="56" height="56" class="size-14 object-cover transition-transform duration-300 ease-smooth hover:scale-105" />
+					</a>
+				</li>
+			))}
+		</ul>
+	)}
+
+	{review.reply && (
+		<div class:list={[glassTile, 'mt-3 px-3.5 py-2.5']}>
+			<p class="text-[11px] font-medium text-muted">Tu respuesta</p>
+			<p class="mt-0.5 line-clamp-3 text-sm leading-relaxed whitespace-pre-line text-secondary" data-review-reply>{review.reply}</p>
+		</div>
+	)}
+
+	<div class="mt-auto flex flex-wrap gap-2 pt-4">
+		{review.status !== 'published' && (
+			<button type="button" class:list={[glassChipPrimaryButton, 'flex-1 sm:flex-none']} data-moderate="published">
+				<Check size={14} stroke-width={2} aria-hidden="true" />
+				<span data-button-label>Publicar</span>
+			</button>
+		)}
+		{review.status !== 'rejected' && (
+			<button type="button" class:list={[glassChipButton, 'flex-1 sm:flex-none']} data-moderate="rejected">
+				<X size={14} stroke-width={2} aria-hidden="true" />
+				<span data-button-label>{review.status === 'published' ? 'Retirar' : 'Rechazar'}</span>
+			</button>
+		)}
+		<button type="button" class:list={[glassChipButton, 'flex-1 sm:flex-none']} data-reply-open data-reply-target={replyTargetStatus}>
+			<MessageSquareReply size={14} stroke-width={1.75} aria-hidden="true" />
+			{replyButtonLabel}
+		</button>
+	</div>
+	<p class="mt-2 text-sm text-error" role="alert" data-review-error hidden></p>
+</article>

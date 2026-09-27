@@ -1,0 +1,40 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { paginationItems } from '../../../lib/account/pagination';
+import { glassCircle, glassCircleDisabled, glassGroup } from '../glass-classes';
+
+interface Props {
+	currentPage: number;
+	totalPages: number;
+	hrefForPage: (page: number) => string;
+}
+
+const { currentPage, totalPages, hrefForPage } = Astro.props;
+
+---
+
+{totalPages > 1 && (
+	<nav aria-label="Páginas" class="mt-6 flex justify-center">
+		<div class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']}>
+			{currentPage > 1 ? (
+				<a href={hrefForPage(currentPage - 1)} class={glassCircle} aria-label="Página anterior"><ChevronLeft size={16} stroke-width={2} aria-hidden="true" /></a>
+			) : (
+				<span class={glassCircleDisabled} aria-hidden="true"><ChevronLeft size={16} stroke-width={2} /></span>
+			)}
+			{paginationItems(currentPage, totalPages).map((item) =>
+				item.kind === 'gap' ? (
+					<span class="flex size-8 items-center justify-center text-[13px] text-muted sm:size-9" aria-hidden="true">…</span>
+				) : (
+					<a href={hrefForPage(item.page)} class={glassCircle} aria-label={`Página ${item.page}`} aria-current={item.page === currentPage ? 'page' : undefined}>
+						{item.page}
+					</a>
+				),
+			)}
+			{currentPage < totalPages ? (
+				<a href={hrefForPage(currentPage + 1)} class={glassCircle} aria-label="Página siguiente"><ChevronRight size={16} stroke-width={2} aria-hidden="true" /></a>
+			) : (
+				<span class={glassCircleDisabled} aria-hidden="true"><ChevronRight size={16} stroke-width={2} /></span>
+			)}
+		</div>
+	</nav>
+)}

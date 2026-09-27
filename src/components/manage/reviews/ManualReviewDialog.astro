@@ -1,0 +1,49 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import Checkbox from '../../ui/form/Checkbox.astro';
+import SelectField from '../../ui/form/SelectField.astro';
+import TextField from '../../ui/form/TextField.astro';
+
+interface Props {
+	products: { value: string; label: string }[];
+}
+
+const { products } = Astro.props;
+
+const ratingOptions = [5, 4, 3, 2, 1].map((rating) => ({ value: String(rating), label: rating === 1 ? '1 estrella' : `${rating} estrellas` }));
+---
+
+<Dialog size="lg" aria-labelledby="opinion-manual" data-manual-dialog>
+	<form data-manual-form>
+		<h2 id="opinion-manual" class="text-xl font-semibold tracking-[-0.03em]">Añadir opinión manual</h2>
+		<p class="mt-2 text-sm leading-relaxed text-secondary">Para opiniones que llegan por WhatsApp, correo o en persona.</p>
+
+		<div class="mt-6 grid gap-5">
+			<SelectField label="Excursión" name="productKey" options={products} placeholder="Elige la excursión" required />
+			<TextField label="Autor" name="authorName" required minlength={2} maxlength={80} autocomplete="off" />
+			<SelectField label="Valoración" name="rating" options={ratingOptions} value="5" required />
+			<TextField label="Título" name="title" maxlength={120} autocomplete="off" />
+			<div>
+				<label for="field-body" class="block text-sm font-medium text-primary">Opinión</label>
+				<textarea
+					id="field-body"
+					name="body"
+					rows="5"
+					required
+					minlength="20"
+					maxlength="4000"
+					class="mt-2 block w-full resize-y rounded-2xl border border-border-strong bg-white/90 px-4 py-3 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none"
+				></textarea>
+				<p class="mt-2 text-xs text-muted">Mínimo 20 caracteres.</p>
+			</div>
+			<Checkbox name="publish">Publicarla ya en la web</Checkbox>
+		</div>
+
+		<p class="mt-4 text-sm text-error" role="alert" data-manual-error hidden></p>
+		<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-manual-close>Volver</DialogButton>
+			<DialogButton type="submit" variant="primary" data-manual-submit>Guardar opinión</DialogButton>
+		</div>
+	</form>
+</Dialog>
