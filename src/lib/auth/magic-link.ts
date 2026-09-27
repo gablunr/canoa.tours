@@ -1,9 +1,10 @@
 import { supabaseAdmin } from '../supabase/admin';
 import { sendEmail } from '../email/send';
 import { magicLinkEmail } from '../email/templates/magic-link';
+import { routes } from '../../data/site/routes';
 
 const defaultNextPath = '/account';
-const allowedNextSections = ['/account', '/manage'];
+const allowedNextSections = ['/account', '/manage', routes.reviews];
 
 function isInAllowedSection(path: string) {
 	return allowedNextSections.some(
