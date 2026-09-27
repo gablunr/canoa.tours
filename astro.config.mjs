@@ -1,4 +1,4 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
@@ -38,6 +38,22 @@ export default defineConfig({
     }),
   ],
   redirects: legacyRedirects,
+  env: {
+    schema: {
+      SUPABASE_URL: envField.string({ context: 'client', access: 'public' }),
+      SUPABASE_PUBLISHABLE_KEY: envField.string({ context: 'client', access: 'public' }),
+      SUPABASE_SECRET_KEY: envField.string({ context: 'server', access: 'secret' }),
+      STRIPE_SECRET_KEY: envField.string({ context: 'server', access: 'secret' }),
+      STRIPE_WEBHOOK_SECRET: envField.string({ context: 'server', access: 'secret' }),
+      PUBLIC_STRIPE_KEY: envField.string({ context: 'client', access: 'public' }),
+      RESEND_API_KEY: envField.string({ context: 'server', access: 'secret' }),
+      EMAIL_FROM: envField.string({ context: 'server', access: 'public', default: 'Canoa Tours <reservas@canoa.tours>' }),
+      TEAM_EMAIL: envField.string({ context: 'server', access: 'public', default: 'hola@canoa.tours' }),
+      CRON_SECRET: envField.string({ context: 'server', access: 'secret' }),
+      TICKET_SIGNING_SECRET: envField.string({ context: 'server', access: 'secret' }),
+      VERCEL_DEPLOY_HOOK_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
+    },
+  },
   markdown: {
     processor: satteri({ mdastPlugins: [contentTokensPlugin] }),
   },
