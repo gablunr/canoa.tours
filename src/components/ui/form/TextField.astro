@@ -7,20 +7,40 @@ interface Props extends Omit<HTMLAttributes<'input'>, 'id' | 'class' | 'name'> {
 	hint?: string;
 	requiredMessage?: string;
 	invalidMessage?: string;
+	tone?: 'light' | 'glass';
 }
 
-const { label, name, hint, requiredMessage, invalidMessage, required, ...attributes } = Astro.props;
+const { label, name, hint, requiredMessage, invalidMessage, required, tone = 'light', ...attributes } = Astro.props;
 
 const inputId = `field-${name}`;
 const hintId = `${inputId}-hint`;
 const errorId = `${inputId}-error`;
 const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+
+const tones = {
+	light: {
+		label: 'text-primary',
+		optional: 'text-muted',
+		input: 'border-border-strong bg-background text-primary placeholder:text-subtle hover:border-muted focus:border-primary aria-invalid:border-error',
+		hint: 'text-muted',
+		error: 'text-error',
+	},
+	glass: {
+		label: 'text-white',
+		optional: 'text-white/60',
+		input: 'border-white/25 bg-white/10 text-white placeholder:text-white/50 hover:border-white/45 focus:border-white aria-invalid:border-sun-300',
+		hint: 'text-white/70',
+		error: 'text-sun-200',
+	},
+};
+
+const styles = tones[tone];
 ---
 
 <div data-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
-	<label for={inputId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
+	<label for={inputId} class:list={['flex items-baseline justify-between gap-3 text-sm font-medium', styles.label]}>
 		{label}
-		{!required && <span class="text-xs font-normal text-muted">Opcional</span>}
+		{!required && <span class:list={['text-xs font-normal', styles.optional]}>Opcional</span>}
 	</label>
 	<input
 		{...attributes}
@@ -28,8 +48,11 @@ const describedBy = hint ? `${hintId} ${errorId}` : errorId;
 		name={name}
 		required={required}
 		aria-describedby={describedBy}
-		class="mt-2 block h-12 w-full rounded-2xl border border-border-strong bg-background px-4 text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none aria-invalid:border-error"
+		class:list={[
+			'mt-2 block h-12 w-full rounded-2xl border px-4 text-base transition-colors duration-300 ease-smooth focus:outline-none',
+			styles.input,
+		]}
 	/>
-	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
-	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+	{hint && <p id={hintId} class:list={['mt-2 text-xs', styles.hint]}>{hint}</p>}
+	<p id={errorId} data-field-error class:list={['mt-2 text-xs', styles.error]} hidden></p>
 </div>
