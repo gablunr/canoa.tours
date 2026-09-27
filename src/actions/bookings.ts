@@ -1,6 +1,6 @@
 import { ActionError, defineAction, type ActionErrorCode } from 'astro:actions';
 import { z } from 'astro/zod';
-import { bookingPolicy } from '../data/booking/booking-policy';
+import { bookingPolicy, termsVersion } from '../data/booking/booking-policy';
 import { findActiveProductId, loadBookableProduct, loadPickupOptions, type BookableProduct } from '../lib/booking/catalog';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
 import { closeUnpaidCheckoutSession, createCheckoutSession } from '../lib/booking/payments';
@@ -9,7 +9,6 @@ import { siteOrigin } from '../lib/site-origin';
 import { supabaseAdmin } from '../lib/supabase/admin';
 
 const maxPendingBookingsPerCustomer = 2;
-const termsVersion = 'v1';
 const cancelledCheckoutQuery = '?pago=cancelado';
 
 const productKeyInput = z.string().trim().min(1).max(100);

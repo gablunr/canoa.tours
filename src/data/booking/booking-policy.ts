@@ -16,3 +16,8 @@ export const cancellationNoticeLabel = `${bookingPolicy.cancellationNoticeHours}
 export const maxDateChangesLabel = timesInWords[bookingPolicy.maxDateChanges];
 
 export const beachActivityPickupFeeLabel = formatPrice(bookingPolicy.beachActivityPickupFee);
+
+export const savedCardNotice =
+	'Guardamos tu tarjeta de forma segura con Stripe. Solo la usaremos para cobrar el saldo pendiente si no te presentas a la excursión y no has contratado el seguro de cancelación.';
+
+export const termsVersion = '2026-09-27';

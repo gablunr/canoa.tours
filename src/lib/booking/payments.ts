@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { savedCardNotice } from '../../data/booking/booking-policy';
 import { sendBookingEmail } from '../email/booking-emails';
 import { stripe } from '../stripe';
 import { supabaseAdmin } from '../supabase/admin';
@@ -10,9 +11,6 @@ type PaymentKind = 'deposit' | 'balance' | 'no_show_charge' | 'refund';
 type PaymentStatus = 'pending' | 'succeeded' | 'failed';
 
 const checkoutSessionLifetimeSeconds = 31 * 60;
-
-const savedCardNotice =
-	'Guardamos tu tarjeta de forma segura con Stripe. Solo la usaremos para cobrar el saldo pendiente si no te presentas a la excursión y no has contratado el seguro de cancelación.';
 
 export async function recordPayment(input: {
 	bookingId: string;
