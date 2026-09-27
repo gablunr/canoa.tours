@@ -1,0 +1,7 @@
+{
+	"crons": [
+		{ "path": "/api/cron/departures-pending", "schedule": "0 21 * * *" },
+		{ "path": "/api/cron/tour-reminders", "schedule": "0 22 * * *" },
+		{ "path": "/api/cron/review-requests", "schedule": "0 17 * * *" }
+	]
+}
