@@ -6,8 +6,8 @@ import Button from '../../ui/Button.astro';
 import ClientPagination from '../../ui/ClientPagination.astro';
 import FilterPills from '../../ui/FilterPills.astro';
 import RatingBadge from '../../ui/RatingBadge.astro';
-import ReviewCard from '../../ui/cards/ReviewCard.astro';
 import ReviewFormFields from '../account/ReviewFormFields.astro';
+import ReviewBrowser from './ReviewBrowser.astro';
 import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
 import { company, whatsappMessageHref } from '../../../data/site/company';
 import { cancellationsLink, contactLink } from '../../../data/site/navigation';
@@ -44,13 +44,7 @@ const pickerFilters = [
 {stats && (
 	<PageSection id="reviews-list-title" title="Opiniones publicadas">
 		<p data-reveal class="max-lg:text-center"><RatingBadge stats={stats} /></p>
-		<ul class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{reviews.map((review) => (
-				<li data-reveal>
-					<ReviewCard review={review} />
-				</li>
-			))}
-		</ul>
+		<ReviewBrowser id="all-reviews" reviews={reviews} tourFilter listClass="md:grid-cols-2 lg:grid-cols-3" class="mt-8" />
 	</PageSection>
 )}
 
