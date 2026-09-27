@@ -1,6 +1,5 @@
 ---
 import { CheckCheck, MessageSquareText, Plus } from '@lucide/astro';
-import { SUPABASE_URL } from 'astro:env/client';
 import ManageLayout from '../../layouts/ManageLayout.astro';
 import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
 import ReviewCard, { type ModerationReview, type ReviewStatus } from '../../components/manage/reviews/ReviewCard.astro';
@@ -9,6 +8,7 @@ import ManualReviewDialog from '../../components/manage/reviews/ManualReviewDial
 import ReviewsPagination from '../../components/manage/reviews/ReviewsPagination.astro';
 import BulkPublishDialog from '../../components/manage/reviews/BulkPublishDialog.astro';
 import { canOpenSection } from '../../data/manage/sections';
+import { publicMediaUrl } from '../../lib/supabase/media';
 import { glassButton, glassButtonPrimary, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../components/manage/glass-classes';
 
 export const prerender = false;
@@ -60,7 +60,6 @@ if (reviewsResult.error) throw reviewsResult.error;
 
 const spanishName = (product: { key: string; product_translations: { name: string; locale: string }[] } | null) =>
 	product ? (product.product_translations.find((translation) => translation.locale === 'es')?.name ?? product.key) : 'Excursión';
-const publicMediaUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/media/${path}`;
 
 const reviews: ModerationReview[] = reviewsResult.data.map((row) => ({
 	id: row.id,

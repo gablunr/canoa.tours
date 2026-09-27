@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { inferRemoteSize } from 'astro:assets';
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from 'astro:env/client';
 import type { Database, Json } from '../supabase/database.types';
 import type { RemoteImage } from '../images';
+import { remoteMediaImage } from '../supabase/media';
 
 export interface PublishedGuideRow {
 	slug: string;
@@ -22,14 +22,6 @@ export interface PublishedGuideRow {
 	updatedAt: Date;
 }
 
-const publicMediaUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/media/${path}`;
-
-async function remoteImage(path: string): Promise<RemoteImage> {
-	const src = publicMediaUrl(path);
-	const { width, height } = await inferRemoteSize(src);
-	return { remote: true, src, width, height };
-}
-
 async function loadPublishedGuideRows(): Promise<PublishedGuideRow[]> {
 	const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } });
 	const { data, error } = await supabase
@@ -47,7 +39,7 @@ async function loadPublishedGuideRows(): Promise<PublishedGuideRow[]> {
 			silo: row.silo,
 			title: row.title,
 			description: row.description,
-			image: await remoteImage(row.image_path ?? ''),
+			image: await remoteMediaImage(row.image_path ?? ''),
 			imageAlt: row.image_alt ?? '',
 			readingMinutes: row.reading_minutes ?? 1,
 			featured: row.featured,

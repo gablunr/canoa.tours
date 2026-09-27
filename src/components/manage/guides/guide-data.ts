@@ -1,6 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { inferRemoteSize } from 'astro:assets';
-import { SUPABASE_URL } from 'astro:env/client';
 import palmBeachImage from '../../../assets/images/home/caribbean-palm-beach.jpg';
 import type { Guide, GuideSilo } from '../../../data/guides/guides';
 import { routes } from '../../../data/site/routes';
@@ -10,6 +8,7 @@ import type { SiteImage } from '../../../lib/images';
 import { storedArray, type StoredGuideSection } from '../../../lib/guides/render-guide-content';
 import type { QuestionAndAnswer } from '../../../lib/seo/structured-data';
 import type { Database } from '../../../lib/supabase/database.types';
+import { publicMediaUrl, remoteImage } from '../../../lib/supabase/media';
 
 export type GuideStatus = 'draft' | 'published';
 
@@ -70,8 +69,6 @@ export const guidePathPrefixes: Record<string, string> = Object.fromEntries(guid
 export const tourSlugsBySilo: Record<string, string[]> = Object.fromEntries(
 	destinations.map((destination) => [destination.id, tourDetails.filter((details) => details.destination.id === destination.id).map((details) => details.tour.slug)]),
 );
-
-export const publicMediaUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/media/${path}`;
 
 const searchTerm = (query: string) => query.replace(/[%_*,()"\\]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -154,8 +151,7 @@ async function previewImage(guide: EditableGuide): Promise<SiteImage> {
 	if (!guide.imageUrl) return fallback;
 
 	try {
-		const { width, height } = await inferRemoteSize(guide.imageUrl);
-		return { remote: true, src: guide.imageUrl, width, height };
+		return await remoteImage(guide.imageUrl);
 	} catch {
 		return fallback;
 	}
