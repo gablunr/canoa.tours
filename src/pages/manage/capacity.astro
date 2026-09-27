@@ -1,0 +1,103 @@
+---
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import MonthNavigation from '../../components/manage/capacity/MonthNavigation.astro';
+import CapacityCalendar from '../../components/manage/capacity/CapacityCalendar.astro';
+import CapacityDialog from '../../components/manage/capacity/CapacityDialog.astro';
+import CapacityExceptions from '../../components/manage/capacity/CapacityExceptions.astro';
+import MonthSummary from '../../components/manage/capacity/MonthSummary.astro';
+import ProductSelect from '../../components/manage/capacity/ProductSelect.astro';
+import { glassPanel } from '../../components/manage/glass-classes';
+import { canOpenSection } from '../../data/manage/sections';
+import { localToday } from '../../lib/account/bookings';
+import {
+	isCapacityException,
+	isValidMonth,
+	loadCapacityMonth,
+	loadCapacityProducts,
+	monthOf,
+	shiftMonth,
+	type CapacityDay,
+	type CapacityProduct,
+} from '../../lib/manage/capacity';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'capacity')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const monthsAhead = 6;
+const today = localToday();
+const firstMonth = monthOf(today);
+const lastMonth = shiftMonth(firstMonth, monthsAhead);
+const requestedMonth = Astro.url.searchParams.get('month');
+const month = isValidMonth(requestedMonth) && requestedMonth >= firstMonth && requestedMonth <= lastMonth ? requestedMonth : firstMonth;
+const previousMonth = month > firstMonth ? shiftMonth(month, -1) : null;
+const nextMonth = month < lastMonth ? shiftMonth(month, 1) : null;
+
+let products: CapacityProduct[] = [];
+let days: CapacityDay[] = [];
+let loadFailed = false;
+let product: CapacityProduct | undefined;
+try {
+	products = await loadCapacityProducts(Astro.locals.supabase);
+	const requestedProduct = Astro.url.searchParams.get('product');
+	product = products.find((candidate) => candidate.key === requestedProduct) ?? products[0];
+	if (product) days = await loadCapacityMonth(Astro.locals.supabase, product, month, today);
+} catch (error) {
+	console.error('capacity load failed', error);
+	loadFailed = true;
+}
+
+const exceptions = days.filter(isCapacityException);
+const departureDays = days.filter((day) => day.isDeparture);
+const seatsSold = departureDays.reduce((sum, day) => sum + day.seatsSold, 0);
+const closedDays = departureDays.filter((day) => day.closed).length;
+const monthFigures = product
+	? [
+			{ label: 'Cupo por defecto', value: String(product.defaultCapacity) },
+			{ label: 'Días con salida', value: String(departureDays.length) },
+			{ label: 'Plazas vendidas', value: String(seatsSold) },
+			{ label: 'Días cerrados', value: String(closedDays), alert: closedDays > 0 },
+		]
+	: [];
+---
+
+<ManageLayout title="Cupo" section="capacity">
+	<div class="grid gap-4" data-capacity data-product-key={product?.key}>
+		<ManagePageHeader title="Cupo" description="Toca un día para cambiar su cupo o cerrarlo.">
+			{product && (
+				<div class="grid w-full grid-cols-2 gap-2 sm:w-96 lg:w-80">
+					<MonthNavigation month={month} productKey={product.key} previousMonth={previousMonth} nextMonth={nextMonth} />
+					<ProductSelect month={month} products={products} selectedKey={product.key} />
+				</div>
+			)}
+		</ManagePageHeader>
+
+		{loadFailed ? (
+			<p class="mt-2 rounded-2xl bg-[#fbe9e7] px-4 py-3 text-sm text-error" role="alert">No pudimos cargar el cupo. Recarga la página.</p>
+		) : !product ? (
+			<p class:list={[glassPanel, 'mt-2 p-6 text-secondary']}>No hay excursiones activas.</p>
+		) : (
+			<>
+				<div class="mt-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+					<section aria-label="Calendario de cupo" class:list={[glassPanel, 'animate-fade-up p-3 sm:p-5']} style="animation-delay: 120ms">
+						<CapacityCalendar month={month} days={days} />
+					</section>
+
+					<aside class="grid animate-fade-up gap-4" style="animation-delay: 180ms">
+						<MonthSummary figures={monthFigures} />
+						<CapacityExceptions days={exceptions} defaultCapacity={product.defaultCapacity} />
+					</aside>
+				</div>
+
+				<CapacityDialog defaultCapacity={product.defaultCapacity} />
+			</>
+		)}
+	</div>
+</ManageLayout>
+
+<script>
+	import { initCapacity } from '../../scripts/manage/capacity';
+
+	document.querySelectorAll<HTMLElement>('[data-capacity]').forEach(initCapacity);
+</script>

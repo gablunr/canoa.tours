@@ -1,0 +1,29 @@
+---
+import { formatMoney } from '../../../lib/email/templates/layout';
+import { glassPanel } from '../glass-classes';
+
+interface Props {
+	departures: number;
+	bookings: number;
+	seats: number;
+	balance: number;
+}
+
+const { departures, bookings, seats, balance } = Astro.props;
+
+const figures = [
+	{ label: 'Salidas', value: String(departures) },
+	{ label: 'Reservas', value: String(bookings) },
+	{ label: 'Plazas', value: String(seats) },
+	{ label: 'A cobrar el día', value: formatMoney(balance) },
+];
+---
+
+<dl class:list={[glassPanel, 'grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-3.5 sm:flex sm:items-center sm:gap-0 sm:self-start sm:rounded-full sm:px-2 sm:py-1.5 lg:self-auto']}>
+	{figures.map((figure) => (
+		<div class="sm:border-l sm:border-white/70 sm:px-5 sm:py-1 sm:first:border-l-0">
+			<dt class="text-xs text-muted">{figure.label}</dt>
+			<dd class="text-lg leading-tight font-semibold tracking-[-0.02em] text-primary tabular-nums">{figure.value}</dd>
+		</div>
+	))}
+</dl>

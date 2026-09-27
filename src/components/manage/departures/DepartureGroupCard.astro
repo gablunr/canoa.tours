@@ -1,0 +1,246 @@
+---
+import { Banknote, CheckCheck, CircleAlert, Clock, Copy, Hotel, MessageCircle, Send, StickyNote, Users } from '@lucide/astro';
+import { formatMoney } from '../../../lib/email/templates/layout';
+import type { ManifestGroup, ManifestRow } from '../../../lib/manage/manifest';
+import { glassChipButton, glassChipPrimaryButton, glassPanel, glassTile } from '../glass-classes';
+
+interface Props {
+	group: ManifestGroup;
+	whatsappText: string;
+	delay: number;
+}
+
+const { group, whatsappText, delay } = Astro.props;
+
+const shortTime = (time: string | null) => (time ? time.slice(0, 5) : null);
+const uniqueTimes = (times: (string | null)[]) => [...new Set(times.map(shortTime).filter((time): time is string => Boolean(time)))].join(', ');
+
+const startTimes = uniqueTimes(group.rows.map((row) => row.start_time));
+const pickupEnds = uniqueTimes(group.rows.map((row) => row.pickup_to));
+const scheduleLabel = pickupEnds ? `Salida ${startTimes}, recogida hasta ${pickupEnds}` : `Salida ${startTimes}`;
+const countLabel = `${group.bookings} ${group.bookings === 1 ? 'reserva' : 'reservas'}, ${group.seats} ${group.seats === 1 ? 'plaza' : 'plazas'}`;
+
+const stampFormatter = new Intl.DateTimeFormat('es', {
+	day: 'numeric',
+	month: 'short',
+	hour: '2-digit',
+	minute: '2-digit',
+	hourCycle: 'h23',
+	timeZone: 'America/Santo_Domingo',
+});
+
+type ProviderStep = { done: number; latest: string | null };
+
+function providerStep(stamps: (string | null)[]): ProviderStep {
+	const present = stamps.filter((stamp): stamp is string => Boolean(stamp)).sort();
+	return { done: present.length, latest: present.at(-1) ?? null };
+}
+
+const total = group.rows.length;
+const sent = providerStep(group.rows.map((row) => row.provider_sent_at));
+const confirmed = providerStep(group.rows.map((row) => row.provider_confirmed_at));
+const allSent = sent.done === total;
+const allConfirmed = confirmed.done === total;
+
+const stampTitle = (prefix: string, step: ProviderStep) => (step.latest ? `${prefix} el ${stampFormatter.format(new Date(step.latest))}` : undefined);
+const pendingTone = 'bg-sun-soft text-sun-strong';
+
+function providerStatus() {
+	if (allConfirmed) return { label: 'Confirmada', tone: 'bg-accent-soft text-accent-strong', title: stampTitle('Confirmada', confirmed) };
+	if (confirmed.done > 0) return { label: `${confirmed.done} de ${total} confirmadas`, tone: pendingTone, title: undefined };
+	if (allSent) return { label: 'Enviada, sin confirmar', tone: 'bg-white/70 text-secondary', title: stampTitle('Enviada', sent) };
+	if (sent.done > 0) return { label: `${sent.done} de ${total} enviadas`, tone: pendingTone, title: undefined };
+	return { label: 'Sin enviar', tone: pendingTone, title: undefined };
+}
+
+const status = providerStatus();
+
+const whatsappHref = (phone: string | null) => {
+	const digits = phone?.replace(/\D/g, '') ?? '';
+	return digits ? `https://wa.me/${digits}` : null;
+};
+
+function paxLabel(row: ManifestRow) {
+	const parts = [row.adults > 0 ? `${row.adults}A` : null, row.children > 0 ? `${row.children}N` : null, row.infants > 0 ? `${row.infants}B` : null];
+	return parts.filter(Boolean).join(' ');
+}
+
+function paxLong(row: ManifestRow) {
+	const parts = [
+		row.adults > 0 ? `${row.adults} ${row.adults === 1 ? 'adulto' : 'adultos'}` : null,
+		row.children > 0 ? `${row.children} ${row.children === 1 ? 'niño' : 'niños'}` : null,
+		row.infants > 0 ? `${row.infants} ${row.infants === 1 ? 'bebé' : 'bebés'}` : null,
+	];
+	return parts.filter(Boolean).join(', ');
+}
+
+const balanceLabel = (row: ManifestRow) => (row.balance_amount > 0 ? formatMoney(row.balance_amount) : 'Pagado');
+const balanceTone = (row: ManifestRow) => (row.balance_amount > 0 ? 'text-primary' : 'text-success');
+const bookingHref = (row: ManifestRow) => `/manage/bookings/${row.booking_code}`;
+const whatsappLink =
+	'flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent outline-none transition-colors duration-300 ease-smooth hover:bg-accent hover:text-white focus-visible:ring-2 focus-visible:ring-accent';
+const mobileWhatsappLink =
+	'liquid-glass flex size-10 shrink-0 items-center justify-center bg-accent-soft/80 text-accent outline-none transition-colors duration-300 ease-smooth [--glass-drop-shadow:0_0_#0000] hover:bg-accent hover:text-white focus-visible:ring-2 focus-visible:ring-accent';
+const factChip = 'inline-flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-white/70 px-2.5 text-xs';
+const alertBadge = 'inline-flex items-center rounded-full bg-sun-soft text-xs font-medium whitespace-nowrap text-sun-strong';
+const noteBadge = 'flex items-start gap-1.5 bg-white/70 text-xs leading-snug text-secondary';
+const headerCell = 'px-3 py-2 text-left text-xs font-medium text-muted first:pl-0 last:pr-0';
+const bodyCell = 'px-3 py-2.5 align-top first:pl-0 last:pr-0';
+---
+
+<article class:list={[glassPanel, 'animate-fade-up p-4 sm:p-6']} style={`animation-delay: ${delay}ms`} data-departure-group data-product-key={group.productKey}>
+	<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+		<div class="min-w-0">
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+				<h2 class="text-lg font-semibold tracking-[-0.03em] text-primary">{group.productName}</h2>
+				<span class:list={['inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium whitespace-nowrap', status.tone]} title={status.title}>{status.label}</span>
+			</div>
+			<p class="mt-1 text-xs text-muted">{scheduleLabel}. {countLabel}.</p>
+		</div>
+		<div class="flex flex-wrap gap-2 sm:shrink-0">
+			<button type="button" class:list={[glassChipButton, 'flex-1 sm:flex-none']} title="Copiar el listado para WhatsApp" data-copy-text={whatsappText}>
+				<Copy size={14} stroke-width={1.75} aria-hidden="true" />
+				<span data-button-label>Copiar</span>
+			</button>
+			{!allSent && (
+				<button type="button" class:list={[glassChipButton, 'flex-1 sm:flex-none']} data-mark-step="sent" data-product-key={group.productKey}>
+					<Send size={14} stroke-width={1.75} aria-hidden="true" />
+					<span data-button-label>Marcar enviada</span>
+				</button>
+			)}
+			{!allConfirmed && (
+				<button type="button" class:list={[glassChipPrimaryButton, 'flex-1 sm:flex-none']} data-mark-step="confirmed" data-product-key={group.productKey}>
+					<CheckCheck size={14} stroke-width={1.75} aria-hidden="true" />
+					<span data-button-label>Marcar confirmada</span>
+				</button>
+			)}
+		</div>
+	</div>
+
+	<table class="mt-4 hidden w-full text-sm md:table">
+		<thead>
+			<tr class="border-b border-white/70">
+				<th scope="col" class={headerCell}>Código</th>
+				<th scope="col" class={headerCell}>Cliente</th>
+				<th scope="col" class={headerCell}><abbr title="Adultos (A), niños (N) y bebés (B)" class="no-underline">Pax</abbr></th>
+				<th scope="col" class={headerCell}>Hotel</th>
+				<th scope="col" class={headerCell}>Recogida</th>
+				<th scope="col" class:list={[headerCell, 'text-right']}>Saldo</th>
+			</tr>
+		</thead>
+		<tbody class="divide-y divide-white/70">
+			{group.rows.map((row) => {
+				const phoneHref = whatsappHref(row.lead_phone);
+				return (
+					<tr>
+						<td class={bodyCell}>
+							<a href={bookingHref(row)} class="text-[13px] font-medium tracking-[0.02em] text-primary tabular-nums underline-offset-4 hover:underline">{row.booking_code}</a>
+						</td>
+						<td class:list={[bodyCell, 'max-w-52']}>
+							<div class="flex items-center gap-2">
+								<span class="truncate font-medium text-primary">{row.lead_name}</span>
+								{phoneHref && (
+									<a href={phoneHref} target="_blank" rel="noopener" class={whatsappLink} title={row.lead_phone ?? undefined} aria-label={`Escribir por WhatsApp a ${row.lead_name}`}>
+										<MessageCircle size={12} stroke-width={2} aria-hidden="true" />
+									</a>
+								)}
+							</div>
+						</td>
+						<td class:list={[bodyCell, 'whitespace-nowrap text-secondary tabular-nums']} title={paxLong(row)}>{paxLabel(row)}</td>
+						<td class:list={[bodyCell, 'max-w-64']}>
+							<p class="truncate text-secondary" title={row.zone ? `${row.hotel ?? 'Sin hotel'}, ${row.zone}` : undefined}>
+								{row.hotel ?? 'Sin hotel'}
+								{row.zone && <span class="ml-1.5 text-xs text-muted">{row.zone}</span>}
+							</p>
+						</td>
+						<td class={bodyCell}>
+							<div class="flex items-center gap-1.5 whitespace-nowrap">
+								<span class:list={[row.pickup_time ? 'text-primary tabular-nums' : 'text-muted']}>{shortTime(row.pickup_time) ?? 'Por confirmar'}</span>
+								{row.pickup_fee_pending && (
+									<span class:list={[alertBadge, 'h-6 gap-1 px-2']} title="Suplemento de recogida pendiente">
+										<CircleAlert size={12} stroke-width={2} aria-hidden="true" />
+										Suplemento
+									</span>
+								)}
+								{row.pickup_note && (
+									<button type="button" class="group/note relative flex size-6 shrink-0 cursor-help items-center justify-center rounded-full bg-white/70 text-secondary outline-none transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary focus-visible:ring-2 focus-visible:ring-accent" aria-label={`Nota de recogida: ${row.pickup_note}`}>
+										<StickyNote size={12} stroke-width={1.75} aria-hidden="true" />
+										<span
+											class="pointer-events-none invisible absolute right-0 bottom-full z-20 mb-2 w-64 rounded-xl bg-primary px-3 py-2 text-left text-xs leading-snug whitespace-normal text-white opacity-0 transition duration-200 ease-smooth group-hover/note:visible group-hover/note:opacity-100 group-focus-visible/note:visible group-focus-visible/note:opacity-100"
+											aria-hidden="true"
+										>
+											{row.pickup_note}
+										</span>
+									</button>
+								)}
+							</div>
+						</td>
+						<td class:list={[bodyCell, 'text-right font-medium whitespace-nowrap tabular-nums', balanceTone(row)]}>{balanceLabel(row)}</td>
+					</tr>
+				);
+			})}
+		</tbody>
+	</table>
+
+	<ul class="mt-4 grid gap-2.5 md:hidden">
+		{group.rows.map((row) => {
+			const phoneHref = whatsappHref(row.lead_phone);
+			return (
+				<li class:list={[glassTile, 'p-4']}>
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<p class="truncate text-[15px] font-medium text-primary">{row.lead_name}</p>
+							<a href={bookingHref(row)} class="text-xs font-medium tracking-[0.02em] text-muted tabular-nums underline-offset-4 hover:text-primary hover:underline">{row.booking_code}</a>
+						</div>
+						{phoneHref && (
+							<a href={phoneHref} target="_blank" rel="noopener" class={mobileWhatsappLink} aria-label={`Escribir por WhatsApp a ${row.lead_name}`}>
+								<MessageCircle size={18} stroke-width={1.75} aria-hidden="true" />
+							</a>
+						)}
+					</div>
+					<div class="mt-3 grid grid-cols-2 gap-1.5">
+						<span class:list={[factChip, 'text-secondary']}>
+							<Users size={13} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+							<span class="truncate">{paxLong(row)}</span>
+						</span>
+						<span class:list={[factChip, row.pickup_time ? 'text-primary tabular-nums' : 'text-muted']}>
+							<Clock size={13} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+							<span class="truncate">{shortTime(row.pickup_time) ?? 'Por confirmar'}</span>
+						</span>
+						<span class:list={[factChip, 'col-span-2 text-secondary']}>
+							<Hotel size={13} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+							<span class="truncate">{row.hotel ?? 'Sin hotel'}</span>
+							{row.zone && <span class="ml-auto shrink-0 pl-2 text-muted">{row.zone}</span>}
+						</span>
+						{row.pickup_note && (
+							<p class:list={[noteBadge, 'col-span-2 rounded-2xl px-3 py-2']}>
+								<StickyNote size={13} stroke-width={1.75} class="mt-px shrink-0 text-muted" aria-hidden="true" />
+								<span>{row.pickup_note}</span>
+							</p>
+						)}
+					</div>
+					<div class="mt-3 flex items-center justify-between gap-3 border-t border-white/60 pt-3">
+						{row.balance_amount > 0 ? (
+							<p class="flex items-center gap-1.5">
+								<Banknote size={14} stroke-width={1.75} class="text-muted" aria-hidden="true" />
+								<span class="text-xs text-muted">A cobrar</span>
+								<span class="text-[15px] font-semibold text-primary tabular-nums">{formatMoney(row.balance_amount)}</span>
+							</p>
+						) : (
+							<p class="flex items-center gap-1.5 text-sm font-medium text-success">
+								<Banknote size={14} stroke-width={1.75} aria-hidden="true" />
+								Pagado
+							</p>
+						)}
+						{row.pickup_fee_pending && (
+							<span class:list={[alertBadge, 'h-7 gap-1.5 px-2.5']}>
+								<CircleAlert size={13} stroke-width={2} aria-hidden="true" />
+								Suplemento pendiente
+							</span>
+						)}
+					</div>
+				</li>
+			);
+		})}
+	</ul>
+</article>

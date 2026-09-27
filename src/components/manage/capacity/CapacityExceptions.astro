@@ -1,0 +1,81 @@
+---
+import { formatTourDay } from '../../../lib/account/bookings';
+import type { CapacityDay } from '../../../lib/manage/capacity';
+import { glassPanel, glassTile } from '../glass-classes';
+
+interface Props {
+	days: CapacityDay[];
+	defaultCapacity: number;
+}
+
+const { days, defaultCapacity } = Astro.props;
+
+const badgeBase = 'inline-flex h-6 shrink-0 items-center rounded-full px-2.5 text-xs font-medium whitespace-nowrap';
+
+function badgeFor(day: CapacityDay) {
+	if (day.closed) return { label: 'Cerrado', tone: 'bg-[#fbe9e7] text-error' };
+	if (day.customCapacity !== null) return { label: `Cupo ${day.customCapacity}`, tone: 'bg-accent-soft text-accent-strong' };
+	return { label: 'Con nota', tone: 'bg-sun-soft text-sun-strong' };
+}
+
+const capacityLabel = (day: CapacityDay) => (day.customCapacity === null ? `Cupo ${defaultCapacity} por defecto` : `Cupo ${day.customCapacity}`);
+const soldLabel = (day: CapacityDay) => `${day.seatsSold} ${day.seatsSold === 1 ? 'vendida' : 'vendidas'}`;
+const canEdit = (day: CapacityDay) => day.isDeparture && !day.isPast;
+
+function dayData(day: CapacityDay) {
+	return {
+		'data-capacity-day': '',
+		'data-date': day.date,
+		'data-date-label': formatTourDay(day.date),
+		'data-custom-capacity': day.customCapacity ?? '',
+		'data-closed': String(day.closed),
+		'data-note': day.note ?? '',
+		'data-seats-sold': day.seatsSold,
+	};
+}
+
+const tileClass = [glassTile, 'block w-full p-3 text-left'];
+---
+
+<section aria-labelledby="capacity-exceptions-title" class:list={[glassPanel, 'p-4 sm:p-5']}>
+	<div class="flex items-baseline justify-between gap-3">
+		<h2 id="capacity-exceptions-title" class="text-base font-semibold tracking-[-0.02em] text-primary">Excepciones</h2>
+		{days.length > 0 && <span class="text-xs text-muted tabular-nums">{days.length} {days.length === 1 ? 'día' : 'días'}</span>}
+	</div>
+
+	{days.length === 0 ? (
+		<p class="mt-2 text-sm text-secondary">Todos los días usan el cupo por defecto de {defaultCapacity} plazas.</p>
+	) : (
+		<ul class="mt-3 grid gap-2">
+			{days.map((day) => {
+				const badge = badgeFor(day);
+				const content = (
+					<>
+						<span class="flex items-center justify-between gap-2">
+							<span class="truncate text-sm font-medium text-primary">{formatTourDay(day.date)}</span>
+							<span class:list={[badgeBase, badge.tone]}>{badge.label}</span>
+						</span>
+						<span class="mt-0.5 block text-xs text-muted tabular-nums">{capacityLabel(day)}, {soldLabel(day)}</span>
+						{day.note && <span class="mt-1.5 line-clamp-2 block text-xs text-secondary">{day.note}</span>}
+					</>
+				);
+				return (
+					<li>
+						{canEdit(day) ? (
+							<button
+								type="button"
+								class:list={[...tileClass, 'cursor-pointer outline-none transition-colors duration-300 ease-smooth hover:bg-ink-300/60 focus-visible:ring-2 focus-visible:ring-accent']}
+								aria-label={`${formatTourDay(day.date)}, ${badge.label.toLowerCase()}. Editar cupo`}
+								{...dayData(day)}
+							>
+								{content}
+							</button>
+						) : (
+							<div class:list={[...tileClass, 'opacity-60']}>{content}</div>
+						)}
+					</li>
+				);
+			})}
+		</ul>
+	)}
+</section>

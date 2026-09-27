@@ -1,0 +1,25 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import { glassControl } from '../glass-classes';
+
+interface Props {
+	month: string;
+	products: { key: string; name: string }[];
+	selectedKey: string;
+}
+
+const { month, products, selectedKey } = Astro.props;
+---
+
+<form method="get" action="/manage/capacity" class="min-w-0" data-product-form>
+	<input type="hidden" name="month" value={month} />
+	<label class:list={[glassControl, 'relative w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent']}>
+		<span class="sr-only">Excursión</span>
+		<select name="product" class="h-full w-full min-w-0 cursor-pointer appearance-none truncate rounded-full bg-transparent pr-8 pl-4 outline-none" data-product-select>
+			{products.map((product) => (
+				<option value={product.key} selected={product.key === selectedKey}>{product.name}</option>
+			))}
+		</select>
+		<ChevronDown size={14} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" aria-hidden="true" />
+	</label>
+</form>

@@ -1,0 +1,167 @@
+---
+import { formatBookingDate, formatTourDay } from '../../../lib/account/bookings';
+import { ChevronRight } from '@lucide/astro';
+import { leadingBlankDays, occupancyRatio, occupancyTone, type CapacityDay, type OccupancyTone } from '../../../lib/manage/capacity';
+import { glassTile } from '../glass-classes';
+
+interface Props {
+	month: string;
+	days: CapacityDay[];
+}
+
+const { month, days } = Astro.props;
+
+const weekdays = [
+	{ short: 'L', long: 'Lunes' },
+	{ short: 'M', long: 'Martes' },
+	{ short: 'X', long: 'Miércoles' },
+	{ short: 'J', long: 'Jueves' },
+	{ short: 'V', long: 'Viernes' },
+	{ short: 'S', long: 'Sábado' },
+	{ short: 'D', long: 'Domingo' },
+];
+const blanks = Array.from({ length: leadingBlankDays(month) });
+const barTones: Record<OccupancyTone, string> = { normal: 'bg-accent', high: 'bg-sun', full: 'bg-error' };
+const legend = [
+	{ label: 'Con plazas', swatch: 'bg-accent' },
+	{ label: 'Más del 80 %', swatch: 'bg-sun' },
+	{ label: 'Completo', swatch: 'bg-error' },
+	{ label: 'Cerrado', swatch: 'bg-[#fbe9e7] ring-1 ring-error/40' },
+];
+const cellBase = 'flex min-h-16 flex-col rounded-2xl p-1.5 text-left sm:min-h-20 sm:p-2.5';
+
+const agendaWeekdayFormatter = new Intl.DateTimeFormat('es', { weekday: 'short', timeZone: 'UTC' });
+const agendaWeekday = (day: CapacityDay) => agendaWeekdayFormatter.format(new Date(`${day.date}T00:00:00Z`)).replace('.', '');
+const agendaDays = days.filter((day) => day.isDeparture && !day.isPast);
+const agendaBadgeBase = 'inline-flex h-5 shrink-0 items-center rounded-full px-2 text-[11px] font-medium whitespace-nowrap';
+
+function agendaBadge(day: CapacityDay) {
+	if (day.closed) return { label: 'Cerrado', tone: 'bg-[#fbe9e7] text-error' };
+	if (occupancyTone(day) === 'full') return { label: 'Completo', tone: 'bg-[#fbe9e7] text-error' };
+	if (day.customCapacity !== null) return { label: 'Cupo ajustado', tone: 'bg-accent-soft text-accent-strong' };
+	return null;
+}
+
+function dayAriaLabel(day: CapacityDay) {
+	const date = formatBookingDate(day.date);
+	if (day.closed) return `${date}, cerrado, ${day.seatsSold} de ${day.capacity} plazas vendidas`;
+	return `${date}, ${day.seatsSold} de ${day.capacity} plazas vendidas`;
+}
+---
+
+<div>
+	<ul class="grid gap-2 sm:hidden" aria-label="Días con salida">
+		{agendaDays.length === 0 && <li class="px-1 py-2 text-sm text-secondary">No quedan salidas este mes.</li>}
+		{agendaDays.map((day) => {
+			const badge = agendaBadge(day);
+			return (
+				<li>
+					<button
+						type="button"
+						class:list={[glassTile, 'flex w-full cursor-pointer items-center gap-3 p-2.5 pr-3 text-left outline-none transition-colors duration-300 ease-smooth hover:bg-ink-300/60 focus-visible:ring-2 focus-visible:ring-accent']}
+						aria-label={`${dayAriaLabel(day)}. Editar cupo`}
+						data-capacity-day
+						data-date={day.date}
+						data-date-label={formatTourDay(day.date)}
+						data-custom-capacity={day.customCapacity ?? ''}
+						data-closed={String(day.closed)}
+						data-note={day.note ?? ''}
+						data-seats-sold={day.seatsSold}
+					>
+						<span class:list={['flex w-12 shrink-0 flex-col items-center rounded-xl py-1.5', day.closed ? 'bg-[#fbe9e7]' : 'bg-white/80']}>
+							<span class="text-[11px] font-medium text-muted capitalize">{agendaWeekday(day)}</span>
+							<span class="text-lg leading-tight font-semibold text-primary tabular-nums">{day.dayOfMonth}</span>
+						</span>
+						<span class="min-w-0 flex-1">
+							<span class="flex items-center justify-between gap-2">
+								<span class="text-sm text-secondary tabular-nums">
+									<span class="font-semibold text-primary">{day.seatsSold}</span> de {day.capacity} plazas
+								</span>
+								{badge && <span class:list={[agendaBadgeBase, badge.tone]}>{badge.label}</span>}
+							</span>
+							<span class="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/70">
+								<span class:list={['block h-full rounded-full', day.closed ? 'bg-ink-300' : barTones[occupancyTone(day)]]} style={`width: ${Math.round(occupancyRatio(day) * 100)}%`}></span>
+							</span>
+							{day.note && <span class="mt-1.5 block truncate text-xs text-muted">{day.note}</span>}
+						</span>
+						<ChevronRight size={16} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+					</button>
+				</li>
+			);
+		})}
+	</ul>
+
+	<div class="hidden grid-cols-7 gap-2 sm:grid">
+		{weekdays.map((weekday) => (
+			<abbr title={weekday.long} class="pb-1 text-center text-xs font-medium text-muted no-underline">{weekday.short}</abbr>
+		))}
+		{blanks.map(() => <span aria-hidden="true"></span>)}
+		{days.map((day) => {
+			if (!day.isDeparture) {
+				return (
+					<div class:list={[cellBase, 'text-subtle']}>
+						<span class="text-xs font-medium tabular-nums sm:text-sm">{day.dayOfMonth}</span>
+						<span class="sr-only">Sin salida</span>
+					</div>
+				);
+			}
+			const tone = occupancyTone(day);
+			const content = (
+				<>
+					<span class="flex items-center justify-between gap-1">
+						<span class="text-xs font-semibold text-primary tabular-nums sm:text-sm">{day.dayOfMonth}</span>
+						{day.note && <span class="size-1.5 shrink-0 rounded-full bg-sun" title={day.note}></span>}
+					</span>
+					<span class="mt-auto">
+						{day.closed ? (
+							<span class="block text-[10px] font-medium text-error sm:text-xs">Cerrado</span>
+						) : (
+							<span class="block text-[10px] text-secondary tabular-nums sm:text-xs">
+								{day.seatsSold}<span class="hidden sm:inline">/<span class:list={[day.customCapacity !== null && 'font-semibold text-accent-strong']}>{day.capacity}</span></span>
+							</span>
+						)}
+						<span class="mt-1 block h-1 overflow-hidden rounded-full bg-ink-200/70 sm:h-1.5">
+							<span class:list={['block h-full rounded-full', day.closed ? 'bg-ink-300' : barTones[tone]]} style={`width: ${Math.round(occupancyRatio(day) * 100)}%`}></span>
+						</span>
+					</span>
+				</>
+			);
+			const cellTone = day.closed ? 'bg-[#fbe9e7] ring-1 ring-error/30' : 'bg-white/80';
+			return day.isPast ? (
+				<div class:list={[cellBase, cellTone, 'opacity-55']}>{content}</div>
+			) : (
+				<button
+					type="button"
+					class:list={[
+						cellBase,
+						cellTone,
+						'cursor-pointer outline-none transition duration-300 ease-smooth hover:bg-white hover:ring-1 hover:ring-primary/25 focus-visible:ring-2 focus-visible:ring-accent',
+					]}
+					aria-label={`${dayAriaLabel(day)}. Editar cupo`}
+					data-capacity-day
+					data-date={day.date}
+					data-date-label={formatTourDay(day.date)}
+					data-custom-capacity={day.customCapacity ?? ''}
+					data-closed={String(day.closed)}
+					data-note={day.note ?? ''}
+					data-seats-sold={day.seatsSold}
+				>
+					{content}
+				</button>
+			);
+		})}
+	</div>
+
+	<ul class="mt-4 hidden flex-wrap gap-x-4 gap-y-1.5 px-1 text-xs text-muted sm:flex">
+		{legend.map((item) => (
+			<li class="flex items-center gap-2">
+				<span class:list={['size-2.5 rounded-full', item.swatch]} aria-hidden="true"></span>
+				{item.label}
+			</li>
+		))}
+		<li class="flex items-center gap-2">
+			<span class="size-1.5 rounded-full bg-sun" aria-hidden="true"></span>
+			Con nota
+		</li>
+	</ul>
+</div>

@@ -1,0 +1,52 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { glassControl, glassOption } from '../glass-classes';
+
+interface Props {
+	date: string;
+	today: string;
+	tomorrow: string;
+	previousDate: string;
+	nextDate: string;
+}
+
+const { date, today, tomorrow, previousDate, nextDate } = Astro.props;
+
+const hrefFor = (target: string) => `/manage/departures?date=${target}`;
+const arrow =
+	'flex size-7 shrink-0 items-center justify-center rounded-full text-secondary outline-none transition-colors duration-300 ease-smooth hover:bg-white/70 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent';
+const shortcuts = [
+	{ label: 'Hoy', date: today },
+	{ label: 'Mañana', date: tomorrow },
+];
+---
+
+<nav aria-label="Elegir fecha" class="flex w-full flex-wrap items-center justify-between gap-2">
+	<div class:list={[glassControl, 'gap-0.5 px-1']}>
+		<a href={hrefFor(previousDate)} class={arrow} aria-label="Día anterior">
+			<ChevronLeft size={16} stroke-width={1.75} aria-hidden="true" />
+		</a>
+		<form method="get" action="/manage/departures" class="flex" data-date-form>
+			<label for="departures-date" class="sr-only">Fecha</label>
+			<input
+				id="departures-date"
+				type="date"
+				name="date"
+				value={date}
+				required
+				class="h-7 rounded-full bg-transparent px-2 text-[13px] font-medium text-primary tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent"
+				data-date-input
+			/>
+		</form>
+		<a href={hrefFor(nextDate)} class={arrow} aria-label="Día siguiente">
+			<ChevronRight size={16} stroke-width={1.75} aria-hidden="true" />
+		</a>
+	</div>
+	<div class="flex gap-2">
+		{shortcuts.map((shortcut) => (
+			<a href={hrefFor(shortcut.date)} class={glassOption} aria-current={shortcut.date === date ? 'page' : undefined}>
+				{shortcut.label}
+			</a>
+		))}
+	</div>
+</nav>

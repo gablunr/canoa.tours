@@ -1,0 +1,42 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import Checkbox from '../../ui/form/Checkbox.astro';
+import TextField from '../../ui/form/TextField.astro';
+
+interface Props {
+	defaultCapacity: number;
+}
+
+const { defaultCapacity } = Astro.props;
+---
+
+<Dialog aria-labelledby="capacity-dialog-title" data-capacity-dialog>
+	<form method="dialog" novalidate data-capacity-form>
+		<h2 id="capacity-dialog-title" class="text-xl font-semibold tracking-[-0.03em]" data-capacity-dialog-title>Cupo del día</h2>
+		<p class="mt-2 text-sm text-secondary" data-capacity-dialog-sold></p>
+
+		<div class="mt-6 grid gap-5">
+			<TextField
+				label="Plazas"
+				name="capacity"
+				type="number"
+				inputmode="numeric"
+				min="0"
+				max="10000"
+				step="1"
+				placeholder={String(defaultCapacity)}
+				hint={`Déjalo vacío para usar el cupo por defecto (${defaultCapacity}).`}
+			/>
+			<Checkbox name="closed">Cerrar este día, no se aceptan reservas</Checkbox>
+			<TextField label="Nota" name="note" maxlength="300" autocomplete="off" />
+		</div>
+
+		<p class="mt-4 text-sm text-error" role="alert" data-capacity-error hidden></p>
+
+		<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-capacity-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-capacity-submit>Guardar</DialogButton>
+		</div>
+	</form>
+</Dialog>

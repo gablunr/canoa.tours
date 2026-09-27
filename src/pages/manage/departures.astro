@@ -1,0 +1,107 @@
+---
+import { CalendarX2, Copy, Download, Send } from '@lucide/astro';
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import DateNavigation from '../../components/manage/departures/DateNavigation.astro';
+import DaySummary from '../../components/manage/departures/DaySummary.astro';
+import DepartureGroupCard from '../../components/manage/departures/DepartureGroupCard.astro';
+import MarkAllSentDialog from '../../components/manage/departures/MarkAllSentDialog.astro';
+import { glassButton, glassButtonPrimary, glassGroup, glassPanel } from '../../components/manage/glass-classes';
+import { canOpenSection } from '../../data/manage/sections';
+import { formatBookingDate, localToday } from '../../lib/account/bookings';
+import { loadManifest, manifestWhatsAppText, type ManifestGroup } from '../../lib/manage/manifest';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'departures')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const shiftDate = (isoDate: string, days: number) => new Date(Date.parse(`${isoDate}T12:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+const isValidDate = (value: string | null): value is string =>
+	value !== null && isoDatePattern.test(value) && !Number.isNaN(Date.parse(value)) && new Date(`${value}T12:00:00Z`).toISOString().startsWith(value);
+
+const today = localToday();
+const tomorrow = shiftDate(today, 1);
+const requestedDate = Astro.url.searchParams.get('date');
+const date = isValidDate(requestedDate) ? requestedDate : tomorrow;
+
+let groups: ManifestGroup[] = [];
+let loadFailed = false;
+try {
+	groups = await loadManifest(Astro.locals.supabase, date);
+} catch (error) {
+	console.error('departures manifest failed', error);
+	loadFailed = true;
+}
+
+const rows = groups.flatMap((group) => group.rows);
+const totals = {
+	departures: groups.length,
+	bookings: rows.length,
+	seats: rows.reduce((sum, row) => sum + row.seats, 0),
+	balance: rows.reduce((sum, row) => sum + Math.max(row.balance_amount, 0), 0),
+};
+const pendingRows = rows.filter((row) => !row.provider_sent_at);
+const allSent = pendingRows.length === 0;
+const pendingDepartures = new Set(pendingRows.map((row) => row.product_key)).size;
+const hasDepartures = groups.length > 0;
+const dateLabel = formatBookingDate(date);
+const relativeLabel = date === today ? 'Hoy' : date === tomorrow ? 'Mañana' : null;
+const description = relativeLabel ? `${relativeLabel}, ${dateLabel.charAt(0).toLowerCase()}${dateLabel.slice(1)}.` : `${dateLabel}.`;
+---
+
+<ManageLayout title="Salidas" section="departures">
+	<div class="grid gap-4" data-departures data-date={date}>
+		<ManagePageHeader title="Salidas" description={description}>
+			<DateNavigation date={date} today={today} tomorrow={tomorrow} previousDate={shiftDate(date, -1)} nextDate={shiftDate(date, 1)} />
+		</ManagePageHeader>
+
+		<p class="rounded-2xl bg-[#fbe9e7] px-4 py-3 text-sm text-error" role="alert" data-departures-error hidden></p>
+
+		{loadFailed ? (
+			<p class="mt-2 rounded-2xl bg-[#fbe9e7] px-4 py-3 text-sm text-error" role="alert">No pudimos cargar las salidas. Recarga la página.</p>
+		) : hasDepartures ? (
+			<>
+				<div class="mt-2 flex animate-fade-up flex-col gap-3 lg:flex-row lg:items-center lg:justify-between" style="animation-delay: 120ms">
+					<DaySummary {...totals} />
+					<div class:list={[glassGroup, 'grid w-full grid-cols-2 gap-1.5 rounded-[1.5rem] p-1.5 sm:flex sm:items-center sm:rounded-full lg:w-auto']}>
+						<button type="button" class:list={[glassButton, 'sm:flex-1 lg:flex-none']} title="Copiar todas las salidas para WhatsApp" data-copy-text={manifestWhatsAppText(date, groups)}>
+							<Copy size={15} stroke-width={1.75} aria-hidden="true" />
+							<span data-button-label>Copiar todo</span>
+						</button>
+						<a href={`/api/manage/departures.csv?date=${date}`} class:list={[glassButton, 'sm:flex-1 lg:flex-none']}>
+							<Download size={15} stroke-width={1.75} aria-hidden="true" />
+							CSV
+						</a>
+						{!allSent && (
+							<button type="button" class:list={[glassButtonPrimary, 'col-span-2 sm:flex-1 lg:flex-none']} aria-haspopup="dialog" data-open-mark-all>
+								<Send size={15} stroke-width={1.75} aria-hidden="true" />
+								<span data-button-label>Marcar todo enviado</span>
+							</button>
+						)}
+					</div>
+				</div>
+				<div class="grid gap-4">
+					{groups.map((group, index) => (
+						<DepartureGroupCard group={group} whatsappText={manifestWhatsAppText(date, [group])} delay={180 + index * 60} />
+					))}
+				</div>
+				{!allSent && <MarkAllSentDialog pendingBookings={pendingRows.length} pendingDepartures={pendingDepartures} />}
+			</>
+		) : (
+			<section class:list={[glassPanel, 'mt-2 flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 120ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+					<CalendarX2 size={22} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<h2 class="mt-5 text-xl font-semibold tracking-[-0.03em] text-primary">No hay salidas este día</h2>
+				<p class="mx-auto mt-2 max-w-md text-sm text-secondary">Las reservas confirmadas para esta fecha aparecerán aquí.</p>
+			</section>
+		)}
+	</div>
+</ManageLayout>
+
+<script>
+	import { initDepartures } from '../../scripts/manage/departures';
+
+	document.querySelectorAll<HTMLElement>('[data-departures]').forEach(initDepartures);
+</script>

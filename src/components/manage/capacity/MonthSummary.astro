@@ -1,0 +1,21 @@
+---
+import { glassPanel, glassTile } from '../glass-classes';
+
+interface Props {
+	figures: { label: string; value: string; alert?: boolean }[];
+}
+
+const { figures } = Astro.props;
+---
+
+<section class:list={[glassPanel, 'p-4 sm:p-5']} aria-labelledby="resumen-del-mes">
+	<h2 id="resumen-del-mes" class="text-base font-semibold tracking-[-0.02em] text-primary">Resumen del mes</h2>
+	<dl class="mt-3 grid grid-cols-2 gap-2">
+		{figures.map((figure) => (
+			<div class:list={[glassTile, 'px-3.5 py-3']}>
+				<dt class="text-xs text-muted">{figure.label}</dt>
+				<dd class:list={['mt-0.5 text-lg leading-tight font-semibold tracking-[-0.02em] tabular-nums', figure.alert ? 'text-error' : 'text-primary']}>{figure.value}</dd>
+			</div>
+		))}
+	</dl>
+</section>

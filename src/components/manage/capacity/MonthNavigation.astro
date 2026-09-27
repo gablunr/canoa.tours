@@ -1,0 +1,42 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { formatMonthLabel } from '../../../lib/manage/capacity';
+import { glassControl } from '../glass-classes';
+
+interface Props {
+	month: string;
+	productKey: string;
+	previousMonth: string | null;
+	nextMonth: string | null;
+}
+
+const { month, productKey, previousMonth, nextMonth } = Astro.props;
+
+const shortMonthFormatter = new Intl.DateTimeFormat('es', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+const shortMonthText = shortMonthFormatter.format(new Date(`${month}-01T12:00:00Z`)).replace('.', '');
+const shortMonthLabel = shortMonthText.charAt(0).toUpperCase() + shortMonthText.slice(1);
+const hrefFor = (target: string) => `/manage/capacity?product=${encodeURIComponent(productKey)}&month=${target}`;
+const arrow =
+	'flex size-7 shrink-0 items-center justify-center rounded-full text-secondary outline-none transition-colors duration-300 ease-smooth hover:bg-white/80 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent';
+const disabledArrow = 'flex size-7 shrink-0 items-center justify-center rounded-full text-secondary opacity-35';
+---
+
+<nav aria-label="Elegir mes" class:list={[glassControl, 'w-full justify-between px-1']}>
+	{previousMonth ? (
+		<a href={hrefFor(previousMonth)} class={arrow} aria-label="Mes anterior">
+			<ChevronLeft size={15} stroke-width={1.75} aria-hidden="true" />
+		</a>
+	) : (
+		<span class={disabledArrow} aria-hidden="true"><ChevronLeft size={15} stroke-width={1.75} /></span>
+	)}
+	<span class="min-w-0 flex-1 truncate text-center whitespace-nowrap" aria-live="polite" title={formatMonthLabel(month)}>
+		{shortMonthLabel}
+	</span>
+	{nextMonth ? (
+		<a href={hrefFor(nextMonth)} class={arrow} aria-label="Mes siguiente">
+			<ChevronRight size={15} stroke-width={1.75} aria-hidden="true" />
+		</a>
+	) : (
+		<span class={disabledArrow} aria-hidden="true"><ChevronRight size={15} stroke-width={1.75} /></span>
+	)}
+</nav>

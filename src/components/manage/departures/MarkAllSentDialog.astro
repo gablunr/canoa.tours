@@ -1,0 +1,30 @@
+---
+import { Send } from '@lucide/astro';
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+
+interface Props {
+	pendingBookings: number;
+	pendingDepartures: number;
+}
+
+const { pendingBookings, pendingDepartures } = Astro.props;
+
+const bookingsLabel = `${pendingBookings} ${pendingBookings === 1 ? 'reserva' : 'reservas'}`;
+const departuresLabel = `${pendingDepartures} ${pendingDepartures === 1 ? 'excursión' : 'excursiones'}`;
+---
+
+<Dialog aria-labelledby="marcar-todo-titulo" data-mark-all-dialog>
+	<h2 id="marcar-todo-titulo" class="text-xl font-semibold tracking-[-0.03em]">¿Marcar todo como enviado?</h2>
+	<p class="mt-3 text-sm leading-relaxed text-secondary">
+		{bookingsLabel} de {departuresLabel} quedarán marcadas como enviadas al proveedor. Hazlo cuando ya le hayas mandado el listado del día.
+	</p>
+	<p class="mt-3 text-sm text-error" role="alert" data-dialog-error hidden></p>
+	<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+		<DialogButton data-dialog-close>Volver</DialogButton>
+		<DialogButton variant="primary" data-mark-step="sent">
+			<Send size={15} stroke-width={1.75} aria-hidden="true" />
+			<span data-button-label>Sí, marcar enviado</span>
+		</DialogButton>
+	</div>
+</Dialog>
