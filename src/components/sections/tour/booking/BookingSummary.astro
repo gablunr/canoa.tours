@@ -1,0 +1,37 @@
+---
+import type { Quote } from '../../../../lib/booking/pricing';
+import { formatPrice } from '../../../../lib/format';
+
+interface Props {
+	quote: Quote;
+}
+
+const { quote } = Astro.props;
+
+const totals = [
+	{ key: 'deposit', label: 'Pagas ahora', amount: quote.depositAmount },
+	{ key: 'balance', label: 'El día de la excursión', amount: quote.balanceAmount },
+];
+---
+
+<div data-booking-summary aria-live="polite" class="rounded-[1.25rem] bg-surface p-4 text-sm transition-opacity duration-300 ease-smooth data-pending:opacity-60">
+	<dl data-summary-lines class="grid gap-2"></dl>
+	<template data-summary-line>
+		<div class="flex justify-between gap-4">
+			<dt data-line-label class="text-muted"></dt>
+			<dd data-line-amount class="text-right font-medium text-primary tabular-nums"></dd>
+		</div>
+	</template>
+	<dl class="mt-3 grid gap-1 border-t border-border/60 pt-3">
+		<div class="flex items-baseline justify-between gap-4">
+			<dt class="text-muted">Total</dt>
+			<dd data-summary="total" class="font-display text-xl font-semibold tracking-[-0.02em] text-primary tabular-nums">{formatPrice(quote.total)}</dd>
+		</div>
+		{totals.map((row) => (
+			<div class="flex justify-between gap-4">
+				<dt class="text-muted">{row.label}</dt>
+				<dd data-summary={row.key} class="font-medium text-primary tabular-nums">{formatPrice(row.amount)}</dd>
+			</div>
+		))}
+	</dl>
+</div>
