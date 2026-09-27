@@ -62,6 +62,6 @@ export const formatRating = (rating: number) => ratingFormatter.format(rating);
 
 export const reviewCountLabel = (count: number) => `${count} ${count === 1 ? 'opinión' : 'opiniones'}`;
 
-export const reviewStatsSummary = (stats: ReviewStats) => `${formatRating(stats.rating)} de 5 de media, ${reviewCountLabel(stats.count)}`;
+export const reviewStatsSummary = (stats: ReviewStats) => `${formatRating(stats.rating)} de 5, ${reviewCountLabel(stats.count)}`;
 
 export const reviewSummary = (review: Review) => `${review.author} (${review.tourTitle}): ${review.text}`;
