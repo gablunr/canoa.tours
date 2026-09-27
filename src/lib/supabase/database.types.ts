@@ -972,7 +972,7 @@ export type Database = {
         Returns: undefined
       }
       complete_past_bookings: { Args: never; Returns: number }
-      confirm_booking: { Args: { p_booking_id: string }; Returns: undefined }
+      confirm_booking: { Args: { p_booking_id: string }; Returns: boolean }
       create_booking: {
         Args: { p_booking: Json }
         Returns: {
