@@ -4,7 +4,7 @@ type AccountSummary =
 			signedIn: true;
 			firstName: string | null;
 			email: string | null;
-			isStaff: boolean;
+			panelHref: string | null;
 			upcomingCount: number;
 			nextBooking: { productName: string; date: string; href: string } | null;
 			reviewHref: string | null;
@@ -31,6 +31,20 @@ function setHidden(root: ParentNode, selector: string, hidden: boolean) {
 	});
 }
 
+const panelIcon =
+	'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>';
+
+function addPanelLink(root: ParentNode, href: string) {
+	root.querySelectorAll<HTMLElement>('[data-account-staff-slot]').forEach((slot) => {
+		if (slot.childElementCount > 0) return;
+		const link = document.createElement('a');
+		link.href = href;
+		link.className = slot.dataset.linkClass ?? '';
+		link.innerHTML = `${panelIcon}Equipo`;
+		slot.append(link);
+	});
+}
+
 function accountLinkHref(link: string | undefined, summary: Extract<AccountSummary, { signedIn: true }>) {
 	const ticketHref = summary.nextBooking?.href;
 	if (link === 'ticket' && ticketHref) return ticketHref;
@@ -46,7 +60,7 @@ function applySummary(root: HTMLElement, summary: AccountSummary) {
 
 	setText(root, '[data-account-greeting]', summary.firstName ? `Hola, ${summary.firstName}` : 'Hola');
 	setText(root, '[data-account-email]', summary.email ?? '');
-	setHidden(root, '[data-account-staff]', !summary.isStaff);
+	if (summary.panelHref) addPanelLink(root, summary.panelHref);
 	setHidden(root, '[data-account-no-next]', summary.nextBooking !== null);
 	setHidden(root, '[data-account-next]', summary.nextBooking === null);
 

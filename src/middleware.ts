@@ -44,13 +44,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.staffRole = staffRole;
 
 	const respond = async () => {
-		if (isInSection(pathname, '/manage')) {
-			if (!user) return context.redirect(`/account/sign-in?next=${encodeURIComponent(pathname + search)}`);
-			if (!staffRole) return context.redirect('/');
-		}
-
-		if (isInSection(pathname, '/api/manage') && !staffRole) {
-			return Response.json({ error: 'unauthorized' }, { status: 401 });
+		if ((isInSection(pathname, '/manage') || isInSection(pathname, '/api/manage')) && !staffRole) {
+			return new Response(null, { status: 404, statusText: 'Not Found' });
 		}
 
 		if (isInSection(pathname, '/account') && !user && !isPublicAccountPath(context.url)) {

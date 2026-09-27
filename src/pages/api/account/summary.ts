@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { formatBookingDate, isUpcoming, loadCustomerBookings, loadCustomerProfile } from '../../../lib/account/bookings';
 import { firstName } from '../../../lib/email/templates/layout';
+import { panelHomeHref } from '../../../data/manage/sections';
 
 export const prerender = false;
 
@@ -21,7 +22,7 @@ export const GET: APIRoute = async ({ locals }) => {
 		signedIn: true,
 		firstName: customer ? firstName(customer.fullName) : null,
 		email: user.email ?? null,
-		isStaff: staffRole !== null,
+		panelHref: staffRole ? panelHomeHref(staffRole) : null,
 		upcomingCount: upcoming.length,
 		nextBooking: next
 			? { productName: next.productName, date: formatBookingDate(next.tourDate), href: `/account/bookings/${next.code}` }

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { aiCrawlers } from '../data/site/ai-crawlers';
 import { absoluteUrl } from '../lib/seo/seo';
 
-const privateSections = ['/manage', '/account', '/booking', '/api'];
+const privateSections = ['/account', '/booking', '/api'];
 
 const group = (userAgents: string[]) => [
 	...userAgents.map((userAgent) => `User-agent: ${userAgent}`),
