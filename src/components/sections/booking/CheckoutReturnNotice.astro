@@ -1,0 +1,85 @@
+---
+import { CircleCheck, CircleX, Clock, CreditCard, LoaderCircle } from '@lucide/astro';
+import Button from '../../ui/Button.astro';
+import type { CheckoutReturnState } from '../../../lib/booking/checkout-return';
+import { formatMoney } from '../../../lib/email/templates/layout';
+
+interface Props {
+	state: CheckoutReturnState;
+	email?: string;
+	manageHref?: string;
+	resumeUrl?: string | null;
+	retryHref?: string;
+	refunded?: number;
+}
+
+const { state, email, manageHref, resumeUrl, retryHref, refunded = 0 } = Astro.props;
+
+const confirmedBody = email ? `Te hemos enviado los detalles a ${email}.` : 'Te hemos enviado los detalles por email.';
+
+const notices = {
+	confirmed: {
+		icon: CircleCheck,
+		tone: 'bg-success/12 text-success',
+		title: 'Reserva confirmada.',
+		body: confirmedBody,
+		action: manageHref ? { href: manageHref, label: 'Gestionar mi reserva' } : null,
+	},
+	processing: {
+		icon: LoaderCircle,
+		tone: 'bg-sun-soft text-sun-strong',
+		title: 'Estamos confirmando tu pago.',
+		body: 'La página se actualiza sola.',
+		action: null,
+	},
+	awaiting_payment: {
+		icon: CreditCard,
+		tone: 'bg-sun-soft text-sun-strong',
+		title: 'Aún no hemos recibido el pago.',
+		body: null,
+		action: resumeUrl ? { href: resumeUrl, label: 'Completar el pago' } : null,
+	},
+	cancelled: {
+		icon: CircleX,
+		tone: 'bg-error/10 text-error',
+		title: 'Esta reserva está cancelada.',
+		body: refunded > 0 ? `Te hemos devuelto ${formatMoney(refunded)}.` : null,
+		action: manageHref ? { href: manageHref, label: 'Gestionar mi reserva' } : null,
+	},
+	expired: {
+		icon: Clock,
+		tone: 'bg-accent-soft text-accent-strong',
+		title: 'El plazo para pagar terminó y la reserva no se completó.',
+		body: null,
+		action: retryHref ? { href: retryHref, label: 'Volver a reservar' } : null,
+	},
+} satisfies Record<CheckoutReturnState, unknown>;
+
+const notice = notices[state];
+const Icon = notice.icon;
+---
+
+<div class="px-4 pt-4 sm:px-6">
+	<section
+		class="mx-auto flex max-w-5xl animate-fade-up flex-col gap-5 rounded-[2rem] bg-surface p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-8"
+		style="animation-delay: 120ms"
+		data-checkout-state={state}
+		role="status"
+	>
+		<div class="flex items-start gap-4">
+			<span class:list={['flex size-11 shrink-0 items-center justify-center rounded-full', notice.tone]}>
+				<Icon size={20} stroke-width={1.75} class:list={[state === 'processing' && 'motion-safe:animate-spin']} aria-hidden="true" />
+			</span>
+			<div>
+				<h2 class="text-lg font-semibold tracking-[-0.02em] text-primary">{notice.title}</h2>
+				{notice.body && <p class="mt-1 text-sm leading-relaxed text-secondary" data-checkout-message>{notice.body}</p>}
+				{state === 'processing' && (
+					<p class="mt-1 hidden text-sm leading-relaxed text-secondary" data-checkout-slow>Tarda más de lo normal. Te avisaremos por email.</p>
+				)}
+			</div>
+		</div>
+		{notice.action && (
+			<Button href={notice.action.href} class="shrink-0">{notice.action.label}</Button>
+		)}
+	</section>
+</div>

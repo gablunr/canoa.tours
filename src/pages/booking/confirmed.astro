@@ -1,0 +1,78 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BookingHero from '../../components/sections/account/BookingHero.astro';
+import BookingOverview from '../../components/sections/account/BookingOverview.astro';
+import BookingPayments from '../../components/sections/account/BookingPayments.astro';
+import BookingTicket from '../../components/sections/account/BookingTicket.astro';
+import CheckoutReturnNotice from '../../components/sections/booking/CheckoutReturnNotice.astro';
+import { refundedAmount } from '../../lib/account/bookings';
+import { loadCheckoutReturn } from '../../lib/booking/checkout-return';
+import { ticketUrl } from '../../lib/booking/tokens';
+import { siteOrigin } from '../../lib/site-origin';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const sessionId = Astro.url.searchParams.get('session_id') ?? '';
+const origin = siteOrigin(Astro.url);
+const checkout = sessionId ? await loadCheckoutReturn(sessionId, origin) : null;
+
+if (!checkout) {
+	return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const { state, details, resumeUrl } = checkout;
+const isSettled = state === 'confirmed' || state === 'cancelled';
+const showTicket = state === 'confirmed';
+const showPayments = isSettled;
+const refunded = showPayments ? await refundedAmount(details.id) : 0;
+const manageHref = isSettled ? ticketUrl(origin, details.code) : undefined;
+---
+
+<Layout title={`Reserva ${details.code}`} description={`Tu reserva de ${details.productName} con Canoa Tours.`} noindex>
+	<BookingHero details={details} showBackLink={false} />
+
+	<CheckoutReturnNotice
+		state={state}
+		email={details.customerEmail || undefined}
+		manageHref={manageHref}
+		resumeUrl={resumeUrl}
+		retryHref={details.tourPath}
+		refunded={refunded}
+	/>
+
+	<div class="px-4 pt-4 sm:px-6">
+		<div class="mx-auto flex max-w-5xl animate-fade-up flex-col gap-4 lg:grid lg:grid-cols-3 lg:items-start" style="animation-delay: 180ms">
+			<div class="max-lg:contents lg:col-span-2 lg:flex lg:flex-col lg:gap-4">
+				<div class="max-lg:order-2">
+					<BookingOverview details={details} />
+				</div>
+			</div>
+
+			{(showTicket || showPayments) && (
+				<div class="max-lg:contents lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-4">
+					{showTicket && (
+						<div class="max-lg:order-1">
+							<BookingTicket details={details} />
+						</div>
+					)}
+					{showPayments && (
+						<div class="max-lg:order-3">
+							<BookingPayments details={details} refunded={refunded} />
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { clearBookingDrafts, initProcessingReload } from '../../scripts/booking/checkout-return';
+
+	document.querySelectorAll<HTMLElement>('[data-checkout-state]').forEach((root) => {
+		if (root.dataset.checkoutState === 'confirmed') clearBookingDrafts();
+		initProcessingReload(root);
+	});
+</script>
