@@ -16,6 +16,7 @@ import {
 	reviewsLink,
 } from '../../../data/site/navigation';
 import { formatPrice } from '../../../lib/format';
+import { imageSource } from '../../../lib/images';
 
 interface Props {
 	currentPath: string;
@@ -132,45 +133,54 @@ const photo = 'absolute inset-0 -z-10 size-full object-cover saturate-150 contra
 				</span>
 				<ArrowUpRight size={18} class={viewAllIcon} aria-hidden="true" />
 			</a>
-			<a href={guideHref(featuredGuide)} class:list={[photoFrame, 'aspect-[16/9] p-4 md:row-span-3 md:aspect-auto']}>
-				<Image src={featuredGuide.image} alt="" widths={[480, 720, 960]} sizes="(min-width: 768px) 21rem, 100vw" class={photo} />
-				<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
-				<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
-				<span class="text-xs text-white/80">Guía destacada, {guideReadingTime(featuredGuide)}</span>
-				<span class="mt-0.5 text-lg leading-tight font-semibold tracking-[-0.02em] text-balance">{featuredGuide.title}</span>
-				<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
-			</a>
+			{featuredGuide ? (
+				<>
+					<a href={guideHref(featuredGuide)} class:list={[photoFrame, 'aspect-[16/9] p-4 md:row-span-3 md:aspect-auto']}>
+						<Image {...imageSource(featuredGuide.image)} alt="" widths={[480, 720, 960]} sizes="(min-width: 768px) 21rem, 100vw" class={photo} />
+						<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
+						<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+						<span class="text-xs text-white/80">Guía destacada, {guideReadingTime(featuredGuide)}</span>
+						<span class="mt-0.5 text-lg leading-tight font-semibold tracking-[-0.02em] text-balance">{featuredGuide.title}</span>
+						<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
+					</a>
 
-			{planningGuides.map((guide) => (
-				<a
-					href={guideHref(guide)}
-					class="group bento-glass flex items-center gap-3 rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
-				>
-					<span class="size-14 shrink-0 overflow-hidden rounded-xl">
-						<Image src={guide.image} alt="" widths={[112, 168]} sizes="3.5rem" class="size-full object-cover" />
-					</span>
-					<span class="min-w-0">
-						<span class="line-clamp-2 text-sm leading-snug font-medium">{guide.title}</span>
-						<span class="mt-0.5 block text-xs text-muted-on-dark">{guideReadingTime(guide)}</span>
-					</span>
-				</a>
-			))}
-
-			<div class="bento-glass rounded-2xl p-4">
-				<p class="text-xs text-muted-on-dark">Guías por destino</p>
-				<ul class="mt-3 flex flex-wrap gap-1.5">
-					{destinationGroups.map((group) => (
-						<li>
-							<a
-								href={`${guidesLink.href}#${group.anchor}`}
-								class="block rounded-full bg-white/10 px-3 py-1.5 text-xs transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary"
-							>
-								{group.title}
-							</a>
-						</li>
+					{planningGuides.map((guide) => (
+						<a
+							href={guideHref(guide)}
+							class="group bento-glass flex items-center gap-3 rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+						>
+							<span class="size-14 shrink-0 overflow-hidden rounded-xl">
+								<Image {...imageSource(guide.image)} alt="" widths={[112, 168]} sizes="3.5rem" class="size-full object-cover" />
+							</span>
+							<span class="min-w-0">
+								<span class="line-clamp-2 text-sm leading-snug font-medium">{guide.title}</span>
+								<span class="mt-0.5 block text-xs text-muted-on-dark">{guideReadingTime(guide)}</span>
+							</span>
+						</a>
 					))}
-				</ul>
-			</div>
+
+					<div class="bento-glass rounded-2xl p-4">
+						<p class="text-xs text-muted-on-dark">Guías por destino</p>
+						<ul class="mt-3 flex flex-wrap gap-1.5">
+							{destinationGroups.map((group) => (
+								<li>
+									<a
+										href={`${guidesLink.href}#${group.anchor}`}
+										class="block rounded-full bg-white/10 px-3 py-1.5 text-xs transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary"
+									>
+										{group.title}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				</>
+			) : (
+				<div class="bento-glass rounded-2xl p-4 md:col-span-2">
+					<p class="text-sm font-semibold">Estamos preparando las primeras guías</p>
+					<p class="mt-1 text-xs leading-relaxed text-muted-on-dark">Qué llevar, cuándo ir y cuánto cuesta cada excursión, contado por destino.</p>
+				</div>
+			)}
 		</div>
 	</details>
 

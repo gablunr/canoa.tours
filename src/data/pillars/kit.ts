@@ -2,6 +2,7 @@ import { guideHref, guides } from '../guides/guides';
 import { destinationHref, findDestination, type DestinationId } from '../tours/destinations';
 import { findTourDetails, scheduleWhen, tourDetails, tourDetailsHref, weekdayLabel, weekdays, type TourDetails } from '../tours/tours';
 import { formatPrice } from '../../lib/format';
+import { routes } from '../site/routes';
 
 export { formatPrice } from '../../lib/format';
 export { routes } from '../site/routes';
@@ -40,8 +41,7 @@ export const departureDaysOf = (destinationId: DestinationId) =>
 
 export function guidePath(slug: string) {
 	const guide = guides.find((candidate) => candidate.slug === slug);
-	if (!guide) throw new Error(`Guía desconocida: ${slug}`);
-	return guideHref(guide);
+	return guide ? guideHref(guide) : routes.guides;
 }
 
 export const link = (href: string, label: string) => `<a href="${href}">${label}</a>`;

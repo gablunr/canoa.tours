@@ -2,77 +2,98 @@
 import { Image } from 'astro:assets';
 import ArrowCircle from '../../ui/ArrowCircle.astro';
 import { featuredGuide, guideGroups, guideHref, guideReadingTime, guides } from '../../../data/guides/guides';
-import { guidesLink } from '../../../data/site/navigation';
+import { catalogLink, guidesLink } from '../../../data/site/navigation';
+import { imageSource } from '../../../lib/images';
 
 const planningGuides = guides.filter((guide) => guide.silo === 'general' && guide !== featuredGuide).slice(0, 2);
 const destinationGroups = guideGroups.filter((group) => group.silo !== 'general');
 ---
 
-<div class="grid grid-cols-12 gap-2">
-	<a
-		href={guideHref(featuredGuide)}
-		class="group relative isolate col-span-7 row-span-2 flex min-h-84 flex-col justify-end overflow-hidden rounded-2xl bg-primary p-6 outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
-	>
-		<Image
-			src={featuredGuide.image}
-			alt=""
-			widths={[640, 960, 1280]}
-			sizes="40rem"
-			class="absolute inset-0 -z-10 size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105"
-		/>
-		<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
-		<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
-		<span class="text-xs text-white/75">Guía destacada, {guideReadingTime(featuredGuide)}</span>
-		<span class="mt-1 max-w-md text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance">{featuredGuide.title}</span>
-		<span class="mt-2 line-clamp-2 max-w-lg text-sm text-white/80">{featuredGuide.description}</span>
-		<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
-	</a>
-
-	<ul class="col-span-5 grid gap-2">
-		{planningGuides.map((guide) => (
-			<li>
-				<a
-					href={guideHref(guide)}
-					class="group flex h-full items-center gap-4 bento-glass rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
-				>
-					<span class="size-20 shrink-0 overflow-hidden rounded-xl">
-						<Image
-							src={guide.image}
-							alt=""
-							widths={[160, 240]}
-							sizes="5rem"
-							class="size-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-110"
-						/>
-					</span>
-					<span class="min-w-0">
-						<span class="line-clamp-2 text-sm leading-snug font-medium">{guide.title}</span>
-						<span class="mt-1 block text-xs text-muted-on-dark">{guideReadingTime(guide)}</span>
-					</span>
-				</a>
-			</li>
-		))}
-	</ul>
-
-	<div class="col-span-5 bento-glass rounded-2xl p-4">
-		<p class="text-xs text-muted-on-dark">Guías por destino</p>
+{featuredGuide ? (
+	<div class="grid grid-cols-12 gap-2">
 		<a
-			href={guidesLink.href}
-			aria-label="Todas las guías"
-			class="group absolute top-3.5 right-3.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+			href={guideHref(featuredGuide)}
+			class="group relative isolate col-span-7 flex min-h-84 flex-col justify-end overflow-hidden rounded-2xl bg-primary p-6 outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
 		>
-			<ArrowCircle class="size-6! [&_svg]:size-3.5" />
+			<Image
+				{...imageSource(featuredGuide.image)}
+				alt=""
+				widths={[640, 960, 1280]}
+				sizes="40rem"
+				class="absolute inset-0 -z-10 size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth group-hover:scale-105"
+			/>
+			<span class="absolute inset-0 -z-10 bg-linear-to-t from-black/65 via-black/10 to-transparent"></span>
+			<span class="film-grain absolute inset-0 -z-10 opacity-70" aria-hidden="true"></span>
+			<span class="text-xs text-white/75">Guía destacada, {guideReadingTime(featuredGuide)}</span>
+			<span class="mt-1 max-w-md text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance">{featuredGuide.title}</span>
+			<span class="mt-2 line-clamp-2 max-w-lg text-sm text-white/80">{featuredGuide.description}</span>
+			<span class="glass-rim opacity-45 [--rim-width:1px]" aria-hidden="true"></span>
 		</a>
-		<ul class="mt-3 flex flex-wrap gap-1.5">
-			{destinationGroups.map((group) => (
-				<li>
-					<a
-						href={`${guidesLink.href}#${group.anchor}`}
-						class="block rounded-full bg-white/10 px-3 py-1.5 text-xs transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary"
-					>
-						{group.title}
-					</a>
-				</li>
-			))}
-		</ul>
+
+		<div class="col-span-5 flex flex-col gap-2">
+			<ul class="grid gap-2">
+				{planningGuides.map((guide) => (
+					<li>
+						<a
+							href={guideHref(guide)}
+							class="group flex items-center gap-4 bento-glass rounded-2xl p-2 pr-4 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+						>
+							<span class="size-20 shrink-0 overflow-hidden rounded-xl">
+								<Image
+									{...imageSource(guide.image)}
+									alt=""
+									widths={[160, 240]}
+									sizes="5rem"
+									class="size-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-110"
+								/>
+							</span>
+							<span class="min-w-0">
+								<span class="line-clamp-2 text-sm leading-snug font-medium">{guide.title}</span>
+								<span class="mt-1 block text-xs text-muted-on-dark">{guideReadingTime(guide)}</span>
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+
+			<div class="relative flex-1 bento-glass rounded-2xl p-4">
+				<p class="text-xs text-muted-on-dark">Guías por destino</p>
+				<a
+					href={guidesLink.href}
+					aria-label="Todas las guías"
+					class="group absolute top-3.5 right-3.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+				>
+					<ArrowCircle class="size-6! [&_svg]:size-3.5" />
+				</a>
+				<ul class="mt-3 flex flex-wrap gap-1.5">
+					{destinationGroups.map((group) => (
+						<li>
+							<a
+								href={`${guidesLink.href}#${group.anchor}`}
+								class="block rounded-full bg-white/10 px-3 py-1.5 text-xs transition-colors duration-300 ease-smooth hover:bg-white hover:text-primary"
+							>
+								{group.title}
+							</a>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
 	</div>
-</div>
+) : (
+	<div class="grid grid-cols-12 gap-2">
+		<div class="col-span-8 flex min-h-56 flex-col justify-end bento-glass rounded-2xl p-6">
+			<p class="text-xs text-muted-on-dark">Guías de viaje</p>
+			<p class="mt-1 max-w-md text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance">Estamos preparando las primeras guías</p>
+			<p class="mt-2 max-w-lg text-sm text-muted-on-dark">Qué llevar, cuándo ir y cuánto cuesta cada excursión, contado por destino.</p>
+		</div>
+		<a
+			href={catalogLink.href}
+			class="group relative col-span-4 flex flex-col justify-end bento-glass rounded-2xl p-6 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark"
+		>
+			<ArrowCircle class="absolute top-4 right-4 size-7! [&_svg]:size-4" />
+			<span class="text-base leading-tight font-semibold tracking-[-0.02em]">Mientras tanto, mira las excursiones</span>
+			<span class="mt-1.5 text-[13px] leading-relaxed text-muted-on-dark">Cada ficha cuenta qué incluye, a qué hora salen y dónde te recogen.</span>
+		</a>
+	</div>
+)}

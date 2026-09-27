@@ -1,14 +1,15 @@
 ---
 import { Picture } from 'astro:assets';
-import type { ImageMetadata, ImageOutputFormat } from 'astro';
+import type { ImageOutputFormat } from 'astro';
 import ArrowCircle from '../ArrowCircle.astro';
 import GlassBadge from '../GlassBadge.astro';
+import { imageSource, type SiteImage } from '../../../lib/images';
 
 interface Props {
 	href: string;
 	title: string;
 	description: string;
-	image: ImageMetadata;
+	image: SiteImage;
 	badges: string[];
 	size?: 'md' | 'lg';
 	headingLevel?: 'h2' | 'h3';
@@ -57,7 +58,7 @@ const photoOptions = {
 
 <article class:list={['group relative isolate', className]}>
 	<Picture
-		src={image}
+		{...imageSource(image)}
 		{...photoOptions}
 		pictureAttributes={{
 			class: `absolute -z-10 opacity-40 blur-2xl transition-opacity duration-700 ease-smooth group-hover:opacity-70 max-sm:hidden ${s.glow}`,
@@ -73,7 +74,7 @@ const photoOptions = {
 		]}
 	>
 		<Picture
-			src={image}
+			{...imageSource(image)}
 			{...photoOptions}
 			pictureAttributes={{ class: 'absolute inset-0 -z-10' }}
 			class="size-full object-cover saturate-150 contrast-105 transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-105"

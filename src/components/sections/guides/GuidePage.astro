@@ -4,7 +4,7 @@ import GuideHeader from './GuideHeader.astro';
 import GuideBody from './GuideBody.astro';
 import RelatedGuides from './RelatedGuides.astro';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
-import { guideContent } from '../../../data/guides/guide-content';
+import { guideContent, type GuideContent } from '../../../data/guides/guide-content';
 import { guideHref, guideSiloHref, guideSiloTitle, type Guide } from '../../../data/guides/guides';
 import { guidesLink } from '../../../data/site/navigation';
 import { canonicalUrl } from '../../../lib/seo/seo';
@@ -12,25 +12,28 @@ import { blogPostingSchema, faqSchema } from '../../../lib/seo/structured-data';
 
 interface Props {
 	guide: Guide;
+	previewContent?: GuideContent;
 }
 
-const { guide } = Astro.props;
-const content = guideContent(guide.slug);
+const { guide, previewContent } = Astro.props;
+const content = previewContent ?? guideContent(guide.slug);
 const href = guideHref(guide);
+const pageUrl = canonicalUrl(previewContent ? Astro.url.pathname : href);
 const updatedAt = guide.updatedAt ?? guide.publishedAt;
 const faqs = content?.faqs ?? [];
 const parent = guide.silo === 'general' ? guidesLink : { label: guideSiloTitle(guide.silo), href: guideSiloHref(guide.silo) };
+import { seoImageSource } from '../../../lib/images';
 ---
 
 <Layout
 	title={guide.title}
 	description={guide.description}
-	image={{ src: guide.image, alt: guide.imageAlt }}
+	image={{ src: seoImageSource(guide.image), alt: guide.imageAlt }}
 	pageType={faqs.length > 0 ? 'FAQPage' : 'WebPage'}
 	mainEntity={faqs.length > 0 ? faqSchema(faqs) : undefined}
 	graph={[
 		blogPostingSchema({
-			url: canonicalUrl(href),
+			url: pageUrl,
 			headline: guide.title,
 			description: guide.description,
 			section: guideSiloTitle(guide.silo),
@@ -44,7 +47,7 @@ const parent = guide.silo === 'general' ? guidesLink : { label: guideSiloTitle(g
 		{ name: parent.label, path: parent.href },
 		{ name: guide.title, path: href },
 	]}
-	noindex={!content}
+	noindex={!content || Boolean(previewContent)}
 >
 	<article data-guide>
 		<GuideHeader guide={guide} />
@@ -65,4 +68,5 @@ const parent = guide.silo === 'general' ? guidesLink : { label: guideSiloTitle(g
 		)}
 	</article>
 	<RelatedGuides guide={guide} />
+	<slot name="notice" />
 </Layout>

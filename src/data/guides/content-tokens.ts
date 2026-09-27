@@ -36,3 +36,6 @@ export const fillContentTokens = (text: string) =>
 		if (value === undefined) throw new Error(`El marcador {{${name}}} no existe en content-tokens.ts`);
 		return value;
 	});
+
+export const unknownContentTokens = (text: string) =>
+	[...new Set([...text.matchAll(tokenPattern)].map((match) => match[1]))].filter((name) => contentTokens[name] === undefined);

@@ -39,6 +39,7 @@ export default defineConfig({
   ],
   redirects: legacyRedirects,
   image: {
+    remotePatterns: [{ protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/v1/object/public/**' }],
     service: {
       config: {
         avif: { quality: 60 },

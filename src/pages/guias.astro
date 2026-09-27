@@ -4,8 +4,8 @@ import PageHeader from '../components/sections/page/PageHeader.astro';
 import FeaturedGuide from '../components/sections/guides/FeaturedGuide.astro';
 import GuidesByDestination from '../components/sections/guides/GuidesByDestination.astro';
 import EdgeWaves from '../components/ui/EdgeWaves.astro';
-import { guidesIntro } from '../data/guides/guides';
-import { guidesLink } from '../data/site/navigation';
+import { guides, guidesIntro } from '../data/guides/guides';
+import { catalogLink, guidesLink } from '../data/site/navigation';
 ---
 
 <Layout
@@ -13,9 +13,24 @@ import { guidesLink } from '../data/site/navigation';
 	description={guidesIntro}
 	pageType="CollectionPage"
 	breadcrumbs={[{ name: guidesLink.label, path: guidesLink.href }]}
+	noindex={guides.length === 0}
 >
 	<EdgeWaves />
 	<PageHeader title={guidesLink.label} intro={guidesIntro} centered />
-	<FeaturedGuide />
-	<GuidesByDestination />
+	{guides.length > 0 ? (
+		<>
+			<FeaturedGuide />
+			<GuidesByDestination />
+		</>
+	) : (
+		<div class="px-4 pt-12 sm:px-6 md:pt-16">
+			<div class="mx-auto max-w-xl rounded-[2rem] bg-surface p-8 text-center sm:p-10">
+				<h2 class="text-2xl font-semibold tracking-[-0.03em] text-primary">Estamos preparando las primeras guías</h2>
+				<p class="mt-3 text-secondary">Mientras tanto, cada excursión tiene en su ficha qué incluye, a qué hora sale y dónde te recogen.</p>
+				<a href={catalogLink.href} class="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white transition-colors duration-300 ease-smooth hover:bg-primary/85">
+					{catalogLink.label}
+				</a>
+			</div>
+		</div>
+	)}
 </Layout>
