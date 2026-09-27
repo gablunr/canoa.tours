@@ -1,6 +1,8 @@
 ---
 import { CalendarClock, ChevronDown, CircleX, MessageCircle, Star } from '@lucide/astro';
 import Button from '../../ui/Button.astro';
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
 import { bookingPolicy } from '../../../data/booking/booking-policy';
 import { company, whatsappMessageHref } from '../../../data/site/company';
 import type { BookingDetails } from '../../../lib/booking/booking-details';
@@ -120,21 +122,17 @@ const actionButton = 'col-span-2 sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:r
 			</div>
 
 			{canSelfManage && cancel.allowed && (
-				<dialog
-					class="m-auto w-[calc(100%-2rem)] max-w-md rounded-[2rem] bg-background p-6 text-primary shadow-2xl backdrop:bg-primary/60 backdrop:backdrop-blur-sm sm:p-8"
-					aria-labelledby="confirmar-cancelacion"
-					data-cancel-dialog
-				>
+				<Dialog aria-labelledby="confirmar-cancelacion" data-cancel-dialog>
 					<h3 id="confirmar-cancelacion" class="text-xl font-semibold tracking-[-0.03em]">¿Cancelar {details.productName}?</h3>
 					<p class="mt-3 text-sm leading-relaxed text-secondary">
 						Te devolvemos {formatMoney(refundAmount)} en unos días. Esta acción no se puede deshacer.
 					</p>
 					<p class="mt-3 text-sm text-error" role="alert" data-cancel-error hidden></p>
-					<div class="mt-8 grid gap-3 sm:grid-cols-2">
-						<Button variant="outline" data-cancel-close>Volver</Button>
-						<Button variant="danger" data-cancel-confirm>Sí, cancelar</Button>
+					<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
+						<DialogButton data-cancel-close>Volver</DialogButton>
+						<DialogButton variant="danger" data-cancel-confirm>Sí, cancelar</DialogButton>
 					</div>
-				</dialog>
+				</Dialog>
 			)}
 		</section>
 	)}

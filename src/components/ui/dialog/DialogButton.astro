@@ -1,0 +1,27 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'button'>, 'class' | 'type'> {
+	type?: 'button' | 'submit';
+	variant?: 'glass' | 'primary' | 'danger';
+}
+
+const { type = 'button', variant = 'glass', ...attributes } = Astro.props;
+
+const variants = {
+	glass: 'bg-ink-200/60 text-primary hover:bg-ink-200/90',
+	primary: 'bg-primary/90 text-white hover:bg-primary',
+	danger: 'bg-error/90 text-white hover:bg-error',
+};
+---
+
+<button
+	{...attributes}
+	type={type}
+	class:list={[
+		'liquid-glass flex h-11 cursor-pointer items-center justify-center gap-2 text-sm font-medium outline-none transition-colors duration-300 ease-smooth [--glass-drop-shadow:0_0_#0000] focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-60',
+		variants[variant],
+	]}
+>
+	<slot />
+</button>
