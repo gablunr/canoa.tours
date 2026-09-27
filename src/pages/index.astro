@@ -8,13 +8,15 @@ import Reviews from '../components/sections/home/Reviews.astro';
 import HowToBook from '../components/sections/home/HowToBook.astro';
 import Faq from '../components/sections/home/Faq.astro';
 import BookingCta from '../components/sections/home/BookingCta.astro';
-import { faqs } from '../data/faq';
-import { faqSchema } from '../lib/structured-data';
+import { faqs } from '../data/booking/faq';
+import { faqSchema } from '../lib/seo/structured-data';
+import { lowestFromPrice } from '../data/tours/destinations';
+import { formatPrice } from '../lib/format';
 ---
 
 <Layout
-	title="Tours en canoa"
-	description="Tours en canoa con Canoa Tours. Muy pronto encontrarás aquí nuestras rutas, los horarios de salida y la forma de reservar tu lugar."
+	title="Excursiones en Punta Cana con recogida en tu hotel"
+	description={`Excursiones desde Punta Cana a Isla Saona, Samaná, Santo Domingo o Coco Bongo, desde ${formatPrice(lowestFromPrice)}. Reservas con un anticipo y el resto lo pagas el día del tour.`}
 	pageType="FAQPage"
 	mainEntity={faqSchema(faqs)}
 	footerOverlapsPhoto
@@ -25,6 +27,9 @@ import { faqSchema } from '../lib/structured-data';
 	<BookingBenefits />
 	<Reviews />
 	<HowToBook />
-	<Faq />
+	<Faq
+		intro="Cuánto cuestan, si incluyen la recogida, desde dónde salen los barcos, cómo se paga y qué pasa si llueve o necesitas cancelar."
+		split
+	/>
 	<BookingCta />
 </Layout>

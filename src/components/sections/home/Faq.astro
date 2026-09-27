@@ -1,24 +1,112 @@
 ---
+import { Image } from 'astro:assets';
+import Button from '../../ui/Button.astro';
+import FluidBackground from '../../ui/FluidBackground.astro';
 import GlassAccordion from '../../ui/GlassAccordion.astro';
-import { faqs } from '../../../data/faq';
+import UnderlineLink from '../../ui/UnderlineLink.astro';
+import chat from '../../../assets/images/icons-3d/chat.png';
+import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
+import { company, whatsappMessageHref } from '../../../data/site/company';
+import { faqs, type Faq } from '../../../data/booking/faq';
+import { faqLink } from '../../../data/site/navigation';
+
+interface Props {
+	id?: string;
+	title?: string;
+	intro?: string;
+	items?: Faq[];
+	showAllLink?: boolean;
+	split?: boolean;
+	whatsappMessage?: string;
+}
+
+const {
+	id = 'faq',
+	title = 'Preguntas frecuentes sobre excursiones en Punta Cana',
+	intro,
+	items = faqs,
+	showAllLink = true,
+	split = false,
+	whatsappMessage = 'Hola, tengo una duda sobre las excursiones.',
+} = Astro.props;
+const titleId = `${id}-title`;
+const { whatsapp } = company;
 ---
 
-<section aria-labelledby="faq-title" class="px-4 pt-24 sm:px-6 lg:pt-32">
-	<div class="mx-auto max-w-6xl">
-		<h2
-			id="faq-title"
-			data-reveal
-			class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
-		>
-			Preguntas frecuentes sobre excursiones en Punta Cana
-		</h2>
+{split ? (
+	<section aria-labelledby={titleId} class="relative isolate px-4 pt-24 sm:px-6 md:px-12 lg:px-6 lg:pt-32">
+		<div class="pointer-events-none absolute inset-x-0 top-0 -bottom-24 -z-10">
+			<FluidBackground class="text-accent/35" />
+		</div>
 
-		<ul class="mx-auto mt-10 grid max-w-3xl gap-3 lg:mt-14">
-			{faqs.map((faq) => (
-				<li data-reveal>
-					<GlassAccordion name="faq" summary={faq.question} text={faq.answer} link={faq.link} />
-				</li>
-			))}
-		</ul>
-	</div>
-</section>
+		<div class="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+			<div class="max-lg:contents lg:sticky lg:top-28 lg:self-start">
+				<div data-reveal class="max-lg:text-center">
+					<h2
+						id={titleId}
+						class="bg-linear-to-b from-primary to-muted bg-clip-text text-4xl leading-[1.05] font-semibold tracking-[-0.03em] text-balance text-transparent md:text-5xl"
+					>
+						{title}
+					</h2>
+					{intro && <p class="mt-5 max-w-md leading-relaxed text-pretty text-secondary max-lg:mx-auto">{intro}</p>}
+				</div>
+
+				<div
+					data-reveal
+					class="rounded-[1.75rem] border border-border/60 bg-surface/80 p-6 backdrop-blur-md max-lg:order-last max-lg:mx-auto max-lg:w-full max-lg:max-w-md max-lg:text-center md:max-lg:max-w-none md:max-lg:py-10 sm:p-7 lg:mt-10"
+				>
+					<Image src={chat} alt="" widths={[56, 112]} sizes="3.5rem" class="size-14 object-contain max-lg:mx-auto" />
+					<p class="mt-4 text-lg font-semibold tracking-[-0.01em] text-primary">¿No encuentras tu respuesta?</p>
+					<p class="mt-2 text-[15px] leading-relaxed text-pretty text-secondary">
+						Escríbenos con la excursión, la fecha y tu hotel, y te decimos si hay lugar y cuánto cuesta la recogida.
+					</p>
+					<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 max-lg:justify-center">
+						{whatsapp ? (
+							<Button href={whatsappMessageHref(whatsapp, whatsappMessage)} class="gap-2.5">
+								<WhatsAppIcon class="size-4.5" aria-hidden="true" />
+								Escríbenos por WhatsApp
+							</Button>
+						) : (
+							<UnderlineLink tone="accent" href={`mailto:${company.email}`}>{company.email}</UnderlineLink>
+						)}
+						{showAllLink && <UnderlineLink href={faqLink.href} tone="accent">Todas las preguntas</UnderlineLink>}
+					</div>
+				</div>
+			</div>
+
+			<ul class="grid content-start gap-3">
+				{items.map((faq) => (
+					<li data-reveal>
+						<GlassAccordion name={id} summary={faq.question} text={faq.answer} link={faq.link} />
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+) : (
+	<section aria-labelledby={titleId} class="px-4 pt-24 sm:px-6 lg:pt-32">
+		<div class="mx-auto max-w-6xl">
+			<h2
+				id={titleId}
+				data-reveal
+				class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+			>
+				{title}
+			</h2>
+
+			<ul class="mx-auto mt-10 grid max-w-3xl gap-3 lg:mt-14">
+				{items.map((faq) => (
+					<li data-reveal>
+						<GlassAccordion name={id} summary={faq.question} text={faq.answer} link={faq.link} />
+					</li>
+				))}
+			</ul>
+
+			{showAllLink && (
+				<p data-reveal class="mt-10 text-center lg:mt-14">
+					<UnderlineLink href={faqLink.href} tone="accent">Ver todas las preguntas frecuentes</UnderlineLink>
+				</p>
+			)}
+		</div>
+	</section>
+)}
