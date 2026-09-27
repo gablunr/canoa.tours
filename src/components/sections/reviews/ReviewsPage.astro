@@ -72,32 +72,33 @@ const pageButton =
 			<p class={pickerMessage} data-picker-state="error" hidden>No hemos podido cargar tus reservas. Recarga la página para intentarlo de nuevo.</p>
 
 			<div class="grid gap-5" data-picker-state="list" hidden>
-				<fieldset class="flex flex-wrap gap-2 max-lg:justify-center" data-picker-filter>
-					<legend class="sr-only">Filtrar tus reservas</legend>
-					{pickerFilters.map((filter) => (
-						<label class="liquid-glass inline-flex h-9 cursor-pointer items-center gap-1.5 bg-white/60 px-4 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent">
-							<input type="radio" name="review-picker-filter" value={filter.value} checked={filter.value === 'pending'} class="sr-only" />
-							{filter.label}
-							<span class="tabular-nums opacity-60" data-picker-filter-count={filter.value}></span>
-						</label>
-					))}
-				</fieldset>
+				<div class="flex flex-wrap items-center gap-3 max-lg:justify-center">
+					<fieldset class="flex flex-wrap gap-2 max-lg:justify-center" data-picker-filter>
+						<legend class="sr-only">Filtrar tus reservas</legend>
+						{pickerFilters.map((filter) => (
+							<label class="liquid-glass inline-flex h-9 cursor-pointer items-center gap-1.5 bg-white/60 px-4 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent">
+								<input type="radio" name="review-picker-filter" value={filter.value} checked={filter.value === 'pending'} class="sr-only" />
+								{filter.label}
+								<span class="tabular-nums opacity-60" data-picker-filter-count={filter.value}></span>
+							</label>
+						))}
+					</fieldset>
+					<nav aria-label="Páginas de tus reservas" class="lg:ml-auto" data-picker-pagination hidden>
+						<div class="flex items-center gap-1">
+							<button type="button" class={pageButton} aria-label="Página anterior" data-picker-page-previous>
+								<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+							</button>
+							<div class="flex items-center gap-1" data-picker-pages></div>
+							<button type="button" class={pageButton} aria-label="Página siguiente" data-picker-page-next>
+								<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+							</button>
+						</div>
+					</nav>
+				</div>
 
 				<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tus excursiones realizadas" aria-live="polite" data-picker-options></ul>
 
 				<p class={pickerMessage} data-picker-filter-empty hidden></p>
-
-				<nav aria-label="Páginas de tus reservas" class="flex justify-end" data-picker-pagination hidden>
-					<div class="flex items-center gap-1">
-						<button type="button" class={pageButton} aria-label="Página anterior" data-picker-page-previous>
-							<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
-						</button>
-						<div class="flex items-center gap-1" data-picker-pages></div>
-						<button type="button" class={pageButton} aria-label="Página siguiente" data-picker-page-next>
-							<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
-						</button>
-					</div>
-				</nav>
 			</div>
 
 			<template data-picker-option-template>
