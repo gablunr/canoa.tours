@@ -1,4 +1,4 @@
-export const reviewPageSize = 6;
+export const reviewPageSize = 4;
 
 export const reviewRatingFilters = [
 	{ value: 'all', label: 'Todas', matches: () => true },
