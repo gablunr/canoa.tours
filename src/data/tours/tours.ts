@@ -1454,7 +1454,7 @@ export function tourFaqs(details: TourDetails): QuestionAndAnswer[] {
 		...details.faqs,
 		{
 			question: `¿Cuánto cuesta ${details.title}?`,
-			answer: `Desde ${priceLabel(details)}.${child ? ` Los niños de ${child.fromAge} a ${child.toAge} años pagan ${formatPrice(child.amount)}.` : ''} Reservas con un anticipo de ${depositLabel(details)} y el resto lo pagas el día de la excursión.`,
+			answer: `Desde ${priceLabel(details)}.${child ? ` Los niños de ${child.fromAge} a ${child.toAge} años pagan ${formatPrice(child.amount)}.` : ''} Reservas online con un depósito de ${depositLabel(details)} y el resto lo pagas el día de la excursión.`,
 		},
 		{ question: '¿Incluye la recogida en el hotel?', answer: pickupAnswer(details) },
 		{ question: '¿Pueden ir embarazadas o personas en silla de ruedas?', answer: accessibilityAnswer(details) },

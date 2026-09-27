@@ -3,7 +3,7 @@ import { firstName, formatMoney, formatTourDate, renderEmail, type EmailContent 
 import { bookingSummaryDetails, pickupPendingNotice, pickupWindowNotice } from './booking-summary';
 
 export function bookingConfirmedEmail(details: BookingDetails, links: { ticketUrl: string }): EmailContent {
-	const paidOnlineLabel = details.hasInsurance ? 'Pagado al reservar (anticipo y seguro)' : 'Pagado al reservar (anticipo)';
+	const paidOnlineLabel = details.hasInsurance ? 'Pagado al reservar (depósito y seguro)' : 'Pagado al reservar (depósito)';
 
 	return renderEmail({
 		subject: `Reserva confirmada: ${details.productName}, ${formatTourDate(details.tourDate)}`,

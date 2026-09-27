@@ -104,7 +104,7 @@ export const pillar: PillarContent = {
 	],
 	cta: {
 		title: 'Elige tu día en la capital',
-		text: 'Con la fecha y el hotel donde te hospedas, te confirmamos qué excursión sale ese día.',
+		text: 'En cada ficha ves los días con plazas. Si no sabes cuál te conviene, escríbenos con tu fecha y te ayudamos a elegir.',
 		whatsappMessage: 'Hola, quiero ir a Santo Domingo el [fecha]',
 	},
 	updatedAt: new Date('2026-09-27'),

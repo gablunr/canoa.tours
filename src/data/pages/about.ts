@@ -59,6 +59,6 @@ export const aboutPromises: AboutPromise[] = [
 	{
 		id: 'someone-answers',
 		title: 'Alguien que te responde',
-		text: 'Antes y después de reservar puedes escribirnos por WhatsApp para preguntar qué tour te conviene, si hay lugar o a qué hora te recogen.',
+		text: 'Reservas y pagas online, y si te surge una duda antes o después, nos escribes por WhatsApp y te responde alguien del equipo.',
 	},
 ];

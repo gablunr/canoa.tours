@@ -1,7 +1,7 @@
 ---
 title: Contacto
-description: Escríbenos por WhatsApp o por correo para elegir tu excursión en Punta Cana o para cambiar una reserva que ya hiciste.
-updatedAt: 2026-09-26
+description: Escríbenos por WhatsApp o por correo si tienes dudas sobre una excursión en Punta Cana, van en un grupo grande o necesitas ayuda con tu reserva.
+updatedAt: 2026-09-27
 ---
 
 ## Cómo escribirnos
@@ -10,11 +10,11 @@ La forma más rápida de hablar con nosotros es por WhatsApp, al [{{whatsapp}}](
 
 ## Si todavía no reservaste
 
-Cuéntanos qué excursión te interesa (o qué tipo de plan buscas) y la fecha. Dinos también cuántas personas son, si van niños y en qué hotel se hospedan: con eso te decimos qué tours salen ese día, si hay lugar y cuánto cuesta la recogida desde tu zona.
+Las reservas se hacen online en la ficha de cada excursión, donde ves los días con plazas y el precio exacto con la recogida. Si dudas cuál elegir o van en un grupo grande, cuéntanos la fecha, cuántos son y tu hotel, y te ayudamos.
 
 ## Si ya tienes una reserva
 
-Escríbenos con el nombre de la reserva, la excursión y la fecha. Si quieres cancelar o cambiar de día, avísanos al menos {{noticeHours}} antes (las condiciones están en [cancelaciones y cambios](<{{cancellationsHref}}>)).
+Si tienes seguro de cancelación, cancelas o cambias la fecha tú mismo desde el enlace del email de confirmación o desde [tu cuenta](</account>) (las condiciones están en [cancelaciones y cambios](<{{cancellationsHref}}>)). Para cualquier otra cosa, escríbenos con el nombre de la reserva y la fecha.
 
 ## Antes de escribir
 

@@ -32,7 +32,7 @@ export const faqs: Faq[] = [
 	{
 		question: '¿Puedo pagar todo el día de la excursión?',
 		answer:
-			'No. Las plazas en barcos y actividades son limitadas, así que hay que reservar con un anticipo. El resto se paga el día del tour.',
+			'No. Las plazas son limitadas, así que reservas online y pagas un depósito con tarjeta. La confirmación te llega al momento por email y el resto se paga el día del tour.',
 	},
 	{
 		question: '¿Qué pasa si llueve?',
@@ -41,7 +41,7 @@ export const faqs: Faq[] = [
 	{
 		question: '¿Puedo cancelar o cambiar la fecha?',
 		answer:
-			`Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) puedes cancelar con reembolso del 100 % o cambiar la fecha hasta ${cancellationNoticeLabel} antes.`,
+			`Sí, con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona). Cancelas con reembolso del depósito o cambias la fecha hasta ${cancellationNoticeLabel} antes, tú mismo desde tu reserva.`,
 	},
 	{
 		question: '¿Pueden ir niños y embarazadas?',

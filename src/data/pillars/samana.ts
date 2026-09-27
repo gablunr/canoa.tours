@@ -84,8 +84,8 @@ export const pillar: PillarContent = {
 		},
 	],
 	cta: {
-		title: 'Samaná con el precio cerrado',
-		text: 'Dinos dónde te hospedas y cuántos son, y te mandamos el total con la recogida y la hora a la que pasamos por ti.',
+		title: '¿Dudas con Samaná?',
+		text: 'El precio exacto con la recogida lo ves al reservar. Si no sabes qué excursión elegir o van en grupo grande, escríbenos y te ayudamos.',
 		whatsappMessage: 'Hola, quiero ir a Samaná el [fecha]. Somos [personas] y nos hospedamos en [hotel]',
 	},
 	updatedAt: new Date('2026-09-27'),

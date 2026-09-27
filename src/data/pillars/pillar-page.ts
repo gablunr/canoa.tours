@@ -244,7 +244,7 @@ function priceAnswer(destination: Destination, tours: TourDetails[]) {
 	}
 
 	for (const details of perGroup) {
-		sentences.push(`${details.title} cuesta ${priceLabel(details)}, con ${formatPrice(details.deposit)} de anticipo.`);
+		sentences.push(`${details.title} cuesta ${priceLabel(details)}, con ${formatPrice(details.deposit)} de depósito que pagas online.`);
 	}
 	if (perPerson.length > 0) {
 		const deposits = perPerson.map((details) => details.deposit);
@@ -252,7 +252,7 @@ function priceAnswer(destination: Destination, tours: TourDetails[]) {
 		const max = Math.max(...deposits);
 		const deposit = min === max ? formatPrice(min) : `${formatPrice(min)} a ${formatPrice(max)}`;
 		const subject = perGroup.length > 0 ? 'Las demás se reservan' : isPlace(destination) ? 'Se reserva' : 'Se reservan';
-		sentences.push(`${subject} con un anticipo de ${deposit} por persona, y el resto se paga el día de la excursión.`);
+		sentences.push(`${subject} online con un depósito de ${deposit} por persona, y el resto se paga el día de la excursión.`);
 	}
 	return sentences.join(' ');
 }

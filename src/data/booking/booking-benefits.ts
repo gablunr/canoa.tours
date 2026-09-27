@@ -16,8 +16,8 @@ export const bookingBenefits: BookingBenefit[] = [
 	},
 	{
 		id: 'deposit',
-		title: 'Reservas con un anticipo',
-		text: 'Pagas una parte al reservar y el resto el día de la excursión.',
+		title: 'Reservas online con un depósito',
+		text: 'Pagas una parte con tarjeta al reservar y el resto el día de la excursión.',
 	},
 	{
 		id: 'weather-reschedule',
@@ -27,7 +27,7 @@ export const bookingBenefits: BookingBenefit[] = [
 	{
 		id: 'cancellation-insurance',
 		title: `Cancela o cambia la fecha hasta ${cancellationNoticeLabel} antes`,
-		text: `Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) te devolvemos el 100 % o cambias la fecha cuando quieras.`,
+		text: `Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) lo haces tú desde tu reserva. Si cancelas, te devolvemos el depósito.`,
 	},
 ];
 

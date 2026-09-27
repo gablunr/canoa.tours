@@ -10,17 +10,17 @@ export const bookingSteps: BookingStep[] = [
 	{
 		id: 'choose-tour',
 		title: 'Elige excursión y fecha',
-		text: 'Mira los días de salida y el precio de cada tour en su ficha.',
+		text: 'En la ficha de cada tour ves los días con plazas libres y el precio exacto.',
 	},
 	{
 		id: 'pay-deposit',
-		title: 'Reserva con un anticipo',
-		text: 'Pagas una parte en línea y el resto el día de la excursión.',
+		title: 'Paga el depósito online',
+		text: 'Pagas una parte con tarjeta y el resto el día de la excursión.',
 	},
 	{
 		id: 'get-pickup-time',
-		title: 'Recibe la hora de recogida',
-		text: 'Te enviamos por WhatsApp la hora y el punto de recogida en tu hotel.',
+		title: 'Recibe tu billete',
+		text: 'La confirmación te llega al momento por email. La hora de recogida la verás en tu billete.',
 	},
 	{
 		id: 'enjoy-tour',
