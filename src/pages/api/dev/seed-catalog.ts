@@ -89,7 +89,7 @@ async function seedCatalog() {
 				tourDetails.map((details) => ({
 					key: productKey(details),
 					supplier_id: supplierId,
-					destination_slug: details.destination.id,
+					destination_slug: details.destination.slug,
 					status: 'active' as const,
 					pricing_mode: details.pricePer === 'group' ? ('per_group' as const) : ('per_person' as const),
 					max_group_size: maxGroupSize(details),
