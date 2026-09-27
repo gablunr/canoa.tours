@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DocumentHeader from '../components/sections/document/DocumentHeader.astro';
+import DocumentBody from '../components/sections/document/DocumentBody.astro';
+import WhatsAppClosing from '../components/sections/document/WhatsAppClosing.astro';
+import { documentHref } from '../data/pages/documents';
+import { getHelpDocument, questionsFromMarkdown } from '../data/pages/help';
+import { helpLinks } from '../data/site/navigation';
+import { faqSchema } from '../lib/seo/structured-data';
+
+const helpDocument = await getHelpDocument('preguntas-frecuentes');
+---
+
+<Layout
+	title={helpDocument.data.title}
+	description={helpDocument.data.description}
+	breadcrumbs={[{ name: helpDocument.data.title, path: documentHref(helpDocument) }]}
+	modifiedAt={helpDocument.data.updatedAt}
+	pageType="FAQPage"
+	mainEntity={faqSchema(questionsFromMarkdown(helpDocument.body))}
+>
+	<article data-document>
+		<DocumentHeader entry={helpDocument} />
+		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks}>
+			<WhatsAppClosing
+				title="¿No está tu pregunta?"
+				text="Escríbenos con la excursión y la fecha que te interesan y te respondemos por WhatsApp."
+				message="Hola, tengo una pregunta sobre la excursión [nombre] para el [fecha]"
+			/>
+		</DocumentBody>
+	</article>
+</Layout>

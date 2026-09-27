@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DocumentHeader from '../components/sections/document/DocumentHeader.astro';
+import DocumentBody from '../components/sections/document/DocumentBody.astro';
+import WhatsAppClosing from '../components/sections/document/WhatsAppClosing.astro';
+import { cancellationNoticeLabel } from '../data/booking/booking-policy';
+import { documentHref } from '../data/pages/documents';
+import { getHelpDocument } from '../data/pages/help';
+import { helpLinks } from '../data/site/navigation';
+
+const helpDocument = await getHelpDocument('cancelaciones');
+---
+
+<Layout
+	title={helpDocument.data.title}
+	description={helpDocument.data.description}
+	breadcrumbs={[{ name: helpDocument.data.title, path: documentHref(helpDocument) }]}
+	modifiedAt={helpDocument.data.updatedAt}
+>
+	<article data-document>
+		<DocumentHeader entry={helpDocument} />
+		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks}>
+			<WhatsAppClosing
+				title="Cómo cancelar o cambiar tu fecha"
+				text={`Escríbenos con el nombre de la reserva, la excursión y la fecha, y dinos si quieres cancelar o cambiar de día. Tiene que ser al menos ${cancellationNoticeLabel} antes del tour.`}
+				message="Hola, quiero [cancelar o cambiar la fecha de] mi reserva a nombre de [nombre], para la excursión [nombre] del [fecha]"
+			/>
+		</DocumentBody>
+	</article>
+</Layout>

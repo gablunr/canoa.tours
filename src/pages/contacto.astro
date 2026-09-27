@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DocumentHeader from '../components/sections/document/DocumentHeader.astro';
+import DocumentBody from '../components/sections/document/DocumentBody.astro';
+import WhatsAppClosing from '../components/sections/document/WhatsAppClosing.astro';
+import { documentHref } from '../data/pages/documents';
+import { getHelpDocument } from '../data/pages/help';
+import { helpLinks } from '../data/site/navigation';
+
+const helpDocument = await getHelpDocument('contacto');
+---
+
+<Layout
+	title="Contacto por WhatsApp y correo"
+	description={helpDocument.data.description}
+	pageType="ContactPage"
+	breadcrumbs={[{ name: helpDocument.data.title, path: documentHref(helpDocument) }]}
+	modifiedAt={helpDocument.data.updatedAt}
+>
+	<article data-document>
+		<DocumentHeader entry={helpDocument} />
+		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks}>
+			<WhatsAppClosing
+				title="Pide una recomendación"
+				text="Te abrimos WhatsApp con un mensaje listo para que completes la fecha, cuántas personas son y tu hotel."
+				message="Hola, me interesa [excursión o tipo de plan] para el [fecha]. Somos [personas], [van o no van niños] y nos hospedamos en [hotel]"
+			/>
+		</DocumentBody>
+	</article>
+</Layout>
