@@ -1,6 +1,6 @@
 ---
-import Dialog from '../../ui/dialog/Dialog.astro';
-import DialogButton from '../../ui/dialog/DialogButton.astro';
+import Dialog from '../ui/dialog/Dialog.astro';
+import DialogButton from '../ui/dialog/DialogButton.astro';
 
 interface Props {
 	name: string;
@@ -11,12 +11,13 @@ interface Props {
 }
 
 const { name, title, description, confirmLabel, variant = 'primary' } = Astro.props;
-const titleId = `guia-${name}-titulo`;
+const titleId = `confirmar-${name}-titulo`;
 ---
 
 <Dialog aria-labelledby={titleId} data-confirm-dialog={name}>
 	<h2 id={titleId} class="text-xl font-semibold tracking-[-0.03em]">{title}</h2>
-	<p class="mt-2 text-sm leading-relaxed text-secondary">{description}</p>
+	<p class="mt-2 text-sm leading-relaxed text-secondary" data-confirm-description>{description}</p>
+	<slot />
 	<p class="mt-4 text-sm text-error" role="alert" data-confirm-error hidden></p>
 	<div class="mt-7 grid gap-2.5 sm:grid-cols-2">
 		<DialogButton data-confirm-close>Volver</DialogButton>

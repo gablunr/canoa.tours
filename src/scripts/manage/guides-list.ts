@@ -1,5 +1,5 @@
 import { actions } from 'astro:actions';
-import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireDialogClosing, wireSlugField } from './guide-fields';
+import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireDialogClosing, wireSlugField } from './form-helpers';
 
 export function initGuidesPage(root: HTMLElement) {
 	const dialog = root.querySelector<HTMLDialogElement>('[data-new-guide-dialog]');

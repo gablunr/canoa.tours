@@ -1,8 +1,8 @@
 import { actions } from 'astro:actions';
 import { faqHeading, parseGuideMarkdown, type GuideMarkdownContent, type GuideMarkdownIssue } from '../../lib/guides/guide-markdown';
-import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireDialogClosing, wireSlugField } from './guide-fields';
-
-type ConfirmHandler = () => Promise<string | null>;
+import { initConfirmDialogs } from './confirm-dialogs';
+import { createEditorSession, type SaveResult } from './editor-session';
+import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireSlugField } from './form-helpers';
 
 const wordsPerMinute = 200;
 const maxImageBytes = 5 * 1024 * 1024;
@@ -108,39 +108,6 @@ function selectLine(textarea: HTMLTextAreaElement, line: number) {
 	textarea.scrollTop = Math.max(0, textHeightBefore(textarea, start) - textarea.clientHeight / 3);
 }
 
-function initConfirmDialogs(root: HTMLElement) {
-	const handlers = new Map<string, { busyLabel: string; handler: ConfirmHandler }>();
-
-	root.querySelectorAll<HTMLDialogElement>('[data-confirm-dialog]').forEach((dialog) => {
-		const name = dialog.dataset.confirmDialog ?? '';
-		const submitButton = dialog.querySelector<HTMLButtonElement>('[data-confirm-submit]');
-		const errorMessage = dialog.querySelector<HTMLElement>('[data-confirm-error]');
-		wireDialogClosing(dialog, dialog.querySelector<HTMLButtonElement>('[data-confirm-close]'));
-
-		submitButton?.addEventListener('click', async () => {
-			const entry = handlers.get(name);
-			if (!entry) return;
-			showMessage(errorMessage, null);
-			setBusy(submitButton, true, entry.busyLabel);
-			const failure = await entry.handler();
-			setBusy(submitButton, false, '');
-			if (failure) {
-				showMessage(errorMessage, failure);
-				return;
-			}
-			dialog.close();
-		});
-	});
-
-	return (name: string, busyLabel: string, handler: ConfirmHandler) => {
-		const dialog = root.querySelector<HTMLDialogElement>(`[data-confirm-dialog="${name}"]`);
-		if (!dialog) return;
-		handlers.set(name, { busyLabel, handler });
-		showMessage(dialog.querySelector<HTMLElement>('[data-confirm-error]'), null);
-		dialog.showModal();
-	};
-}
-
 function initImageUpload(root: HTMLElement, guideId: string, isPublished: boolean) {
 	const card = root.querySelector<HTMLElement>('[data-image-card]');
 	const fileInput = card?.querySelector<HTMLInputElement>('[data-image-input]');
@@ -240,14 +207,7 @@ export function initGuideEditor(root: HTMLElement) {
 	const issueList = form.querySelector<HTMLElement>('[data-markdown-issue-list]');
 	const askToConfirm = initConfirmDialogs(root);
 
-	let revision = 0;
-	let savedRevision = 0;
-	let leaving = false;
 	let showIssuesLive = false;
-	const isDirty = () => revision !== savedRevision;
-	const setSaveState = (text: string) => {
-		if (saveState) saveState.textContent = text;
-	};
 
 	const fieldValue = (name: string) => {
 		const field = form.elements.namedItem(name);
@@ -280,17 +240,6 @@ export function initGuideEditor(root: HTMLElement) {
 		if (showIssuesLive) renderIssues(issues);
 	};
 
-	const markDirty = () => {
-		revision += 1;
-		setSaveState('Cambios sin guardar');
-		refreshFromBody();
-	};
-
-	const leaveTo = (href: string) => {
-		leaving = true;
-		window.location.assign(href);
-	};
-
 	titleInput?.addEventListener('keydown', (event) => {
 		if (event.key === 'Enter') event.preventDefault();
 	});
@@ -318,12 +267,6 @@ export function initGuideEditor(root: HTMLElement) {
 		const field = document.getElementById(counter.dataset.countFor ?? '');
 		if (!(field instanceof HTMLTextAreaElement)) return;
 		field.addEventListener('input', () => (counter.textContent = String(field.value.length)));
-	});
-
-	form.addEventListener('input', (event) => {
-		const target = event.target;
-		if (!(target instanceof HTMLElement) || target.matches('[data-image-input], [data-marker-select]')) return;
-		markDirty();
 	});
 
 	form.querySelectorAll<HTMLButtonElement>('[data-markdown-tool]').forEach((button) => {
@@ -359,8 +302,8 @@ export function initGuideEditor(root: HTMLElement) {
 		applyTool(markdownInput, key === 'b' ? 'bold' : 'link');
 	});
 
-	const save = async () => {
-		const { content, issues } = parseBody();
+	const validate = () => {
+		const { issues } = parseBody();
 		showIssuesLive = true;
 		renderIssues(issues);
 		form.querySelectorAll('details').forEach((panel) => {
@@ -372,11 +315,12 @@ export function initGuideEditor(root: HTMLElement) {
 			showMessage(errorBox, 'Hay cosas que revisar en el texto, las tienes debajo del editor.');
 			return false;
 		}
+		return true;
+	};
 
-		const revisionAtStart = revision;
+	const persist = async (): Promise<SaveResult<{ readingMinutes: number }>> => {
+		const { content } = parseBody();
 		showMessage(errorBox, null);
-		setBusy(saveButton, true, 'Guardando…');
-		setSaveState('Guardando…');
 		const featured = form.elements.namedItem('featured');
 		const { data, error } = await actions.guides.save({
 			id: guideId,
@@ -390,36 +334,31 @@ export function initGuideEditor(root: HTMLElement) {
 			tourNote: fieldValue('tourNote'),
 			...content,
 		});
-		setBusy(saveButton, false, '');
 		if (error) {
 			showMessage(errorBox, actionErrorMessage(error));
-			setSaveState('Cambios sin guardar');
-			return false;
+			return { ok: false };
 		}
-
-		savedRevision = revisionAtStart;
-		if (readingOutput && !isDirty()) readingOutput.textContent = String(data.readingMinutes);
-		setSaveState(isDirty() ? 'Cambios sin guardar' : isPublished ? 'Guardado, la web se actualiza en unos minutos' : 'Guardado');
-		return true;
+		return { ok: true, data };
 	};
 
-	form.addEventListener('submit', (event) => {
-		event.preventDefault();
-		void save();
+	const session = createEditorSession({
+		form,
+		validate,
+		persist,
+		onSaved: (data) => {
+			if (readingOutput && !session.isDirty()) readingOutput.textContent = String(data.readingMinutes);
+		},
+		onChange: refreshFromBody,
+		saveButton,
+		saveState,
+		previewLink,
+		savedMessage: isPublished ? 'Guardado, la web se actualiza en unos minutos' : 'Guardado',
+		untrackedFields: '[data-image-input], [data-marker-select]',
 	});
-
-	document.addEventListener('keydown', (event) => {
-		if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 's') return;
-		event.preventDefault();
-		if (saveButton && !saveButton.disabled) void save();
-	});
-
-	window.addEventListener('beforeunload', (event) => {
-		if (isDirty() && !leaving) event.preventDefault();
-	});
+	const { leaveTo } = session;
 
 	publishButton?.addEventListener('click', async () => {
-		if (isDirty() && !(await save())) return;
+		if (!(await session.saveIfDirty())) return;
 		showMessage(errorBox, null);
 		setBusy(publishButton, true, 'Publicando…');
 		const { error } = await actions.guides.publish({ id: guideId });
@@ -432,7 +371,7 @@ export function initGuideEditor(root: HTMLElement) {
 	});
 
 	unpublishButton?.addEventListener('click', async () => {
-		if (isDirty() && !(await save())) return;
+		if (!(await session.saveIfDirty())) return;
 		askToConfirm('unpublish', 'Retirando…', async () => {
 			const { error } = await actions.guides.unpublish({ id: guideId });
 			if (error) return actionErrorMessage(error);
@@ -448,16 +387,6 @@ export function initGuideEditor(root: HTMLElement) {
 			leaveTo(listHref);
 			return null;
 		});
-	});
-
-	previewLink?.addEventListener('click', async (event) => {
-		if (!isDirty()) return;
-		event.preventDefault();
-		const previewTab = window.open('about:blank', '_blank');
-		const saved = await save();
-		if (!saved) previewTab?.close();
-		else if (previewTab) previewTab.location.href = previewLink.href;
-		else window.open(previewLink.href, '_blank');
 	});
 
 	initImageUpload(root, guideId, isPublished);

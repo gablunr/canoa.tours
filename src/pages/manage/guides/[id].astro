@@ -1,6 +1,6 @@
 ---
 import ManageLayout from '../../../layouts/ManageLayout.astro';
-import GuideConfirmDialog from '../../../components/manage/guides/GuideConfirmDialog.astro';
+import ConfirmDialog from '../../../components/manage/ConfirmDialog.astro';
 import GuideEditorToolbar from '../../../components/manage/guides/GuideEditorToolbar.astro';
 import GuideMarkdownCard from '../../../components/manage/guides/GuideMarkdownCard.astro';
 import GuideSidebar from '../../../components/manage/guides/GuideSidebar.astro';
@@ -45,13 +45,13 @@ const listHref = `/manage/guides?status=${guide.status}`;
 			<GuideSidebar guide={guide} products={products} />
 		</form>
 
-		<GuideConfirmDialog
+		<ConfirmDialog
 			name="unpublish"
 			title="¿Pasar a borrador?"
 			description="Deja de verse en la web en unos minutos. Puedes publicarla otra vez cuando quieras."
 			confirmLabel="Pasar a borrador"
 		/>
-		<GuideConfirmDialog
+		<ConfirmDialog
 			name="delete"
 			title="¿Borrar la guía?"
 			description={isPublished ? 'Se borran el texto y la imagen, y desaparece de la web. No se puede deshacer.' : 'Se borran el texto y la imagen. No se puede deshacer.'}
