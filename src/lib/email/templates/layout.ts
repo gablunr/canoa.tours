@@ -23,11 +23,38 @@ export interface EmailLayoutInput {
 	closing?: string[];
 }
 
-const brandColor = '#0f766e';
-const textColor = '#1f2937';
-const mutedColor = '#6b7280';
-const borderColor = '#e5e7eb';
-const fontStack = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const siteUrl = import.meta.env.SITE.replace(/\/$/, '');
+const siteHost = new URL(siteUrl).host;
+const publicAsset = (path: string) => `${siteUrl}${path}`;
+
+const logo = { src: publicAsset('/email/logo.png'), width: 132, height: 32 };
+
+const colors = {
+	page: '#f3f8f9',
+	card: '#ffffff',
+	notch: '#000000',
+	primary: '#02242d',
+	secondary: '#2c4147',
+	muted: '#5e6c70',
+	border: '#d7e0e2',
+	accent: '#017d94',
+	onDark: '#e9f0f2',
+	mutedOnDark: '#bfc9cd',
+};
+
+const bodyFont = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const displayFont = `'Inter Display', ${bodyFont}`;
+
+const fontFaces = [
+	{ family: 'Inter', weight: 400, file: 'Inter-Regular' },
+	{ family: 'Inter', weight: 500, file: 'Inter-Medium' },
+	{ family: 'Inter Display', weight: 600, file: 'InterDisplay-SemiBold' },
+]
+	.map(
+		(font) =>
+			`@font-face{font-family:'${font.family}';font-style:normal;font-weight:${font.weight};src:url('${publicAsset(`/fonts/inter/${font.file}.woff2`)}') format('woff2');}`,
+	)
+	.join('');
 
 export function escapeHtml(value: string): string {
 	return value
@@ -75,34 +102,75 @@ export function contactLine(): string {
 	return `¿Tienes dudas? Escríbenos ${whatsapp}a ${company.email}.`;
 }
 
-function contactLineHtml(): string {
-	const linkStyle = `color:${brandColor};text-decoration:underline;`;
-	const whatsapp = company.whatsapp
-		? `por WhatsApp al <a href="${escapeHtml(company.whatsapp.href)}" style="${linkStyle}">${escapeHtml(company.whatsapp.label)}</a> o `
-		: '';
-	return `¿Tienes dudas? Escríbenos ${whatsapp}a <a href="mailto:${escapeHtml(company.email)}" style="${linkStyle}">${escapeHtml(company.email)}</a>.`;
-}
-
 const paragraphHtml = (text: string) =>
-	`<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${textColor};">${escapeHtml(text)}</p>`;
+	`<p style="margin:0 0 16px;font-family:${bodyFont};font-size:16px;line-height:1.6;color:${colors.secondary};">${escapeHtml(text)}</p>`;
 
 function detailsHtml(details: EmailDetail[]): string {
 	const rows = details
-		.map(
-			(detail) =>
-				`<tr><td style="padding:10px 12px;border-bottom:1px solid ${borderColor};font-size:14px;color:${mutedColor};vertical-align:top;width:40%;">${escapeHtml(detail.label)}</td><td style="padding:10px 12px;border-bottom:1px solid ${borderColor};font-size:15px;color:${textColor};font-weight:600;vertical-align:top;">${escapeHtml(detail.value)}</td></tr>`,
-		)
+		.map((detail, index) => {
+			const divider = index < details.length - 1 ? `border-bottom:1px solid ${colors.border};` : '';
+			return `<tr>
+<td style="padding:12px 0;${divider}font-family:${bodyFont};font-size:13px;line-height:1.4;color:${colors.muted};vertical-align:top;">${escapeHtml(detail.label)}</td>
+<td align="right" style="padding:12px 0 12px 16px;${divider}font-family:${bodyFont};font-size:15px;line-height:1.4;font-weight:500;color:${colors.primary};vertical-align:top;">${escapeHtml(detail.value)}</td>
+</tr>`;
+		})
 		.join('');
-	return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${borderColor};border-radius:8px;margin:0 0 20px;">${rows}</table>`;
+
+	return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;background:${colors.page};border-radius:16px;">
+<tr><td style="padding:8px 20px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rows}</table>
+</td></tr>
+</table>`;
 }
 
 function ctaHtml(cta: { label: string; url: string }): string {
-	return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;"><tr><td style="border-radius:8px;background:${brandColor};"><a href="${escapeHtml(cta.url)}" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${escapeHtml(cta.label)}</a></td></tr></table>`;
+	return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 28px;">
+<tr><td style="border-radius:9999px;background:${colors.accent};">
+<a href="${escapeHtml(cta.url)}" style="display:inline-block;padding:15px 28px;font-family:${bodyFont};font-size:15px;font-weight:500;line-height:1;color:#ffffff;text-decoration:none;border-radius:9999px;">${escapeHtml(cta.label)}&nbsp;&nbsp;&rarr;</a>
+</td></tr>
+</table>`;
+}
+
+function logoHtml(): string {
+	return `<a href="${siteUrl}" style="text-decoration:none;"><img src="${logo.src}" width="${logo.width}" height="${logo.height}" alt="${escapeHtml(company.brandName)}" style="display:block;border:0;width:${logo.width}px;height:${logo.height}px;"></a>`;
+}
+
+function headerHtml(): string {
+	return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${colors.notch};border-radius:9999px;">
+<tr>
+<td style="padding:12px 16px 12px 22px;">${logoHtml()}</td>
+<td align="right" style="padding:12px 22px 12px 16px;font-family:${bodyFont};font-size:13px;color:${colors.onDark};">
+<a href="${siteUrl}" style="color:${colors.onDark};text-decoration:none;">${escapeHtml(siteHost)}</a>
+</td>
+</tr>
+</table>`;
+}
+
+function footerHtml(): string {
+	const linkStyle = `color:${colors.onDark};text-decoration:none;`;
+	const contactRows = [
+		company.whatsapp
+			? `<a href="${escapeHtml(company.whatsapp.href)}" style="${linkStyle}">WhatsApp ${escapeHtml(company.whatsapp.label)}</a>`
+			: null,
+		`<a href="mailto:${escapeHtml(company.email)}" style="${linkStyle}">${escapeHtml(company.email)}</a>`,
+	]
+		.filter((row): row is string => row !== null)
+		.map((row) => `<p style="margin:0 0 6px;font-family:${bodyFont};font-size:14px;line-height:1.5;">${row}</p>`)
+		.join('');
+
+	return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${colors.notch};border-radius:24px;">
+<tr><td class="email-footer" style="padding:32px 32px 28px;">
+${logoHtml()}
+<p style="margin:20px 0 16px;font-family:${bodyFont};font-size:14px;line-height:1.6;color:${colors.mutedOnDark};">¿Tienes dudas? Escríbenos, te respondemos rápido.</p>
+${contactRows}
+<p style="margin:24px 0 0;font-family:${bodyFont};font-size:12px;line-height:1.6;color:${colors.mutedOnDark};">© ${new Date().getFullYear()} ${escapeHtml(company.name)}. Excursiones en Punta Cana con recogida en tu hotel.</p>
+</td></tr>
+</table>`;
 }
 
 export function renderEmail(input: EmailLayoutInput): EmailContent {
 	const body = [
-		`<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:${textColor};">${escapeHtml(input.heading)}</h1>`,
+		`<h1 style="margin:0 0 20px;font-family:${displayFont};font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-0.03em;color:${colors.primary};">${escapeHtml(input.heading)}</h1>`,
 		...input.paragraphs.map(paragraphHtml),
 		input.details && input.details.length > 0 ? detailsHtml(input.details) : '',
 		...(input.detailsAfter ?? []).map(paragraphHtml),
@@ -116,16 +184,29 @@ export function renderEmail(input: EmailLayoutInput): EmailContent {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <title>${escapeHtml(input.subject)}</title>
+<style>
+${fontFaces}
+@media (max-width: 600px) {
+.email-shell { padding: 16px 8px !important; }
+.email-card { padding: 28px 22px 12px !important; }
+.email-footer { padding: 28px 22px 24px !important; }
+}
+</style>
 </head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:${fontStack};">
+<body style="margin:0;padding:0;background:${colors.page};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(input.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
-<tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;">
-<tr><td style="padding:20px 24px;background:${brandColor};font-size:20px;font-weight:700;color:#ffffff;">${escapeHtml(company.brandName)}</td></tr>
-<tr><td style="padding:28px 24px 12px;">${body}</td></tr>
-<tr><td style="padding:16px 24px 24px;border-top:1px solid ${borderColor};font-size:13px;line-height:1.6;color:${mutedColor};">${contactLineHtml()}</td></tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${colors.page};">
+<tr><td align="center" class="email-shell" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+<tr><td>${headerHtml()}</td></tr>
+<tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
+<tr><td style="background:${colors.card};border-radius:24px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td class="email-card" style="padding:40px 40px 16px;">${body}</td></tr></table>
+</td></tr>
+<tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
+<tr><td>${footerHtml()}</td></tr>
 </table>
 </td></tr>
 </table>
