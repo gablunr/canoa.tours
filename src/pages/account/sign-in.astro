@@ -1,0 +1,22 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SignIn from '../../components/sections/account/SignIn.astro';
+import { safeNextPath } from '../../lib/auth/magic-link';
+
+export const prerender = false;
+
+const next = safeNextPath(Astro.url.searchParams.get('next'));
+
+if (Astro.locals.user) return Astro.redirect(next);
+
+const linkFailed = Astro.url.searchParams.get('error') === 'link';
+---
+
+<Layout
+	title="Accede a tu cuenta"
+	description="Entra en tu cuenta de Canoa Tours con un enlace en tu email para ver y gestionar tus reservas."
+	noindex
+	footerOverlapsPhoto
+>
+	<SignIn next={next} linkFailed={linkFailed} />
+</Layout>
