@@ -1,8 +1,12 @@
 ---
+import { Star } from '@lucide/astro';
+
 interface FilterOption {
 	value: string;
 	label: string;
 	count?: number;
+	starred?: boolean;
+	accessibleLabel?: string;
 }
 
 interface Props {
@@ -16,12 +20,16 @@ interface Props {
 const { legend, name, options, checked, class: className } = Astro.props;
 ---
 
-<fieldset class:list={['flex flex-wrap gap-2 max-lg:justify-center', className]} data-filter-pills>
+<fieldset class:list={['flex flex-wrap gap-1.5 max-lg:justify-center sm:gap-2', className]} data-filter-pills>
 	<legend class="sr-only">{legend}</legend>
 	{options.map((option) => (
-		<label class="liquid-glass inline-flex h-9 cursor-pointer items-center gap-1.5 bg-white/60 px-4 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent">
+		<label class="liquid-glass inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 bg-white/60 px-3 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-checked:bg-primary has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-accent sm:px-4">
 			<input type="radio" name={name} value={option.value} checked={option.value === checked} class="sr-only" />
-			{option.label}
+			<span class="inline-flex items-center gap-1" aria-hidden={option.accessibleLabel ? 'true' : undefined}>
+				{option.label}
+				{option.starred && <Star size={12} stroke-width={0} fill="currentColor" class="text-sun" />}
+			</span>
+			{option.accessibleLabel && <span class="sr-only">{option.accessibleLabel}</span>}
 			<span class="tabular-nums opacity-60" data-filter-count={option.value}>{option.count}</span>
 		</label>
 	))}

@@ -43,7 +43,7 @@ export function createClientPagination(nav: HTMLElement, onPageChange: (page: nu
 		);
 	};
 
-	const focusCurrent = () => pageList?.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+	const focusCurrent = () => pageList?.querySelector<HTMLElement>('[aria-current="page"]')?.focus({ preventScroll: true });
 
 	return { render, focusCurrent };
 }
