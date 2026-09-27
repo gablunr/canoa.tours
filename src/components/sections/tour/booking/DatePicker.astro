@@ -1,0 +1,108 @@
+---
+import { ChevronDown, ChevronLeft, ChevronRight } from '@lucide/astro';
+import { weekdays } from '../../../../lib/calendar';
+
+interface Props {
+	name?: string;
+	label?: string;
+	hint?: string;
+	requiredMessage?: string;
+}
+
+const { name = 'tourDate', label = 'Fecha', hint, requiredMessage = 'Elige una fecha.' } = Astro.props;
+
+const fieldId = `field-${name}`;
+const labelId = `${fieldId}-label`;
+const valueId = `${fieldId}-value`;
+const panelId = `${fieldId}-panel`;
+const hintId = `${fieldId}-hint`;
+const noteId = `${fieldId}-note`;
+const errorId = `${fieldId}-error`;
+const describedBy = [hint && hintId, noteId, errorId].filter(Boolean).join(' ');
+
+const monthStepButton =
+	'flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-primary outline-none transition-colors duration-300 ease-smooth hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-30';
+---
+
+<div data-field data-date-picker data-required-message={requiredMessage} class="group/date">
+	<label id={labelId} for={fieldId} class="flex items-baseline justify-between gap-3 text-sm font-medium text-primary">
+		{label}
+	</label>
+	<button
+		type="button"
+		id={fieldId}
+		data-date-trigger
+		aria-expanded="false"
+		aria-controls={panelId}
+		aria-labelledby={`${labelId} ${valueId}`}
+		aria-describedby={describedBy}
+		class="group/trigger mt-2 flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-border-strong bg-background px-4 text-left text-base text-primary transition-colors duration-300 ease-smooth outline-none hover:border-muted focus-visible:border-primary aria-expanded:border-primary group-has-[input[aria-invalid]]/date:border-error"
+	>
+		<span id={valueId} data-date-value data-empty class="truncate data-empty:text-subtle">Elige el día</span>
+		<ChevronDown size={18} stroke-width={1.75} class="shrink-0 text-muted transition-transform duration-300 ease-smooth group-aria-expanded/trigger:rotate-180" aria-hidden="true" />
+	</button>
+	<input type="hidden" name={name} />
+	<input data-date-required required tabindex="-1" aria-hidden="true" class="sr-only" />
+	{hint && <p id={hintId} class="mt-2 text-xs text-muted">{hint}</p>}
+
+	<div id={panelId} data-date-panel hidden class="mt-3 rounded-3xl border border-border bg-background p-3 sm:p-4">
+		<div class="flex items-center justify-between gap-2">
+			<button type="button" data-month-step="-1" aria-label="Mes anterior" class={monthStepButton}>
+				<ChevronLeft size={18} stroke-width={1.75} aria-hidden="true" />
+			</button>
+			<p data-month-label aria-live="polite" class="text-sm font-semibold text-primary"></p>
+			<button type="button" data-month-step="1" aria-label="Mes siguiente" class={monthStepButton}>
+				<ChevronRight size={18} stroke-width={1.75} aria-hidden="true" />
+			</button>
+		</div>
+
+		<div class="mt-2 grid grid-cols-7 gap-1">
+			{weekdays.map((weekday) => (
+				<abbr title={weekday.long} class="py-1 text-center text-xs font-medium text-muted no-underline">{weekday.short}</abbr>
+			))}
+		</div>
+		<div data-month-grid role="grid" aria-labelledby={labelId} class="grid min-h-[16.25rem] content-start gap-1"></div>
+
+		<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+			<p data-date-status aria-live="polite" class="text-sm text-muted" hidden></p>
+			<button
+				type="button"
+				data-date-retry
+				hidden
+				class="cursor-pointer rounded-full text-sm font-medium text-accent-strong underline underline-offset-4 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-accent"
+			>
+				Reintentar
+			</button>
+		</div>
+
+		<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border px-1 pt-3 text-xs text-muted">
+			<li class="flex items-center gap-2">
+				<span class="size-3 rounded-full bg-accent-soft ring-1 ring-accent/30" aria-hidden="true"></span>
+				Disponible
+			</li>
+			<li class="flex items-center gap-2">
+				<span class="size-1.5 rounded-full bg-sun" aria-hidden="true"></span>
+				Pocas plazas
+			</li>
+			<li class="flex items-center gap-2">
+				<span class="text-muted tabular-nums line-through" aria-hidden="true">15</span>
+				Completo
+			</li>
+		</ul>
+	</div>
+
+	<p id={noteId} data-date-note class="mt-2 text-xs text-sun-strong" hidden></p>
+	<p id={errorId} data-field-error class="mt-2 text-xs text-error" hidden></p>
+
+	<template data-day-template>
+		<button
+			type="button"
+			data-day
+			tabindex="-1"
+			class="group/day relative flex h-10 w-full items-center justify-center rounded-full text-sm tabular-nums outline-none transition-colors duration-300 ease-smooth focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 enabled:cursor-pointer disabled:cursor-default aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-white aria-[pressed=false]:enabled:bg-accent-soft aria-[pressed=false]:enabled:font-semibold aria-[pressed=false]:enabled:text-primary aria-[pressed=false]:enabled:hover:bg-teal-100 aria-[pressed=false]:data-[state=full]:text-muted aria-[pressed=false]:data-[state=none]:text-subtle/60 data-[state=full]:line-through"
+		>
+			<span data-day-number></span>
+			<span class="absolute bottom-1 left-1/2 hidden size-1 -translate-x-1/2 rounded-full bg-sun group-data-[state=few]/day:block" aria-hidden="true"></span>
+		</button>
+	</template>
+</div>
