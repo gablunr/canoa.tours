@@ -18,7 +18,7 @@ const { title, image, imageAlt, imageClass = 'object-center', sizes, compact = f
 	Astro.props;
 
 const coverSizes = sizes ?? `(max-aspect-ratio: ${image.width}/${image.height}) ${Math.ceil((image.width / image.height) * 100)}vh, 100vw`;
-const widths = [...[640, 960, 1280, 1920, 2560].filter((width) => width < image.width), image.width];
+const widths = [...new Set([640, 960, 1280, 1920, 2560].map((width) => Math.min(width, image.width)))];
 ---
 
 <section
