@@ -10,16 +10,21 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "node ./node_modules/astro/bin/astro.mjs"
+    "astro": "node ./node_modules/astro/bin/astro.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.2",
     "@astrojs/sitemap": "^3.7.4",
     "@astrojs/vercel": "^11.0.10",
     "@lucide/astro": "^1.47.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.3",
+    "resend": "^6.30.0",
     "sharp": "^0.35.4",
+    "stripe": "^22.6.2",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
@@ -27,6 +32,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.2"
   }
 }
