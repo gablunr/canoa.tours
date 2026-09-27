@@ -14,8 +14,8 @@ export const bookingSteps: BookingStep[] = [
 	},
 	{
 		id: 'pay-deposit',
-		title: 'Paga el depósito online',
-		text: 'Pagas una parte con tarjeta y el resto el día de la excursión.',
+		title: 'Paga online',
+		text: 'Pagas con tarjeta un depósito y el resto el día de la excursión, o todo de una vez.',
 	},
 	{
 		id: 'get-pickup-time',

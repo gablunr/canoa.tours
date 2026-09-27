@@ -16,7 +16,7 @@ updatedAt: 2026-09-27
 
 - Si cancelas, no te devolvemos lo que pagaste al reservar.
 - No se puede cambiar la fecha: solo puedes ir el día que reservaste.
-- Si no te presentas o avisas con menos de {{noticeHours}}, cobramos el resto del tour a la tarjeta que guardaste al reservar.
+- Si pagaste solo el depósito y no te presentas o avisas con menos de {{noticeHours}}, cobramos el resto del tour a la tarjeta que guardaste al reservar.
 - Si el tour se mueve por mal tiempo, tu reserva pasa a la siguiente fecha en que salga la excursión y te enviamos un billete nuevo. Si no puedes ir ese día, no hay reembolso.
 
 Si viajas sin seguro, deja algún día libre en tus vacaciones por si hay que mover la excursión.

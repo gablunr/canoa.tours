@@ -8,7 +8,7 @@ updatedAt: 2026-09-27
 
 ### ¿Puedo pagar todo el día del tour?
 
-No. Para ir a cualquier excursión hay que reservar antes en la web y pagar un depósito con tarjeta, porque los barcos y las actividades tienen cupo limitado. El resto se paga el día del tour. Los pasos están en [cómo reservar](<{{howToBookHref}}>).
+No. Para ir a cualquier excursión hay que reservar antes en la web y pagar con tarjeta un depósito o el total, porque los barcos y las actividades tienen cupo limitado. Si pagas el depósito, el resto se paga el día del tour. Los pasos están en [cómo reservar](<{{howToBookHref}}>).
 
 ### ¿Cuánto es el depósito?
 
@@ -62,4 +62,4 @@ Solo si contrataste el seguro de cancelación al reservar ({{insurancePrice}} po
 
 ### ¿Qué pasa si no me presento?
 
-Sin seguro, si no te presentas o avisas con menos de {{noticeHours}}, cobramos el resto del tour a la tarjeta que guardaste al reservar. Con seguro, no te cobramos nada más.
+Sin seguro, si pagaste solo el depósito y no te presentas o avisas con menos de {{noticeHours}}, cobramos el resto del tour a la tarjeta que guardaste al reservar. Con seguro, no te cobramos nada más.

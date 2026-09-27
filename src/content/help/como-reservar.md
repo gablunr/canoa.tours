@@ -1,6 +1,6 @@
 ---
 title: Cómo reservar tu excursión en Punta Cana
-description: En la página de cada excursión eliges la fecha, cuántas personas van y tu hotel. Pagas un depósito online con tarjeta y el resto, el día del tour.
+description: En la página de cada excursión eliges la fecha, cuántas personas van y tu hotel. Pagas online con tarjeta un depósito o el total.
 updatedAt: 2026-09-27
 ---
 
@@ -10,7 +10,7 @@ updatedAt: 2026-09-27
 2. Selecciona la fecha y cuántas personas van. Si una fecha no aparece disponible, ese día el tour no sale o ya no quedan lugares.
 3. Indica tu hotel. Con eso sabemos en qué zona te recogemos y si hay que sumar un cargo extra por el transporte. Si no sabes en qué zona está tu hotel, búscalo en [zonas de recogida](<{{pickupZonesHref}}>).
 4. Decide si agregas el seguro de cancelación. Cuesta {{insurancePrice}} por persona y por tour, y solo se contrata en este paso: después de reservar ya no se puede agregar. Con el seguro puedes cancelar con reembolso o cambiar la fecha (el detalle está en [cancelaciones y cambios](<{{cancellationsHref}}>)).
-5. Paga el depósito con tarjeta. Ves el precio exacto antes de pagar, y tu tarjeta queda guardada con Stripe por si no te presentas sin seguro.
+5. Paga con tarjeta el depósito o el total, sin salir de la página. Ves el precio exacto antes de pagar y, si pagas solo el depósito, tu tarjeta queda guardada con Stripe por si no te presentas sin seguro.
 
 ## Después de reservar
 
