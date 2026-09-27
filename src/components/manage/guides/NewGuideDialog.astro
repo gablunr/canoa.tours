@@ -1,0 +1,38 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import SelectField from '../../ui/form/SelectField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { guidePathPrefix, guideSiloOptions } from './guide-data';
+---
+
+<Dialog size="lg" aria-labelledby="nueva-guia-titulo" data-new-guide-dialog>
+	<h2 id="nueva-guia-titulo" class="text-xl font-semibold tracking-[-0.03em]">Nueva guía</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Empieza como borrador. La publicas cuando esté lista.</p>
+
+	<form class="mt-6 grid gap-5" data-new-guide-form>
+		<TextField label="Título" name="title" required minlength={5} maxlength={120} autocomplete="off" data-title-input />
+		<SelectField label="Destino" name="silo" options={guideSiloOptions} value="general" required hint="Las generales salen en Guías de viaje." data-silo-select />
+		<TextField
+			label="Dirección"
+			name="slug"
+			required
+			minlength={3}
+			maxlength={80}
+			pattern="[a-z0-9]+(-[a-z0-9]+)*"
+			title="Minúsculas, números y guiones, sin espacios ni tildes."
+			autocomplete="off"
+			autocapitalize="none"
+			spellcheck="false"
+			hint={`canoa.tours${guidePathPrefix('general')}`}
+			data-slug-input
+		/>
+
+		<p class="text-sm text-error" role="alert" data-new-guide-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-new-guide-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-new-guide-submit>Crear borrador</DialogButton>
+		</div>
+	</form>
+</Dialog>

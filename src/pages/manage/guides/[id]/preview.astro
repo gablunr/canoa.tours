@@ -1,0 +1,37 @@
+---
+import { ArrowLeft } from '@lucide/astro';
+import GuidePage from '../../../../components/sections/guides/GuidePage.astro';
+import { loadEditableGuide, previewGuide } from '../../../../components/manage/guides/guide-data';
+import { glassButtonPrimary, glassGroup } from '../../../../components/manage/glass-classes';
+import { canOpenSection } from '../../../../data/manage/sections';
+import { renderGuideContent } from '../../../../lib/guides/render-guide-content';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'guides')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const editable = await loadEditableGuide(Astro.locals.supabase, Astro.params.id);
+if (!editable) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const guide = await previewGuide(editable);
+const content = renderGuideContent({
+	answer: editable.answer,
+	sections: editable.sections,
+	faqs: editable.faqs,
+	tourProductKey: editable.tourProductKey,
+	tourNote: editable.tourNote,
+});
+const statusLabel = editable.status === 'published' ? 'Vista previa de lo guardado' : 'Vista previa del borrador';
+---
+
+<GuidePage guide={guide} previewContent={content}>
+	<div slot="notice" class="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+		<div class:list={[glassGroup, 'pointer-events-auto flex items-center gap-3 rounded-full py-1.5 pr-1.5 pl-4']}>
+			<p class="text-[13px] font-medium text-primary">{statusLabel}</p>
+			<a href={`/manage/guides/${editable.id}`} class={glassButtonPrimary}>
+				<ArrowLeft size={15} stroke-width={1.75} aria-hidden="true" />
+				Volver al editor
+			</a>
+		</div>
+	</div>
+</GuidePage>

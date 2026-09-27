@@ -1,0 +1,53 @@
+---
+import { ArrowLeft, Eye, SlidersHorizontal } from '@lucide/astro';
+import type { EditableGuide } from './guide-data';
+import { glassButton, glassButtonPrimary, glassCircle, glassGroup } from '../glass-classes';
+
+interface Props {
+	guide: EditableGuide;
+	notice: string | null;
+	listHref: string;
+}
+
+const { guide, notice, listHref } = Astro.props;
+
+const isPublished = guide.status === 'published';
+const statusLabel = isPublished ? 'Publicada' : 'Borrador';
+---
+
+<div class="animate-fade-up" style="animation-delay: 60ms">
+	<div class:list={[glassGroup, 'flex items-center gap-1.5 rounded-full p-1.5']}>
+		<a href={listHref} class:list={[glassCircle, 'shrink-0']} aria-label="Volver a todas las guías" title="Todas las guías">
+			<ArrowLeft size={16} stroke-width={1.75} aria-hidden="true" />
+		</a>
+		<div class="flex min-w-0 flex-1 items-center gap-2 px-1.5">
+			<span
+				class:list={[
+					'hidden h-7 shrink-0 items-center rounded-full px-3 text-xs font-medium sm:inline-flex',
+					isPublished ? 'bg-accent-soft text-accent-strong' : 'bg-white/75 text-secondary',
+				]}
+			>
+				{statusLabel}
+			</span>
+			<span class="min-w-0 truncate text-xs text-secondary" role="status" data-save-state data-idle-label={statusLabel}>
+				{notice ?? <span class="sm:hidden">{statusLabel}</span>}
+			</span>
+		</div>
+		<a href="#ajustes-guia" class:list={[glassCircle, 'shrink-0 lg:hidden']} aria-label="Ajustes de la guía" title="Ajustes">
+			<SlidersHorizontal size={15} stroke-width={1.75} aria-hidden="true" />
+		</a>
+		<a href={`/manage/guides/${guide.id}/preview`} target="_blank" class:list={[glassButton, 'shrink-0 max-sm:size-9 max-sm:px-0']} aria-label="Vista previa" title="Vista previa" data-preview-link>
+			<Eye size={15} stroke-width={1.75} aria-hidden="true" />
+			<span class="max-sm:hidden">Vista previa</span>
+		</a>
+		<button type="submit" class:list={[isPublished ? glassButtonPrimary : glassButton, 'shrink-0 max-sm:px-3.5']} data-save>
+			<span data-button-label>{isPublished ? 'Actualizar' : 'Guardar'}</span>
+		</button>
+		{!isPublished && (
+			<button type="button" class:list={[glassButtonPrimary, 'shrink-0 max-sm:px-3.5']} data-publish>
+				<span data-button-label>Publicar</span>
+			</button>
+		)}
+	</div>
+	<p class="mt-2 rounded-2xl bg-[#fbe9e7] px-4 py-2.5 text-sm text-error" role="alert" data-editor-error hidden></p>
+</div>

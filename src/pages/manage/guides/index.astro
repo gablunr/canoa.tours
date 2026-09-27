@@ -1,0 +1,121 @@
+---
+import { BookOpenText, Plus, Search } from '@lucide/astro';
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
+import GuideList from '../../../components/manage/guides/GuideList.astro';
+import NewGuideDialog from '../../../components/manage/guides/NewGuideDialog.astro';
+import ReviewsPagination from '../../../components/manage/reviews/ReviewsPagination.astro';
+import { canOpenSection } from '../../../data/manage/sections';
+import { guidePathPrefixes, loadGuideCounts, loadGuideList, tourSlugsBySilo, type GuideStatus } from '../../../components/manage/guides/guide-data';
+import { glassButton, glassControl, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'guides')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const pageSize = 20;
+
+const statusTabs: { id: GuideStatus; label: string; summary: string; emptyMessage: string }[] = [
+	{ id: 'draft', label: 'Borradores', summary: 'Solo las ve el equipo hasta que las publiques.', emptyMessage: 'No hay borradores.' },
+	{ id: 'published', label: 'Publicadas', summary: 'Están en la web. Lo que cambies tarda unos minutos en verse.', emptyMessage: 'Todavía no hay guías publicadas.' },
+];
+
+const query = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 80);
+const supabase = Astro.locals.supabase;
+const counts = await loadGuideCounts(supabase, query);
+
+const requestedStatus = Astro.url.searchParams.get('status');
+const defaultStatus: GuideStatus = counts.draft === 0 && counts.published > 0 ? 'published' : 'draft';
+const activeTab = statusTabs.find((tab) => tab.id === requestedStatus) ?? statusTabs.find((tab) => tab.id === defaultStatus) ?? statusTabs[0];
+
+const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+const totalPages = Math.max(1, Math.ceil(counts[activeTab.id] / pageSize));
+const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
+const guides = await loadGuideList(supabase, activeTab.id, query, (currentPage - 1) * pageSize, pageSize);
+
+const hrefFor = (status: GuideStatus, page = 1) => {
+	const params = new URLSearchParams({ status });
+	if (query) params.set('q', query);
+	if (page > 1) params.set('page', String(page));
+	return `/manage/guides?${params}`;
+};
+
+const emptyMessage = query ? `Ninguna guía coincide con «${query}».` : activeTab.emptyMessage;
+const resultCount = counts[activeTab.id];
+const resultLabel = `${resultCount} ${resultCount === 1 ? 'resultado' : 'resultados'} para «${query}».`;
+---
+
+<ManageLayout title="Guías" section="guides">
+	<div class="grid gap-4" data-guides-page data-path-prefixes={JSON.stringify(guidePathPrefixes)} data-tour-slugs={JSON.stringify(tourSlugsBySilo)}>
+		<ManagePageHeader title="Guías" description="Lo que publicas aquí sale en Guías de viaje.">
+			<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-new-guide-open>
+				<Plus size={15} stroke-width={2} aria-hidden="true" />
+				Nueva guía
+			</button>
+		</ManagePageHeader>
+
+		<div class="mt-2 flex animate-fade-up flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3" style="animation-delay: 100ms">
+			<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
+				{statusTabs.map((tab) => (
+					<a href={hrefFor(tab.id)} class:list={[glassOption, 'group/tab flex-1 sm:flex-none']} aria-current={tab.id === activeTab.id ? 'page' : undefined}>
+						{tab.label}
+						<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{counts[tab.id]}</span>
+					</a>
+				))}
+			</nav>
+			<form method="get" action="/manage/guides" role="search" class="w-full sm:w-72">
+				<input type="hidden" name="status" value={activeTab.id} />
+				<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
+					<span class="sr-only">Buscar guías</span>
+					<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+					<input
+						type="search"
+						name="q"
+						value={query}
+						maxlength="80"
+						placeholder="Buscar una guía"
+						class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 font-normal outline-none placeholder:text-muted"
+					/>
+				</label>
+			</form>
+		</div>
+
+		<p class="animate-fade-up px-1 text-sm text-secondary" style="animation-delay: 120ms">
+			{query ? (
+				<Fragment>
+					{resultLabel}{' '}
+					<a href={`/manage/guides?status=${activeTab.id}`} class="font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary">Quitar búsqueda</a>
+				</Fragment>
+			) : (
+				activeTab.summary
+			)}
+		</p>
+
+		{guides.length === 0 ? (
+			<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 160ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+					<BookOpenText size={20} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<p class="mt-4 text-sm text-secondary">{emptyMessage}</p>
+				{!query && activeTab.id === 'draft' && (
+					<button type="button" class:list={[glassButton, 'mt-5']} data-new-guide-open>
+						<Plus size={15} stroke-width={2} aria-hidden="true" />
+						Nueva guía
+					</button>
+				)}
+			</div>
+		) : (
+			<GuideList guides={guides} />
+		)}
+
+		<ReviewsPagination currentPage={currentPage} totalPages={totalPages} hrefForPage={(page) => hrefFor(activeTab.id, page)} />
+
+		<NewGuideDialog />
+	</div>
+</ManageLayout>
+
+<script>
+	import { initGuidesPage } from '../../../scripts/manage/guides-list';
+
+	document.querySelectorAll<HTMLElement>('[data-guides-page]').forEach(initGuidesPage);
+</script>

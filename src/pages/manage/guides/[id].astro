@@ -1,0 +1,68 @@
+---
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import GuideConfirmDialog from '../../../components/manage/guides/GuideConfirmDialog.astro';
+import GuideEditorToolbar from '../../../components/manage/guides/GuideEditorToolbar.astro';
+import GuideMarkdownCard from '../../../components/manage/guides/GuideMarkdownCard.astro';
+import GuideSidebar from '../../../components/manage/guides/GuideSidebar.astro';
+import { loadProductOptions } from '../../../components/manage/coupons/coupon-data';
+import { guidePathPrefixes, loadEditableGuide, tourSlugsBySilo } from '../../../components/manage/guides/guide-data';
+import { canOpenSection } from '../../../data/manage/sections';
+import { guideToMarkdown } from '../../../lib/guides/guide-markdown';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'guides')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const guide = await loadEditableGuide(Astro.locals.supabase, Astro.params.id);
+if (!guide) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const products = await loadProductOptions();
+const markdown = guideToMarkdown({ answer: guide.answer, sections: guide.sections, faqs: guide.faqs });
+
+const doneNotices: Record<string, string> = {
+	published: 'Publicada, sale en la web en unos minutos',
+	unpublished: 'Pasada a borrador, deja de verse en la web en unos minutos',
+};
+const notice = doneNotices[Astro.url.searchParams.get('done') ?? ''] ?? null;
+const isPublished = guide.status === 'published';
+const listHref = `/manage/guides?status=${guide.status}`;
+---
+
+<ManageLayout title={guide.title} section="guides">
+	<div
+		data-guide-editor
+		data-guide-id={guide.id}
+		data-guide-status={guide.status}
+		data-list-href={listHref}
+		data-path-prefixes={JSON.stringify(guidePathPrefixes)}
+		data-tour-slugs={JSON.stringify(tourSlugsBySilo)}
+	>
+		<form class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]" data-guide-form>
+			<div class="lg:col-span-2">
+				<GuideEditorToolbar guide={guide} notice={notice} listHref={listHref} />
+			</div>
+			<GuideMarkdownCard title={guide.title} markdown={markdown} />
+			<GuideSidebar guide={guide} products={products} />
+		</form>
+
+		<GuideConfirmDialog
+			name="unpublish"
+			title="¿Pasar a borrador?"
+			description="Deja de verse en la web en unos minutos. Puedes publicarla otra vez cuando quieras."
+			confirmLabel="Pasar a borrador"
+		/>
+		<GuideConfirmDialog
+			name="delete"
+			title="¿Borrar la guía?"
+			description={isPublished ? 'Se borran el texto y la imagen, y desaparece de la web. No se puede deshacer.' : 'Se borran el texto y la imagen. No se puede deshacer.'}
+			confirmLabel="Borrar"
+			variant="danger"
+		/>
+	</div>
+</ManageLayout>
+
+<script>
+	import { initGuideEditor } from '../../../scripts/manage/guide-editor';
+
+	document.querySelectorAll<HTMLElement>('[data-guide-editor]').forEach(initGuideEditor);
+</script>

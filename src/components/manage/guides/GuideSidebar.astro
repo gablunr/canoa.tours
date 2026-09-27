@@ -1,0 +1,162 @@
+---
+import { ChevronDown, ExternalLink, ImageOff, ImageUp } from '@lucide/astro';
+import { guidePathPrefix, guideSiloOptions, type EditableGuide } from './guide-data';
+import { glassButton, surfacePanel } from '../glass-classes';
+
+interface Props {
+	guide: EditableGuide;
+	products: { value: string; label: string }[];
+}
+
+const { guide, products } = Astro.props;
+
+const isPublished = guide.status === 'published';
+const publicPath = `${guidePathPrefix(guide.silo)}${guide.slug}`;
+const descriptionLimit = 300;
+
+const panel = 'group/panel border-b border-border last:border-b-0';
+const panelSummary =
+	'flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset [&::-webkit-details-marker]:hidden';
+const panelChevron = 'text-muted transition-transform duration-300 ease-smooth group-open/panel:rotate-180';
+const panelBody = 'grid gap-4 px-5 pb-5';
+const label = 'flex items-baseline justify-between gap-3 text-[13px] font-medium text-primary';
+const hint = 'mt-1.5 text-xs text-muted';
+const field =
+	'mt-1.5 block w-full rounded-xl border border-border-strong bg-background text-base text-primary transition-colors duration-300 ease-smooth placeholder:text-subtle hover:border-muted focus:border-primary focus:outline-none user-invalid:border-error sm:text-sm';
+const input = `${field} h-10 px-3`;
+const textArea = `${field} min-h-20 resize-y px-3 py-2.5 leading-relaxed field-sizing-content`;
+const select = `${field} h-10 cursor-pointer appearance-none pr-9 pl-3`;
+const selectChevron = 'pointer-events-none absolute right-3 bottom-3 text-muted';
+---
+
+<aside id="ajustes-guia" aria-label="Ajustes de la guía" class="min-w-0 scroll-mt-20 lg:sticky lg:top-[5.25rem] lg:max-h-[calc(100dvh-6.5rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[1.75rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+	<div class:list={[surfacePanel, 'animate-fade-up overflow-hidden']} style="animation-delay: 180ms">
+		<details class={panel} open>
+			<summary class={panelSummary}>Estado<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<p class="text-sm leading-relaxed text-secondary">
+					{isPublished ? 'Publicada. Está en la web y lo que actualices tarda unos minutos en verse.' : 'Borrador. Solo lo ve el equipo hasta que lo publiques.'}
+				</p>
+				{isPublished && (
+					<div class="flex flex-wrap gap-2">
+						<a href={publicPath} target="_blank" rel="noopener" class={glassButton}>
+							<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
+							Ver en la web
+						</a>
+						<button type="button" class={glassButton} data-unpublish>Pasar a borrador</button>
+					</div>
+				)}
+				<label class="flex cursor-pointer items-start gap-3">
+					<input type="checkbox" name="featured" checked={guide.featured} class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary" />
+					<span class="text-sm leading-relaxed">
+						<span class="block font-medium text-primary">Destacada</span>
+						<span class="block text-muted">Sale la primera en Guías de viaje. Solo puede haber una.</span>
+					</span>
+				</label>
+				<button
+					type="button"
+					class="w-fit cursor-pointer rounded-full text-sm font-medium text-error underline decoration-error/30 underline-offset-4 outline-none hover:decoration-error focus-visible:ring-2 focus-visible:ring-accent"
+					data-delete-guide
+				>
+					Borrar guía
+				</button>
+			</div>
+		</details>
+
+		<details class={panel} open>
+			<summary class={panelSummary}>Dirección<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<div class="relative">
+					<label for="field-silo" class={label}>Destino</label>
+					<select id="field-silo" name="silo" required class={select} data-silo-select>
+						{guideSiloOptions.map((option) => (
+							<option value={option.value} selected={option.value === guide.silo}>{option.label}</option>
+						))}
+					</select>
+					<ChevronDown size={16} stroke-width={1.75} class={selectChevron} aria-hidden="true" />
+				</div>
+				<div>
+					<label for="field-slug" class={label}>Dirección de la página</label>
+					<input
+						id="field-slug"
+						name="slug"
+						value={guide.slug}
+						required
+						minlength="3"
+						maxlength="80"
+						pattern="[a-z0-9]+(-[a-z0-9]+)*"
+						title="Minúsculas, números y guiones, sin espacios ni tildes."
+						autocomplete="off"
+						autocapitalize="none"
+						spellcheck="false"
+						aria-describedby="field-slug-hint"
+						class={input}
+						data-slug-input
+					/>
+					<p id="field-slug-hint" class:list={[hint, 'break-all']}>canoa.tours<span data-slug-path>{publicPath}</span></p>
+					{isPublished && <p class={hint}>Si la cambias, la dirección anterior deja de funcionar.</p>}
+				</div>
+			</div>
+		</details>
+
+		<details class={panel} open data-image-card>
+			<summary class={panelSummary}>Imagen destacada<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<div class="aspect-[16/10] overflow-hidden rounded-2xl bg-ink-100">
+					<img src={guide.imageUrl ?? undefined} alt="" class="size-full object-cover" hidden={!guide.imageUrl} data-image-preview />
+					<span class="flex size-full flex-col items-center justify-center gap-2 text-sm text-muted" hidden={Boolean(guide.imageUrl)} data-image-empty>
+						<ImageOff size={20} stroke-width={1.75} aria-hidden="true" />
+						Sin imagen
+					</span>
+				</div>
+				<label class:list={[glassButton, 'w-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent']}>
+					<ImageUp size={15} stroke-width={1.75} aria-hidden="true" />
+					<span data-image-button-label>{guide.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}</span>
+					<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input />
+				</label>
+				<p class="-mt-2 text-xs text-muted">JPG, PNG o WebP de hasta 5 MB, mejor en horizontal.</p>
+				<div>
+					<label for="field-imageAlt" class={label}>Texto alternativo</label>
+					<input id="field-imageAlt" name="imageAlt" value={guide.imageAlt} maxlength="200" autocomplete="off" aria-describedby="field-imageAlt-hint" class={input} data-image-alt />
+					<p id="field-imageAlt-hint" class={hint}>Describe la foto para quien no la ve.</p>
+				</div>
+				<p class="-mt-2 text-xs" role="status" data-image-status hidden></p>
+			</div>
+		</details>
+
+		<details class={panel} open>
+			<summary class={panelSummary}>Descripción<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<div>
+					<label for="field-description" class={label}>
+						Resumen corto
+						<span class="text-xs font-normal text-muted tabular-nums"><span data-count-for="field-description">{guide.description.length}</span>/{descriptionLimit}</span>
+					</label>
+					<textarea id="field-description" name="description" rows="3" maxlength={descriptionLimit} aria-describedby="field-description-hint" class={textArea}>{guide.description}</textarea>
+					<p id="field-description-hint" class={hint}>Sale en la tarjeta de la guía y en Google.</p>
+				</div>
+			</div>
+		</details>
+
+		<details class={panel} open={Boolean(guide.tourProductKey)}>
+			<summary class={panelSummary}>Excursión recomendada<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<div class="relative">
+					<label for="field-tourProductKey" class={label}>Excursión</label>
+					<select id="field-tourProductKey" name="tourProductKey" class={select} data-tour-select>
+						<option value="" selected={!guide.tourProductKey}>Ninguna</option>
+						{products.map((product) => (
+							<option value={product.value} selected={product.value === guide.tourProductKey}>{product.label}</option>
+						))}
+					</select>
+					<ChevronDown size={16} stroke-width={1.75} class={selectChevron} aria-hidden="true" />
+				</div>
+				<div>
+					<label for="field-tourNote" class={label}>Por qué la recomiendas</label>
+					<textarea id="field-tourNote" name="tourNote" rows="2" maxlength="300" required={Boolean(guide.tourProductKey)} class={textArea} data-tour-note>{guide.tourNote}</textarea>
+					<p class={hint}>Sale al final de la guía, junto a la tarjeta de la excursión.</p>
+				</div>
+			</div>
+		</details>
+	</div>
+</aside>
