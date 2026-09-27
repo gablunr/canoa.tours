@@ -1,0 +1,197 @@
+---
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import StatTile from '../../components/manage/overview/StatTile.astro';
+import DailyActivityCard from '../../components/manage/overview/DailyActivityCard.astro';
+import PeriodFigures from '../../components/manage/overview/PeriodFigures.astro';
+import OccupancyList from '../../components/manage/overview/OccupancyList.astro';
+import SalesBreakdown, { type SalesBreakdownTab } from '../../components/manage/overview/SalesBreakdown.astro';
+import { canOpenSection, panelHomeHref } from '../../data/manage/sections';
+import { localToday } from '../../lib/account/bookings';
+import { formatAxisDay } from '../../lib/manage/charts';
+import { loadDashboard, type OccupancyRow } from '../../lib/manage/stats';
+import { formatMoney } from '../../lib/email/templates/layout';
+import { glassGroup, glassOption } from '../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'overview')) {
+	const homeHref = panelHomeHref(Astro.locals.staffRole);
+	return homeHref === '/manage' ? new Response(null, { status: 404, statusText: 'Not Found' }) : Astro.redirect(homeHref);
+}
+
+type RangeId = '7' | '30' | '90' | 'month';
+
+const rangeOptions: { id: RangeId; label: string }[] = [
+	{ id: '7', label: '7 días' },
+	{ id: '30', label: '30 días' },
+	{ id: '90', label: '90 días' },
+	{ id: 'month', label: 'Este mes' },
+];
+
+const requestedRange = Astro.url.searchParams.get('range');
+const activeRange: RangeId = rangeOptions.find((option) => option.id === requestedRange)?.id ?? '30';
+
+const shiftDays = (isoDate: string, days: number) => {
+	const date = new Date(`${isoDate}T00:00:00Z`);
+	date.setUTCDate(date.getUTCDate() + days);
+	return date.toISOString().slice(0, 10);
+};
+
+const today = localToday();
+const rangeTo = today;
+const rangeFrom = activeRange === 'month' ? `${today.slice(0, 8)}01` : shiftDays(today, -(Number(activeRange) - 1));
+const occupancyTo = shiftDays(today, 13);
+const tomorrow = shiftDays(today, 1);
+
+const [dashboard, upcoming] = await Promise.all([
+	loadDashboard(Astro.locals.supabase, rangeFrom, rangeTo),
+	Astro.locals.supabase.rpc('admin_occupancy', { p_from: today, p_to: occupancyTo }),
+]);
+if (upcoming.error) throw upcoming.error;
+
+const { summary, dailySeries, productRanking, sources, couponUsage } = dashboard;
+const isAdmin = Astro.locals.staffRole === 'admin';
+
+const numberFormat = new Intl.NumberFormat('es');
+const percentFormat = new Intl.NumberFormat('es', { style: 'percent', maximumFractionDigits: 1 });
+const formatCount = (value: number) => numberFormat.format(value);
+const plural = (count: number, singular: string, pluralForm: string) => `${formatCount(count)} ${count === 1 ? singular : pluralForm}`;
+
+const bookingsSold = summary?.bookings_sold ?? 0;
+const seatsSold = summary?.seats_sold ?? 0;
+const bookingsCreated = summary?.bookings_created ?? 0;
+const money = (value: number | null | undefined) => formatMoney(Number(value ?? 0));
+const percent = (value: number | null | undefined) => (value === null || value === undefined ? 'Sin datos' : percentFormat.format(Number(value)));
+
+const rangeLabel = `Del ${formatAxisDay(rangeFrom)} al ${formatAxisDay(rangeTo)}.`;
+
+const bookingsPoints = dailySeries.map((point) => ({
+	date: point.day,
+	value: point.bookings_sold,
+	tooltip: `${formatAxisDay(point.day)}: ${plural(point.bookings_sold, 'reserva', 'reservas')}, ${money(point.gross_sales)}`,
+}));
+const seatsPoints = dailySeries.map((point) => ({
+	date: point.day,
+	value: point.seats_departing,
+	tooltip: `${formatAxisDay(point.day)}: ${plural(point.seats_departing, 'plaza', 'plazas')}`,
+}));
+
+type SeriesPoint = { date: string; value: number };
+const peakOf = (points: SeriesPoint[]) => points.reduce<SeriesPoint | null>((peak, point) => (!peak || point.value > peak.value ? point : peak), null);
+const totalOf = (points: SeriesPoint[]) => points.reduce((sum, point) => sum + point.value, 0);
+const seriesSummary = (points: SeriesPoint[], singular: string, pluralForm: string, basis: string) => {
+	const peak = peakOf(points);
+	const peakText = peak && peak.value > 0 ? `, con un máximo de ${formatCount(peak.value)} el ${formatAxisDay(peak.date)}` : '';
+	return `${plural(totalOf(points), singular, pluralForm)} por fecha de ${basis}${peakText}.`;
+};
+
+const occupancyVisibleLimit = 6;
+const upcomingRows = (upcoming.data ?? [])
+	.filter((row: OccupancyRow) => row.seats_sold > 0 || row.closed)
+	.sort((first, second) => first.tour_date.localeCompare(second.tour_date) || first.product_name.localeCompare(second.product_name, 'es'));
+const tomorrowRows = upcomingRows.filter((row) => row.tour_date === tomorrow && row.seats_sold > 0);
+const tomorrowSeats = tomorrowRows.reduce((sum, row) => sum + row.seats_sold, 0);
+const occupancyNote =
+	tomorrowSeats > 0
+		? `Mañana salen ${plural(tomorrowSeats, 'plaza', 'plazas')} en ${plural(tomorrowRows.length, 'excursión', 'excursiones')}.`
+		: 'Mañana no hay salidas con plazas vendidas.';
+
+const breakdownLimit = 5;
+const sourceLabel = (source: string) => (source === 'direct' ? 'Directo' : source);
+
+const salesTabs: SalesBreakdownTab[] = [
+	{
+		id: 'excursiones',
+		label: 'Excursión',
+		emptyMessage: 'Sin ventas en este periodo.',
+		rows: productRanking
+			.filter((row) => row.bookings_sold > 0)
+			.slice(0, breakdownLimit)
+			.map((row) => ({
+				key: row.product_key,
+				label: row.product_name,
+				detail: `${plural(row.bookings_sold, 'reserva', 'reservas')}, ${plural(row.seats_sold, 'plaza', 'plazas')}`,
+				value: money(row.gross_sales),
+			})),
+	},
+	{
+		id: 'origen',
+		label: 'Origen',
+		emptyMessage: 'Sin ventas en este periodo.',
+		rows: sources.slice(0, breakdownLimit).map((row) => ({
+			key: `${row.source}-${row.medium ?? ''}-${row.campaign ?? ''}`,
+			label: row.medium ? `${sourceLabel(row.source)} (${row.medium})` : sourceLabel(row.source),
+			detail: `${row.campaign ?? 'Sin campaña'}, ${plural(row.bookings_sold, 'reserva', 'reservas')}`,
+			value: money(row.gross_sales),
+		})),
+	},
+];
+
+if (isAdmin) {
+	salesTabs.push({
+		id: 'cupones',
+		label: 'Cupón',
+		emptyMessage: 'Ningún cupón usado en este periodo.',
+		rows: couponUsage
+			.filter((row) => row.bookings_sold > 0)
+			.slice(0, breakdownLimit)
+			.map((row) => ({
+				key: row.code,
+				label: row.code,
+				detail: `${plural(row.bookings_sold, 'reserva', 'reservas')}, ${money(row.discount_total)} de descuento`,
+				value: money(row.gross_sales),
+			})),
+	});
+}
+
+const periodFigures = [
+	{ label: 'Con seguro', value: percent(summary?.insurance_rate) },
+	{ label: 'Canceladas', value: formatCount(summary?.cancelled_count ?? 0) },
+	{ label: 'Caducadas', value: formatCount(summary?.expired_count ?? 0) },
+	{ label: 'Reembolsos', value: money(summary?.refunds) },
+	{ label: 'Cobros por no presentarse', value: money(summary?.no_show_charges) },
+];
+
+---
+
+<ManageLayout title="Resumen" section="overview">
+	<ManagePageHeader title="Resumen" description={rangeLabel}>
+		<nav aria-label="Periodo" class:list={[glassGroup, 'grid w-full grid-cols-2 gap-1 rounded-[1.5rem] p-1.5 sm:flex sm:w-auto sm:rounded-full']}>
+			{rangeOptions.map((option) => (
+				<a href={option.id === '30' ? '/manage' : `/manage?range=${option.id}`} class={glassOption} aria-current={option.id === activeRange ? 'page' : undefined}>
+					{option.label}
+				</a>
+			))}
+		</nav>
+	</ManagePageHeader>
+
+	<div class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+		<StatTile highlight label="Vendido" value={money(summary?.gross_sales)} detail={`${plural(bookingsSold, 'reserva', 'reservas')}, ${plural(seatsSold, 'plaza', 'plazas')}`} delay={100} />
+		<StatTile label="Cobrado online" value={money(summary?.deposits_collected)} detail="Depósitos con tarjeta" delay={140} />
+		<StatTile label="Por cobrar el día" value={money(summary?.balance_to_collect)} detail="Saldo de las confirmadas" delay={180} />
+		<StatTile label="Conversión" value={percent(summary?.conversion_rate)} detail={`${formatCount(bookingsSold)} de ${plural(bookingsCreated, 'iniciada', 'iniciadas')}`} delay={220} />
+	</div>
+
+	<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-4 lg:grid-cols-3">
+		<DailyActivityCard
+			class="lg:col-span-2"
+			bookings={{ points: bookingsPoints, summary: seriesSummary(bookingsPoints, 'reserva', 'reservas', 'compra') }}
+			seats={{ points: seatsPoints, summary: seriesSummary(seatsPoints, 'plaza', 'plazas', 'excursión') }}
+			formatValue={formatCount}
+			delay={260}
+		/>
+		<PeriodFigures title="Otros datos" figures={periodFigures} delay={300} />
+	</div>
+
+	<div class="mt-3 grid items-start gap-3 sm:mt-4 sm:gap-4 lg:grid-cols-3">
+		<OccupancyList
+			class="lg:col-span-2"
+			rows={upcomingRows.slice(0, occupancyVisibleLimit)}
+			hiddenCount={Math.max(0, upcomingRows.length - occupancyVisibleLimit)}
+			note={occupancyNote}
+			delay={340}
+		/>
+		<SalesBreakdown tabs={salesTabs} delay={380} />
+	</div>
+</ManageLayout>

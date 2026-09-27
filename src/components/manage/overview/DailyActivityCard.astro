@@ -1,0 +1,51 @@
+---
+import DailyColumnChart from './DailyColumnChart.astro';
+import SegmentedToggle from './SegmentedToggle.astro';
+import type { ChartPoint } from '../../../lib/manage/charts';
+
+interface Series {
+	summary: string;
+	points: ChartPoint[];
+}
+
+interface Props {
+	bookings: Series;
+	seats: Series;
+	formatValue: (value: number) => string;
+	delay?: number;
+	class?: string;
+}
+
+const { bookings, seats, formatValue, delay = 0, class: className } = Astro.props;
+---
+
+<section class:list={['group/actividad animate-fade-up rounded-[1.75rem] bg-surface p-5 sm:p-6', className]} style={`animation-delay: ${delay}ms`} aria-labelledby="actividad-diaria">
+	<div class="flex items-center justify-between gap-3">
+		<h2 id="actividad-diaria" class="text-lg font-semibold tracking-[-0.03em] text-primary">Actividad diaria</h2>
+		<SegmentedToggle
+			name="actividad"
+			legend="Dato del gráfico"
+			options={[
+				{ id: 'reservas', label: 'Reservas' },
+				{ id: 'plazas', label: 'Plazas' },
+			]}
+		/>
+	</div>
+
+	<DailyColumnChart
+		id="grafico-reservas"
+		class="mt-3 group-has-[#actividad-plazas:checked]/actividad:hidden"
+		summary={bookings.summary}
+		valueLabel="Reservas"
+		points={bookings.points}
+		formatValue={formatValue}
+	/>
+	<DailyColumnChart
+		id="grafico-plazas"
+		class="mt-3 hidden group-has-[#actividad-plazas:checked]/actividad:block"
+		summary={seats.summary}
+		valueLabel="Plazas"
+		points={seats.points}
+		formatValue={formatValue}
+	/>
+</section>

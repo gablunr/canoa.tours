@@ -1,0 +1,22 @@
+---
+interface Props {
+	title: string;
+	figures: { label: string; value: string }[];
+	delay?: number;
+	class?: string;
+}
+
+const { title, figures, delay = 0, class: className } = Astro.props;
+---
+
+<section class:list={['animate-fade-up rounded-[1.75rem] bg-surface p-5 sm:p-6', className]} style={`animation-delay: ${delay}ms`} aria-labelledby="otros-datos">
+	<h2 id="otros-datos" class="text-lg font-semibold tracking-[-0.03em] text-primary">{title}</h2>
+	<dl class="mt-3 divide-y divide-border">
+		{figures.map((figure) => (
+			<div class="flex items-baseline justify-between gap-4 py-3">
+				<dt class="text-sm text-secondary">{figure.label}</dt>
+				<dd class="text-sm font-semibold text-primary tabular-nums">{figure.value}</dd>
+			</div>
+		))}
+	</dl>
+</section>

@@ -1,0 +1,28 @@
+---
+interface Props {
+	label: string;
+	value: string;
+	detail?: string;
+	highlight?: boolean;
+	delay?: number;
+	class?: string;
+}
+
+const { label, value, detail, highlight = false, delay = 0, class: className } = Astro.props;
+---
+
+<div
+	class:list={[
+		'relative isolate flex animate-fade-up flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 sm:p-6',
+		highlight ? 'bg-primary text-white' : 'bg-surface',
+		className,
+	]}
+	style={`animation-delay: ${delay}ms`}
+>
+	<p class:list={['text-sm font-medium', highlight ? 'text-white/70' : 'text-secondary']}>{label}</p>
+	<div class="mt-4">
+		<p class:list={['text-xl leading-none font-semibold tracking-[-0.03em] tabular-nums sm:text-2xl lg:text-3xl', !highlight && 'text-primary']}>{value}</p>
+		{detail && <p class:list={['mt-2 truncate text-xs', highlight ? 'text-white/70' : 'text-muted']}>{detail}</p>}
+	</div>
+	{highlight && <span class="glass-rim opacity-60 [--rim-width:2px]" aria-hidden="true"></span>}
+</div>

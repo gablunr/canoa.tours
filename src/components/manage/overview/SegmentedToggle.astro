@@ -1,0 +1,21 @@
+---
+import { glassGroup, glassRadioOption } from '../glass-classes';
+
+interface Props {
+	name: string;
+	legend: string;
+	options: { id: string; label: string }[];
+}
+
+const { name, legend, options } = Astro.props;
+---
+
+<fieldset class:list={[glassGroup, 'flex shrink-0 gap-1 p-1']}>
+	<legend class="sr-only">{legend}</legend>
+	{options.map((option, index) => (
+		<label class={glassRadioOption}>
+			<input type="radio" id={`${name}-${option.id}`} name={name} value={option.id} checked={index === 0} class="sr-only" />
+			{option.label}
+		</label>
+	))}
+</fieldset>

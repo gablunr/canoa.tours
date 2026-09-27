@@ -1,0 +1,60 @@
+---
+import SegmentedToggle from './SegmentedToggle.astro';
+
+export type SalesBreakdownTabId = 'excursiones' | 'origen' | 'cupones';
+
+export interface SalesBreakdownRow {
+	key: string;
+	label: string;
+	detail: string;
+	value: string;
+}
+
+export interface SalesBreakdownTab {
+	id: SalesBreakdownTabId;
+	label: string;
+	rows: SalesBreakdownRow[];
+	emptyMessage: string;
+}
+
+interface Props {
+	tabs: SalesBreakdownTab[];
+	delay?: number;
+	class?: string;
+}
+
+const { tabs, delay = 0, class: className } = Astro.props;
+
+const panelVisibility: Record<SalesBreakdownTabId, string> = {
+	excursiones: 'group-has-[#ventas-origen:checked]/ventas:hidden group-has-[#ventas-cupones:checked]/ventas:hidden',
+	origen: 'hidden group-has-[#ventas-origen:checked]/ventas:block',
+	cupones: 'hidden group-has-[#ventas-cupones:checked]/ventas:block',
+};
+---
+
+<section class:list={['group/ventas animate-fade-up rounded-[1.75rem] bg-surface p-5 sm:p-6', className]} style={`animation-delay: ${delay}ms`} aria-labelledby="desglose-ventas">
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<h2 id="desglose-ventas" class="text-lg font-semibold tracking-[-0.03em] text-primary">Ventas por</h2>
+		<SegmentedToggle name="ventas" legend="Agrupar las ventas por" options={tabs.map((tab) => ({ id: tab.id, label: tab.label }))} />
+	</div>
+
+	{tabs.map((tab) => (
+		<div class:list={['mt-3', panelVisibility[tab.id]]}>
+			{tab.rows.length === 0 ? (
+				<p class="py-3 text-sm text-muted">{tab.emptyMessage}</p>
+			) : (
+				<ul class="divide-y divide-border">
+					{tab.rows.map((row) => (
+						<li class="flex items-center justify-between gap-4 py-3">
+							<div class="min-w-0">
+								<p class="truncate text-sm font-medium text-primary">{row.label}</p>
+								<p class="mt-0.5 truncate text-xs text-muted">{row.detail}</p>
+							</div>
+							<p class="shrink-0 text-sm font-semibold text-primary tabular-nums">{row.value}</p>
+						</li>
+					))}
+				</ul>
+			)}
+		</div>
+	))}
+</section>
