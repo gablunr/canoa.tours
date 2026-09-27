@@ -18,3 +18,4 @@ pnpm-debug.log*
 .vercel/
 
 supabase/migrations/20260926000000_init.sql
+.env*
