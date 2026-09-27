@@ -1,5 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../supabase/types';
+import { monthBounds } from '../calendar';
+
+export { formatMonthLabel, isValidMonth, leadingBlankDays, monthBounds, monthOf, shiftMonth } from '../calendar';
 
 export type CapacityProduct = {
 	id: string;
@@ -19,39 +22,6 @@ export type CapacityDay = {
 	closed: boolean;
 	note: string | null;
 };
-
-const monthPattern = /^(\d{4})-(0[1-9]|1[0-2])$/;
-
-export const monthOf = (isoDate: string) => isoDate.slice(0, 7);
-
-export function isValidMonth(month: string | null): month is string {
-	return month !== null && monthPattern.test(month);
-}
-
-export function shiftMonth(month: string, offset: number) {
-	const [year = 0, monthNumber = 1] = month.split('-').map(Number);
-	const shifted = new Date(Date.UTC(year, monthNumber - 1 + offset, 1));
-	return shifted.toISOString().slice(0, 7);
-}
-
-export function monthBounds(month: string) {
-	const first = `${month}-01`;
-	const nextFirst = new Date(`${shiftMonth(month, 1)}-01T00:00:00Z`);
-	const last = new Date(nextFirst.getTime() - 86_400_000).toISOString().slice(0, 10);
-	return { first, last };
-}
-
-const monthLabelFormatter = new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-
-export function formatMonthLabel(month: string) {
-	const label = monthLabelFormatter.format(new Date(`${month}-01T12:00:00Z`));
-	return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-export function leadingBlankDays(month: string) {
-	const weekday = new Date(`${month}-01T12:00:00Z`).getUTCDay();
-	return (weekday + 6) % 7;
-}
 
 export async function loadCapacityProducts(supabase: SupabaseClient<Database>): Promise<CapacityProduct[]> {
 	const { data, error } = await supabase

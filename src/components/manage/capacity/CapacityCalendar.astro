@@ -1,7 +1,8 @@
 ---
 import { formatBookingDate, formatTourDay } from '../../../lib/account/bookings';
 import { ChevronRight } from '@lucide/astro';
-import { leadingBlankDays, occupancyRatio, occupancyTone, type CapacityDay, type OccupancyTone } from '../../../lib/manage/capacity';
+import { leadingBlankDays, weekdays } from '../../../lib/calendar';
+import { occupancyRatio, occupancyTone, type CapacityDay, type OccupancyTone } from '../../../lib/manage/capacity';
 import { glassTile } from '../glass-classes';
 
 interface Props {
@@ -11,15 +12,6 @@ interface Props {
 
 const { month, days } = Astro.props;
 
-const weekdays = [
-	{ short: 'L', long: 'Lunes' },
-	{ short: 'M', long: 'Martes' },
-	{ short: 'X', long: 'Miércoles' },
-	{ short: 'J', long: 'Jueves' },
-	{ short: 'V', long: 'Viernes' },
-	{ short: 'S', long: 'Sábado' },
-	{ short: 'D', long: 'Domingo' },
-];
 const blanks = Array.from({ length: leadingBlankDays(month) });
 const barTones: Record<OccupancyTone, string> = { normal: 'bg-accent', high: 'bg-sun', full: 'bg-error' };
 const legend = [
