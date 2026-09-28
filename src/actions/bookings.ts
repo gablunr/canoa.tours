@@ -26,7 +26,7 @@ const bookingSelectionShape = {
 	hotelName: z.string().trim().min(1).max(200).optional(),
 	zoneSlug: z.string().trim().min(1).max(100).optional(),
 	insurance: z.boolean().default(false),
-	couponCode: z.string().trim().min(1).max(64).optional(),
+	couponCode: z.string().trim().toUpperCase().min(1).max(64).optional(),
 	paymentOption: z.enum(['deposit', 'full']).default('deposit'),
 };
 
@@ -110,13 +110,11 @@ function localToday(): string {
 	return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santo_Domingo' }).format(new Date());
 }
 
-const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, (character) => `\\${character}`);
-
 async function findCoupon(code: string): Promise<CouponRow | null> {
 	const { data, error } = await supabaseAdmin
 		.from('coupons')
 		.select('id, code, discount_type, discount_value, product_id, valid_from, valid_to, active')
-		.ilike('code', escapeLikePattern(code))
+		.eq('code', code)
 		.limit(1)
 		.maybeSingle();
 	if (error) throw error;
@@ -330,14 +328,14 @@ export const bookings = {
 		input: quoteInputSchema,
 		handler: async (input) => {
 			try {
-				const { bookable, pickup, coupon, couponValid, quote } = await priceSelection(input);
+				const { bookable, pickup, couponValid, quote } = await priceSelection(input);
 				return {
 					...quote,
 					currency: bookable.product.currency,
 					pickupZone: pickup.zoneName,
 					coupon: input.couponCode
 						? {
-								code: coupon?.code ?? input.couponCode,
+								code: input.couponCode,
 								valid: couponValid,
 								message: couponValid ? null : bookingErrorMessage('coupon_not_valid'),
 							}
