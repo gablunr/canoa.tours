@@ -1,7 +1,7 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { TEAM_EMAIL } from 'astro:env/server';
 import { z } from 'astro/zod';
-import sharp from 'sharp';
+import sharp, { type ResizeOptions } from 'sharp';
 import { avatarFolder } from '../lib/account/avatar';
 import { customerIdForUser, findOwnedBooking, isBookingOwner } from '../lib/account/bookings';
 import { loadBookingDetails, type BookingDetails } from '../lib/booking/booking-details';
@@ -18,18 +18,14 @@ import { publicMediaUrl } from '../lib/supabase/media';
 
 const bookingCode = z.string().trim().toUpperCase().min(4).max(20);
 const maxReviewPhotos = 5;
-const maxPhotoBytes = 5 * 1024 * 1024;
-const photoExtensions: Record<string, string> = {
-	'image/jpeg': 'jpg',
-	'image/png': 'png',
-	'image/webp': 'webp',
-	'image/avif': 'avif',
-};
+const maxPhotoBytes = 4 * 1024 * 1024;
+const reviewPhotoEdge = 1600;
+const acceptedPhotoTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 
 const reviewPhoto = z
 	.instanceof(File)
-	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
-	.refine((file) => file.size <= maxPhotoBytes, 'Cada foto puede pesar como máximo 5 MB.');
+	.refine((file) => acceptedPhotoTypes.has(file.type), 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
+	.refine((file) => file.size <= maxPhotoBytes, 'Cada foto puede pesar como máximo 4 MB.');
 
 const reviewPhotos = z
 	.array(z.instanceof(File))
@@ -42,7 +38,7 @@ const avatarEdge = 320;
 const avatarPhoto = z
 	.instanceof(File)
 	.refine((file) => file.size > 0, 'Elige una foto.')
-	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
+	.refine((file) => acceptedPhotoTypes.has(file.type), 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
 	.refine((file) => file.size <= maxAvatarBytes, 'La foto puede pesar como máximo 4 MB.');
 
 const roundMoney = (amount: number) => Math.round(amount * 100) / 100;
@@ -62,11 +58,11 @@ async function customerAvatar(userId: string) {
 	return data;
 }
 
-async function squareAvatar(photo: File): Promise<Buffer | null> {
+async function photoAsWebp(photo: File, resize: ResizeOptions): Promise<Buffer | null> {
 	try {
 		return await sharp(Buffer.from(await photo.arrayBuffer()), { limitInputPixels: 60_000_000 })
 			.rotate()
-			.resize(avatarEdge, avatarEdge, { fit: 'cover', position: 'attention' })
+			.resize(resize)
 			.webp({ quality: 80 })
 			.toBuffer();
 	} catch {
@@ -215,7 +211,7 @@ export const account = {
 			const { userId } = requireCustomerUser(context);
 			const customer = await customerAvatar(userId);
 
-			const avatar = await squareAvatar(photo);
+			const avatar = await photoAsWebp(photo, { width: avatarEdge, height: avatarEdge, fit: 'cover', position: 'attention' });
 			if (!avatar) throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos leer la foto. Prueba con una JPG o PNG.' });
 
 			const path = `${avatarFolder(customer.id)}${Date.now()}.webp`;
@@ -295,10 +291,12 @@ export const account = {
 
 			const uploadedPhotos: { review_id: string; storage_path: string; position: number }[] = [];
 			for (const [index, photo] of input.photos.entries()) {
-				const storagePath = `reviews/${review.id}/${index}.${photoExtensions[photo.type]}`;
+				const webp = await photoAsWebp(photo, { width: reviewPhotoEdge, height: reviewPhotoEdge, fit: 'inside', withoutEnlargement: true });
+				if (!webp) continue;
+				const storagePath = `reviews/${review.id}/${index}.webp`;
 				const { error: uploadError } = await supabaseAdmin.storage
 					.from('media')
-					.upload(storagePath, photo, { contentType: photo.type, upsert: false });
+					.upload(storagePath, webp, { contentType: 'image/webp', upsert: false });
 				if (uploadError) {
 					console.error('review photo upload failed', uploadError);
 					continue;

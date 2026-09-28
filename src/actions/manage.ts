@@ -149,6 +149,21 @@ async function assertNotLastAdmin(userId: string) {
 
 const refundOption = z.enum(['none', 'deposit_without_insurance', 'full']);
 
+async function removeReviewPhotos(reviewId: string) {
+	const { data: photos, error } = await supabaseAdmin.from('review_photos').select('storage_path').eq('review_id', reviewId);
+	if (error) failWithDbError(error);
+	if (photos.length === 0) return;
+
+	const { error: storageError } = await supabaseAdmin.storage.from('media').remove(photos.map((photo) => photo.storage_path));
+	if (storageError) {
+		console.error('review_photos_not_removed', { reviewId, storageError });
+		return;
+	}
+
+	const { error: deleteError } = await supabaseAdmin.from('review_photos').delete().eq('review_id', reviewId);
+	if (deleteError) console.error('review_photo_rows_not_removed', { reviewId, deleteError });
+}
+
 function refundAmountFor(details: BookingDetails, option: z.infer<typeof refundOption>) {
 	if (option === 'none') return 0;
 	if (option === 'full') return roundMoney(details.depositAmount);
@@ -464,6 +479,7 @@ export const manage = {
 				.eq('id', reviewId);
 			if (error) failWithDbError(error);
 
+			if (status === 'rejected') await removeReviewPhotos(reviewId);
 			if (status === 'published' || review.status === 'published') await triggerRebuild('Opinión moderada', userId);
 			return { reviewId, status };
 		},
