@@ -1,7 +1,7 @@
 ---
 import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Star } from '@lucide/astro';
 import type { TourListItem } from './tour-list-data';
-import { glassCircle } from '../glass-classes';
+import { glassCircle, glassTile } from '../glass-classes';
 
 interface Props {
 	tour: TourListItem;
@@ -16,7 +16,10 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 ---
 
 <li
-	class="group/row relative flex items-center gap-3 rounded-[1rem] p-1 pr-1.5 transition-colors duration-300 ease-smooth hover:bg-ink-200/60 has-[[data-tour-link]:focus-visible]:ring-2 has-[[data-tour-link]:focus-visible]:ring-accent sm:gap-3 sm:pr-2"
+	class:list={[
+		glassTile,
+		'group/row relative flex items-center gap-3 p-1.5 pr-2 transition-colors duration-300 ease-smooth hover:bg-ink-300/65 has-[[data-tour-link]:focus-visible]:ring-2 has-[[data-tour-link]:focus-visible]:ring-accent sm:pr-2.5',
+	]}
 	data-tour-row
 	data-tour-id={tour.id}
 	data-search={tour.searchText}
@@ -35,7 +38,7 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 		<h3 class="truncate text-sm leading-snug font-semibold tracking-[-0.015em] text-primary">
 			<a
 				href={`/manage/tours/${tour.id}`}
-				class="outline-none after:absolute after:inset-0 after:rounded-[1rem] group-data-[sorting]/panel:pointer-events-none"
+				class="outline-none after:absolute after:inset-0 after:rounded-[1.25rem] group-data-[sorting]/panel:pointer-events-none"
 				data-tour-link
 			>
 				{tour.name}

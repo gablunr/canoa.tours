@@ -63,7 +63,7 @@ const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-
 			<p class="px-3 pb-2 text-sm text-error" role="alert" data-sort-error hidden></p>
 			<p class="sr-only" aria-live="polite" data-sort-status></p>
 
-			<ol class="grid pb-0.5" aria-label={`Excursiones de ${group.destination.name}`} data-tour-rows>
+			<ol class="grid gap-1.5" aria-label={`Excursiones de ${group.destination.name}`} data-tour-rows>
 				{group.tours.map((tour) => <TourListRow tour={tour} />)}
 			</ol>
 		</section>
