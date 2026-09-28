@@ -1,0 +1,46 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import TourSelectField from './TourSelectField.astro';
+import { mostBookedPositions, type TourEditorData } from './tour-editor-data';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+}
+
+const { data, isAdmin } = Astro.props;
+const { row, mostBookedHolders } = data;
+const current = row.most_booked_position;
+const holders = Object.fromEntries(mostBookedHolders.map((holder) => [holder.position, holder.name]));
+const options = [
+	{ value: '', label: 'No aparece' },
+	...mostBookedPositions.map((position) => ({
+		value: String(position),
+		label: holders[position] ? `Puesto ${position}, ahora ${holders[position]}` : `Puesto ${position}`,
+	})),
+];
+const currentLabel = current === null ? 'No aparece.' : `Puesto ${current}.`;
+
+const panel = 'group/panel border-b border-border last:border-b-0';
+const panelSummary =
+	'flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset [&::-webkit-details-marker]:hidden';
+const panelChevron = 'text-muted transition-transform duration-300 ease-smooth group-open/panel:rotate-180';
+---
+
+<details class={panel} open>
+	<summary class={panelSummary}>Las más reservadas<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+	<div class="grid gap-3 px-5 pb-5">
+		{isAdmin && row.status === 'active' ? (
+			<div class="grid gap-2" data-most-booked-panel data-tour-id={row.id} data-holders={JSON.stringify(holders)} data-current={current ?? ''}>
+				<TourSelectField label="Puesto en la portada" name="mostBooked" options={options} value={current === null ? '' : String(current)} data-most-booked />
+				<p class="text-xs text-muted" data-most-booked-hint>Se guarda al elegir.</p>
+				<p class="text-xs" role="status" data-most-booked-status hidden></p>
+			</div>
+		) : (
+			<p class="text-sm leading-relaxed text-secondary">
+				{currentLabel}
+				{isAdmin && ' Solo las excursiones a la venta pueden salir aquí.'}
+			</p>
+		)}
+	</div>
+</details>

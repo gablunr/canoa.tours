@@ -377,4 +377,26 @@ export const tours = {
 			return { ok: true };
 		},
 	}),
+
+	setMostBooked: defineAction({
+		input: z.object({
+			id: z.uuid(),
+			position: z.number().int().min(1).max(4).nullable(),
+		}),
+		handler: async ({ id, position }, context) => {
+			const { userId } = requireStaff(context, tourAdmins);
+			const row = await requireTourRow(id);
+			if (row.most_booked_position === position) return { ok: true };
+
+			const { error } = await supabaseAdmin.rpc('admin_set_most_booked', {
+				p_user_id: userId,
+				p_product_id: id,
+				p_position: position as number,
+			});
+			if (error) failWithDbError(error, 'No se pudo cambiar el puesto.');
+
+			await triggerRebuild('Más reservadas cambiadas', userId);
+			return { ok: true };
+		},
+	}),
 };

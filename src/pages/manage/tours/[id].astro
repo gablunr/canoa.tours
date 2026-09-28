@@ -8,6 +8,7 @@ import TourEditorSidebar from '../../../components/manage/tours/TourEditorSideba
 import TourEditorToolbar from '../../../components/manage/tours/TourEditorToolbar.astro';
 import TourFaqsCard from '../../../components/manage/tours/TourFaqsCard.astro';
 import TourIncludesCard from '../../../components/manage/tours/TourIncludesCard.astro';
+import TourMostBookedPanel from '../../../components/manage/tours/TourMostBookedPanel.astro';
 import TourItineraryCard from '../../../components/manage/tours/TourItineraryCard.astro';
 import TourPhotosCard from '../../../components/manage/tours/TourPhotosCard.astro';
 import TourPickupCard from '../../../components/manage/tours/TourPickupCard.astro';
@@ -87,7 +88,9 @@ const editorTitle = data.details.shortName || data.details.title;
 				<TourDestinationPageCard data={data} />
 			</div>
 
-			<TourEditorSidebar data={data} isAdmin={isAdmin} />
+			<TourEditorSidebar data={data} isAdmin={isAdmin}>
+				<TourMostBookedPanel data={data} isAdmin={isAdmin} />
+			</TourEditorSidebar>
 		</form>
 
 		<ConfirmDialog
@@ -116,6 +119,8 @@ const editorTitle = data.details.shortName || data.details.title;
 
 <script>
 	import { initTourEditor } from '../../../scripts/manage/tour-editor';
+	import { initMostBooked } from '../../../scripts/manage/tour-most-booked';
 
 	document.querySelectorAll<HTMLElement>('[data-tour-editor]').forEach(initTourEditor);
+	document.querySelectorAll<HTMLElement>('[data-most-booked-panel]').forEach(initMostBooked);
 </script>
