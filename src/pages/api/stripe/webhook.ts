@@ -76,9 +76,11 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 async function handleEvent(event: Stripe.Event, origin: string) {
 	switch (event.type) {
 		case 'checkout.session.completed':
+		case 'checkout.session.async_payment_succeeded':
 			await handleCheckoutCompleted(event.data.object, origin);
 			break;
 		case 'checkout.session.expired':
+		case 'checkout.session.async_payment_failed':
 			await handleCheckoutExpired(event.data.object);
 			break;
 		case 'charge.refunded':
