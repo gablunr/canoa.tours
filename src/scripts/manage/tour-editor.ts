@@ -331,6 +331,7 @@ export function initTourEditor(root: HTMLElement) {
 					const section = form.querySelector<HTMLElement>(`[data-editor-section="${item.section}"]`);
 					return section ? [{ target: section, label: item.label }] : [];
 				});
+				if (sectionProblems[0]) focusField(sectionProblems[0].target);
 				showError('Está a la venta y tiene que seguir completa. Falta:', sectionProblems);
 				return false;
 			}
