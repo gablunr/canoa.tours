@@ -90,6 +90,7 @@ const maxUploadBytes = 10 * 1024 * 1024;
 const imageExtensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const mediaBucket = 'media';
 const rotatedOrientations = new Set([5, 6, 7, 8]);
+const recentUploadMs = 60 * 60 * 1000;
 
 async function requireTourRow(id: string): Promise<TourRow> {
 	let row: TourRow | null = null;
@@ -124,17 +125,40 @@ function assertOwnImages(tourId: string, images: TourImage[]) {
 async function storedImagePaths(tourId: string) {
 	const prefix = tourImagePrefix(tourId);
 	const { data, error } = await supabaseAdmin.storage.from(mediaBucket).list(prefix.slice(0, -1), { limit: 1000 });
-	if (error) {
-		console.error('tour image listing failed', error);
-		return [];
-	}
+	if (error) throw error;
 	return data.filter((entry) => Boolean(entry.id)).map((entry) => `${prefix}${entry.name}`);
 }
 
-async function removeStoredImages(tourId: string, keptPaths: string[] = []) {
+async function assertImagesStored(tourId: string, images: TourImage[]) {
+	if (images.length === 0) return;
+	let stored: Set<string>;
+	try {
+		stored = new Set(await storedImagePaths(tourId));
+	} catch (error) {
+		console.error('tour image listing failed', error);
+		throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos comprobar las fotos. Prueba de nuevo.' });
+	}
+	if (images.some((image) => !stored.has(image.path))) {
+		throw new ActionError({ code: 'BAD_REQUEST', message: 'Una foto ya no está guardada. Quítala y súbela de nuevo.' });
+	}
+}
+
+function isRecentUpload(path: string) {
+	const uploadedAt = Number(path.split('/').pop()?.split('.')[0]);
+	return Number.isFinite(uploadedAt) && uploadedAt > Date.now() - recentUploadMs;
+}
+
+async function removeStoredImages(tourId: string, keptPaths: string[] = [], { keepRecentUploads = false } = {}) {
 	const kept = new Set(keptPaths);
 	const prefix = tourImagePrefix(tourId);
-	const unused = (await storedImagePaths(tourId)).filter((path) => path.startsWith(prefix) && !kept.has(path));
+	let stored: string[];
+	try {
+		stored = await storedImagePaths(tourId);
+	} catch (error) {
+		console.error('tour image listing failed', error);
+		return;
+	}
+	const unused = stored.filter((path) => path.startsWith(prefix) && !kept.has(path) && !(keepRecentUploads && isRecentUpload(path)));
 	if (unused.length === 0) return;
 	const { error } = await supabaseAdmin.storage.from(mediaBucket).remove(unused);
 	if (error) console.error('tour image removal failed', error);
@@ -264,6 +288,7 @@ export const tours = {
 			if (routeChanged && (row.published_at !== null || row.status === 'active')) failWithDbError({ message: 'slug_locked' });
 			if (content.slug !== current.content.slug) await assertSlugFreeOfGuides(content.slug);
 			assertOwnImages(id, images);
+			await assertImagesStored(id, images);
 			if (row.status === 'active') assertStillComplete({ content, operations: operations ?? current.operations, images });
 
 			const { data, error } = await supabaseAdmin.rpc('admin_save_tour', {
@@ -279,6 +304,7 @@ export const tours = {
 			await removeStoredImages(
 				id,
 				images.map((image) => image.path),
+				{ keepRecentUploads: true },
 			);
 			if (row.status === 'active') await triggerRebuild('Excursión editada', userId);
 			return readSaveResult(data);
