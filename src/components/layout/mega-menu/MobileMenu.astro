@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { ArrowUpRight, CalendarCheck, CalendarClock, ChevronDown, ChevronRight, CircleHelp, LogOut, MapPin, MessageCircle, ShieldCheck, Star, Ticket } from '@lucide/astro';
+import { ArrowUpRight, CalendarCheck, CalendarClock, ChevronDown, ChevronRight, CircleQuestionMark, LogOut, MapPin, MessageCircle, ShieldCheck, Star, Ticket } from '@lucide/astro';
 import { cancellationInsurancePriceLabel } from '../../../data/booking/booking-policy';
 import { company } from '../../../data/site/company';
 import { destinationHref, destinationImage, destinations, lowestFromPrice } from '../../../data/tours/destinations';
@@ -104,7 +104,7 @@ const photo = 'absolute inset-0 -z-10 size-full object-cover saturate-150 contra
 				<span class={tileText}>Con el seguro de {cancellationInsurancePriceLabel} por persona.</span>
 			</a>
 			<a href={faqLink.href} class:list={[tile, 'md:col-span-2']}>
-				<CircleHelp size={18} class={tileIcon} aria-hidden="true" />
+				<CircleQuestionMark size={18} class={tileIcon} aria-hidden="true" />
 				<span class={tileTitle}>{faqLink.label}</span>
 				<span class={tileText}>Pagos, recogida, mal tiempo y cancelaciones.</span>
 			</a>
