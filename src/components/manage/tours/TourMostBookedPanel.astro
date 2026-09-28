@@ -1,5 +1,6 @@
 ---
 import { ChevronDown } from '@lucide/astro';
+import { glassChipButton } from '../glass-classes';
 import TourSelectField from './TourSelectField.astro';
 import { mostBookedPositions, type TourEditorData } from './tour-editor-data';
 
@@ -33,7 +34,8 @@ const panelChevron = 'text-muted transition-transform duration-300 ease-smooth g
 		{isAdmin && row.status === 'active' ? (
 			<div class="grid gap-2" data-most-booked-panel data-tour-id={row.id} data-holders={JSON.stringify(holders)} data-current={current ?? ''}>
 				<TourSelectField label="Puesto en la portada" name="mostBooked" options={options} value={current === null ? '' : String(current)} data-most-booked />
-				<p class="text-xs text-muted" data-most-booked-hint>Se guarda al elegir.</p>
+				<p class="text-xs text-muted" data-most-booked-hint>Elige un puesto y guárdalo.</p>
+				<button type="button" class:list={[glassChipButton, 'w-fit']} data-most-booked-save disabled>Guardar puesto</button>
 				<p class="text-xs" role="status" data-most-booked-status hidden></p>
 			</div>
 		) : (

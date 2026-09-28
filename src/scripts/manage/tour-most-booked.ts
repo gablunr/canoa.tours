@@ -2,7 +2,7 @@ import { actions } from 'astro:actions';
 import { actionErrorMessage } from './form-helpers';
 import { requestSiteStatusRefresh } from './site-status';
 
-const idleHint = 'Se guarda al elegir.';
+const idleHint = 'Elige un puesto y guárdalo.';
 
 function parseHolders(value: string | undefined): Record<string, string> {
 	try {
@@ -17,8 +17,9 @@ export function initMostBooked(panel: HTMLElement) {
 	const select = panel.querySelector<HTMLSelectElement>('[data-most-booked]');
 	const hint = panel.querySelector<HTMLElement>('[data-most-booked-hint]');
 	const status = panel.querySelector<HTMLElement>('[data-most-booked-status]');
+	const saveButton = panel.querySelector<HTMLButtonElement>('[data-most-booked-save]');
 	const tourId = panel.dataset.tourId;
-	if (!select || !tourId) return;
+	if (!select || !saveButton || !tourId) return;
 
 	const holders = parseHolders(panel.dataset.holders);
 	let current = panel.dataset.current ?? '';
@@ -39,15 +40,23 @@ export function initMostBooked(panel: HTMLElement) {
 		});
 	};
 
-	select.addEventListener('change', async () => {
+	select.addEventListener('change', () => {
+		const replaced = select.value ? holders[select.value] : undefined;
+		if (hint) hint.textContent = replaced ? `Sustituye a ${replaced}, que deja de salir.` : idleHint;
+		saveButton.disabled = select.value === current;
+		setStatus(null);
+	});
+
+	saveButton.addEventListener('click', async () => {
 		const chosen = select.value;
-		const replaced = chosen ? holders[chosen] : undefined;
+		if (chosen === current) return;
 		select.disabled = true;
+		saveButton.disabled = true;
 		setStatus('Guardando…');
 		const { error } = await actions.tours.setMostBooked({ id: tourId, position: chosen ? Number(chosen) : null });
 		select.disabled = false;
 		if (error) {
-			select.value = current;
+			saveButton.disabled = false;
 			setStatus(actionErrorMessage(error), 'error');
 			return;
 		}
@@ -55,7 +64,7 @@ export function initMostBooked(panel: HTMLElement) {
 		if (chosen) delete holders[chosen];
 		current = chosen;
 		refreshOptions();
-		if (hint) hint.textContent = replaced ? `Sustituye a ${replaced}, que deja de salir.` : idleHint;
+		if (hint) hint.textContent = idleHint;
 		setStatus('Guardado, la web se actualiza en unos minutos.');
 		requestSiteStatusRefresh();
 	});
