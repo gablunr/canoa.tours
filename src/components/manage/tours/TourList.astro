@@ -1,8 +1,9 @@
 ---
-import { ArrowUpDown, ChevronLeft, ChevronRight, ExternalLink } from '@lucide/astro';
+import { ArrowUpDown, ExternalLink } from '@lucide/astro';
+import ListPager from '../ListPager.astro';
 import TourListRow from './TourListRow.astro';
 import type { TourListGroup } from './tour-list-data';
-import { glassChipButton, glassChipPrimaryButton, glassCircle, glassGroup, glassPanel } from '../glass-classes';
+import { glassChipButton, glassChipPrimaryButton, glassPanel } from '../glass-classes';
 
 interface Props {
 	groups: TourListGroup[];
@@ -12,7 +13,6 @@ interface Props {
 const { groups, canReorder } = Astro.props;
 
 const tourCountLabel = (count: number) => `${count} ${count === 1 ? 'excursión' : 'excursiones'}`;
-const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-40`;
 ---
 
 <div class="grid animate-fade-up gap-3" style="animation-delay: 160ms" data-tour-groups>
@@ -70,15 +70,4 @@ const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-
 	))}
 </div>
 
-<div class="flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-between" style="animation-delay: 200ms" data-tour-pager-bar>
-	<p class="px-2 text-xs text-muted tabular-nums" aria-live="polite" data-tour-pager-summary></p>
-	<nav class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']} aria-label="Páginas de excursiones" data-tour-pager hidden>
-		<button type="button" class={pageArrow} aria-label="Página anterior" data-tour-page-previous>
-			<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
-		</button>
-		<span class="flex items-center gap-0.5 sm:gap-1" data-tour-page-numbers></span>
-		<button type="button" class={pageArrow} aria-label="Página siguiente" data-tour-page-next>
-			<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
-		</button>
-	</nav>
-</div>
+<ListPager label="Páginas de excursiones" singular="excursión" plural="excursiones" class="animate-fade-up" data-tour-pager />

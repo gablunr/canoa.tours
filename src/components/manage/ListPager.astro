@@ -1,0 +1,35 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { glassCircle, glassGroup } from './glass-classes';
+
+interface Props {
+	label: string;
+	singular: string;
+	plural: string;
+	class?: string;
+	[key: `data-${string}`]: string | boolean | undefined;
+}
+
+const { label, singular, plural, class: className, ...dataAttributes } = Astro.props;
+const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-40`;
+---
+
+<div
+	class:list={['flex flex-col items-center gap-3 sm:flex-row sm:justify-between', className]}
+	data-list-pager
+	data-singular={singular}
+	data-plural={plural}
+	hidden
+	{...dataAttributes}
+>
+	<p class="px-2 text-xs text-muted tabular-nums" aria-live="polite" data-list-pager-summary></p>
+	<nav class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']} aria-label={label} data-list-pager-nav hidden>
+		<button type="button" class={pageArrow} aria-label="Página anterior" data-list-page-previous>
+			<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+		<span class="flex items-center gap-0.5 sm:gap-1" data-list-page-numbers></span>
+		<button type="button" class={pageArrow} aria-label="Página siguiente" data-list-page-next>
+			<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+	</nav>
+</div>

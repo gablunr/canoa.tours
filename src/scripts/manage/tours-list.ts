@@ -1,6 +1,5 @@
 import { actions } from 'astro:actions';
-import { paginationItems } from '../../lib/account/pagination';
-import { glassCircle } from '../../components/manage/glass-classes';
+import { initListPager } from './list-pager';
 import { actionErrorMessage, setBusy, showMessage, slugify, wireDialogClosing } from './form-helpers';
 
 interface CopySource {
@@ -34,25 +33,6 @@ function readJson<Value>(value: string | undefined, fallback: Value): Value {
 	}
 }
 
-function pageButton(page: number, current: number) {
-	const button = document.createElement('button');
-	button.type = 'button';
-	button.className = glassCircle;
-	button.textContent = String(page);
-	button.dataset.tourPage = String(page);
-	button.setAttribute('aria-label', `Página ${page}`);
-	if (page === current) button.setAttribute('aria-current', 'page');
-	return button;
-}
-
-function pageGap() {
-	const gap = document.createElement('span');
-	gap.className = 'flex size-8 items-center justify-center text-[13px] text-muted sm:size-9';
-	gap.textContent = '…';
-	gap.setAttribute('aria-hidden', 'true');
-	return gap;
-}
-
 function initListView(root: HTMLElement): ListView {
 	const input = root.querySelector<HTMLInputElement>('[data-tour-search]');
 	const results = root.querySelector<HTMLElement>('[data-tour-results]');
@@ -60,12 +40,6 @@ function initListView(root: HTMLElement): ListView {
 	const emptyPanel = root.querySelector<HTMLElement>('[data-tour-search-empty]');
 	const emptyText = root.querySelector<HTMLElement>('[data-tour-search-empty-text]');
 	const listPanel = root.querySelector<HTMLElement>('[data-tour-groups]');
-	const pagerBar = root.querySelector<HTMLElement>('[data-tour-pager-bar]');
-	const pager = root.querySelector<HTMLElement>('[data-tour-pager]');
-	const pagerSummary = root.querySelector<HTMLElement>('[data-tour-pager-summary]');
-	const pageNumbers = root.querySelector<HTMLElement>('[data-tour-page-numbers]');
-	const previousButton = root.querySelector<HTMLButtonElement>('[data-tour-page-previous]');
-	const nextButton = root.querySelector<HTMLButtonElement>('[data-tour-page-next]');
 	const filterButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-destination-filter]')];
 	const destinationSelect = root.querySelector<HTMLSelectElement>('[data-destination-select]');
 	const groups = [...root.querySelectorAll<HTMLElement>('[data-tour-group]')];
@@ -83,20 +57,6 @@ function initListView(root: HTMLElement): ListView {
 		if (page > 1) url.searchParams.set('pagina', String(page));
 		else url.searchParams.delete('pagina');
 		window.history.replaceState(window.history.state, '', url);
-	};
-
-	const renderPager = (totalPages: number, matchCount: number, firstShown: number, lastShown: number) => {
-		if (pagerBar) pagerBar.hidden = sortingGroup !== null || matchCount === 0;
-		if (pagerSummary) {
-			const countLabel = `${matchCount} ${matchCount === 1 ? 'excursión' : 'excursiones'}`;
-			pagerSummary.textContent = totalPages > 1 ? `${firstShown} a ${lastShown} de ${countLabel}` : countLabel;
-		}
-		if (pager) pager.hidden = totalPages <= 1;
-		if (previousButton) previousButton.disabled = page <= 1;
-		if (nextButton) nextButton.disabled = page >= totalPages;
-		pageNumbers?.replaceChildren(
-			...paginationItems(page, totalPages, 5).map((item) => (item.kind === 'gap' ? pageGap() : pageButton(item.page, page))),
-		);
 	};
 
 	const apply = () => {
@@ -144,19 +104,16 @@ function initListView(root: HTMLElement): ListView {
 		if (emptyPanel) emptyPanel.hidden = !term || matching.length > 0 || total === 0;
 		if (input) input.disabled = sortingGroup !== null;
 
-		renderPager(totalPages, matching.length, firstIndex + 1, firstIndex + shown.size);
+		renderPager({ page, totalPages, matchCount: matching.length, firstShown: firstIndex + 1, lastShown: firstIndex + shown.size, hidden: sortingGroup !== null });
 		if (!sortingGroup) syncUrl();
 	};
 
-	const goToPage = (nextPage: number) => {
+	const renderPager = initListPager(root.querySelector<HTMLElement>('[data-tour-pager]'), (nextPage) => {
 		page = nextPage;
 		apply();
-		if (document.activeElement instanceof HTMLButtonElement && document.activeElement.disabled) {
-			pageNumbers?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
-		}
 		const top = listPanel?.getBoundingClientRect().top ?? 0;
 		if (top < 0) listPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-	};
+	});
 
 	const clear = () => {
 		if (!input) return;
@@ -186,14 +143,6 @@ function initListView(root: HTMLElement): ListView {
 		destination = destinationSelect.value;
 		page = 1;
 		apply();
-	});
-	previousButton?.addEventListener('click', () => goToPage(page - 1));
-	nextButton?.addEventListener('click', () => goToPage(page + 1));
-	pageNumbers?.addEventListener('click', (event) => {
-		const button = (event.target as Element).closest<HTMLButtonElement>('[data-tour-page]');
-		if (!button) return;
-		goToPage(Number(button.dataset.tourPage));
-		pageNumbers.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
 	});
 
 	apply();
