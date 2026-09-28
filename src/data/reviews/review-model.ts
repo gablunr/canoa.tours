@@ -5,6 +5,7 @@ import { tourDetails, tourDetailsHref, tourProductKey, type TourDetails } from '
 export interface Review {
 	id: string;
 	author: string;
+	authorAvatarUrl: string | null;
 	rating: number;
 	title: string | null;
 	text: string;
@@ -30,6 +31,7 @@ export function reviewFromRow(row: PublishedReviewRow): Review | null {
 	return {
 		id: row.id,
 		author: row.authorName,
+		authorAvatarUrl: row.authorAvatarUrl,
 		rating: row.rating,
 		title: row.title,
 		text: row.body,

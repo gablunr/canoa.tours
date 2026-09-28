@@ -31,8 +31,11 @@ const expandedClamp = 'group-has-[:checked]/review:line-clamp-none';
 	{expandable && <input type="checkbox" id={expandId} class="sr-only" />}
 
 	<figcaption class="flex items-center gap-3">
-		<span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-[13px] font-semibold text-primary" aria-hidden="true">
+		<span class="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background text-[13px] font-semibold text-primary" aria-hidden="true">
 			{initials}
+			{review.authorAvatarUrl && (
+				<img src={review.authorAvatarUrl} alt="" width="36" height="36" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover" />
+			)}
 		</span>
 		<div class="min-w-0">
 			<p class="truncate text-[15px] font-semibold text-primary">{review.author}</p>

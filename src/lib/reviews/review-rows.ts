@@ -2,12 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from 'astro:env/client';
 import type { Database } from '../supabase/database.types';
 import type { RemoteImage } from '../images';
-import { remoteMediaImage } from '../supabase/media';
+import { publicMediaUrl, remoteMediaImage } from '../supabase/media';
 
 export interface PublishedReviewRow {
 	id: string;
 	verified: boolean;
 	authorName: string;
+	authorAvatarUrl: string | null;
 	rating: number;
 	title: string | null;
 	body: string;
@@ -21,6 +22,7 @@ interface PublishedReviewRecord {
 	id: string;
 	source: Database['public']['Enums']['review_source'];
 	author_name: string;
+	author_avatar_path: string | null;
 	rating: number;
 	title: string | null;
 	body: string;
@@ -32,7 +34,7 @@ interface PublishedReviewRecord {
 }
 
 export const publishedReviewColumns =
-	'id, source, author_name, rating, title, body, reply, published_at, created_at, product:products(key), review_photos(storage_path, position)';
+	'id, source, author_name, author_avatar_path, rating, title, body, reply, published_at, created_at, product:products(key), review_photos(storage_path, position)';
 
 export const publicReviewsClient = () => createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } });
 
@@ -45,6 +47,7 @@ export async function publishedReviewRow(record: PublishedReviewRecord): Promise
 		id: record.id,
 		verified: record.source === 'booking',
 		authorName: record.author_name,
+		authorAvatarUrl: record.author_avatar_path ? publicMediaUrl(record.author_avatar_path) : null,
 		rating: record.rating,
 		title: record.title,
 		body: record.body,

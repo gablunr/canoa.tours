@@ -82,6 +82,25 @@ async function removeAvatarFile(customerId: string, path: string | null) {
 	if (error) console.error('avatar removal failed', error);
 }
 
+async function customerAvatarPath(customerId: string) {
+	const { data, error } = await supabaseAdmin.from('customers').select('avatar_path').eq('id', customerId).maybeSingle();
+	if (error) failWithDbError(error);
+	return data?.avatar_path ?? null;
+}
+
+async function syncReviewAvatars(customerId: string, avatarPath: string) {
+	const { data: bookings, error } = await supabaseAdmin.from('bookings').select('id').eq('customer_id', customerId);
+	if (error) {
+		console.error('review avatar sync failed', error);
+		return;
+	}
+	if (bookings.length === 0) return;
+
+	const bookingIds = bookings.map((booking) => booking.id);
+	const { error: updateError } = await supabaseAdmin.from('reviews').update({ author_avatar_path: avatarPath }).in('booking_id', bookingIds);
+	if (updateError) console.error('review avatar sync failed', updateError);
+}
+
 const bookingNotFound = () => new ActionError({ code: 'NOT_FOUND', message: 'No encontramos esa reserva en tu cuenta.' });
 
 async function ownedBooking(user: { userId: string; email: string }, code: string): Promise<BookingDetails> {
@@ -214,6 +233,7 @@ export const account = {
 				failWithDbError(error);
 			}
 
+			await syncReviewAvatars(customer.id, path);
 			await removeAvatarFile(customer.id, customer.avatar_path);
 			return { avatarUrl: publicMediaUrl(path) };
 		},
@@ -253,6 +273,8 @@ export const account = {
 			if (existingError) failWithDbError(existingError);
 			if (existingReview) throw new ActionError({ code: 'CONFLICT', message: 'Ya has dejado tu opinión sobre esta reserva. ¡Gracias!' });
 
+			const authorAvatarPath = await customerAvatarPath(details.customerId);
+
 			const { data: review, error: insertError } = await supabaseAdmin
 				.from('reviews')
 				.insert({
@@ -260,6 +282,7 @@ export const account = {
 					booking_id: details.id,
 					product_id: details.productId,
 					author_name: input.authorName,
+					author_avatar_path: authorAvatarPath,
 					rating: input.rating,
 					title: input.title || null,
 					body: input.body,
