@@ -230,17 +230,17 @@ export interface TouristTripOptions {
 	name: string;
 	description: string;
 	offers: OfferOptions[];
-	imageUrl?: string;
+	imageUrls?: string[];
 	touristType?: string[];
 }
 
-export const touristTripSchema = ({ url, name, description, offers, imageUrl, touristType }: TouristTripOptions): SchemaNode => ({
+export const touristTripSchema = ({ url, name, description, offers, imageUrls = [], touristType }: TouristTripOptions): SchemaNode => ({
 	'@type': 'TouristTrip',
 	'@id': pageNodeIds(url).trip,
 	name,
 	description,
 	url,
-	...(imageUrl && { image: imageUrl }),
+	...(imageUrls.length > 0 && { image: imageUrls }),
 	provider: organizationReference,
 	...(touristType && touristType.length > 0 && { touristType }),
 	offers: offers.map(offerSchema),

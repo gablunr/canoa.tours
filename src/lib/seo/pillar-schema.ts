@@ -16,15 +16,16 @@ import {
 
 export async function tripNode(details: TourDetails): Promise<SchemaNode> {
 	const url = canonicalUrl(tourDetailsHref(details));
-	const photo = tourPhoto(details);
-	const image = photo && (await socialImage({ src: seoImageSource(photo), alt: details.imageAlt }));
+	const cover = tourPhoto(details);
+	const photos = details.images.length > 0 ? details.images : cover ? [{ image: cover, alt: details.imageAlt }] : [];
+	const images = await Promise.all(photos.map(({ image, alt }) => socialImage({ src: seoImageSource(image), alt })));
 
 	return touristTripSchema({
 		url,
 		name: details.title,
 		description: details.summary,
 		offers: tourOffers(details, url),
-		imageUrl: image?.url,
+		imageUrls: images.map((image) => image.url),
 		touristType: pillarPlaces[details.destination.id].touristType,
 	});
 }

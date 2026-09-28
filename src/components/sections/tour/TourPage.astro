@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
 import TourHeader from './TourHeader.astro';
 import TourHighlights from './TourHighlights.astro';
+import TourGallery from './TourGallery.astro';
 import TourFacts from './TourFacts.astro';
 import TourBooking from './TourBooking.astro';
 import TourIncludes from './TourIncludes.astro';
@@ -58,6 +59,7 @@ const trip = { ...(await tripNode(details)), mainEntityOfPage: reference(pageNod
 			<div class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_23rem] lg:grid-rows-[auto_1fr] lg:gap-x-16 xl:gap-x-20">
 				<div class="mx-auto w-full max-w-3xl space-y-12 lg:col-start-1 lg:mx-0 lg:max-w-none">
 					<TourHighlights details={details} />
+					<TourGallery title={details.title} photos={details.images} />
 					<TourFacts details={details} />
 				</div>
 				<aside id="reservar" aria-label="Reservar" class:list={['scroll-mt-20 lg:col-start-2 lg:row-span-2 lg:row-start-1', preview && 'opacity-60']} inert={preview}>
