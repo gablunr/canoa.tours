@@ -55,13 +55,19 @@ export function createEditorSession<Saved>({
 		onChange?.();
 	};
 
+	let saving = false;
+
 	const save = async () => {
+		if (saving) return false;
 		if (validate && !(await validate())) return false;
 
+		saving = true;
 		const revisionAtStart = revision;
 		setBusy(saveButton, true, savingText);
 		setSaveState(savingText);
-		const result = await persist();
+		const result = await persist().finally(() => {
+			saving = false;
+		});
 		setBusy(saveButton, false, '');
 		if (!result.ok) {
 			setSaveState(unsavedText);
