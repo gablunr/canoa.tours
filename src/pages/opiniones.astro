@@ -6,6 +6,7 @@ import EdgeWaves from '../components/ui/EdgeWaves.astro';
 import { reviewsLink } from '../data/site/navigation';
 import { reviewsIntroFor } from '../data/reviews/reviews-page';
 import { hasActiveReviewFilters, loadReviewPage, readReviewPageRequest, reviewPageHref } from '../lib/reviews/review-page';
+import { latestDate } from '../lib/format';
 
 export const prerender = false;
 
@@ -31,6 +32,7 @@ const canonicalPath = filtered ? undefined : reviewPageHref(reviewPage.filters, 
 	breadcrumbs={[{ name: reviewsLink.label, path: reviewsLink.href }]}
 	noindex={filtered}
 	canonicalPath={canonicalPath}
+	modifiedAt={latestDate(reviewPage.reviews.map((review) => review.date))}
 >
 	<EdgeWaves />
 	<PageHeader title={reviewsLink.label} intro={intro} />

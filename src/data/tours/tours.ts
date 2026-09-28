@@ -1,4 +1,4 @@
-import { formatPrice } from '../../lib/format';
+import { formatPrice, latestDate } from '../../lib/format';
 import type { SiteImage } from '../../lib/images';
 import { publishedPickupZones, publishedTourRows } from '../../lib/tours/published-tours';
 import { tourRowToDetails, type TourRow } from '../../lib/tours/tour-rows';
@@ -116,6 +116,8 @@ function detailsFromRow(row: TourRow): TourDetails[] {
 export const tourDetails: TourDetails[] = destinations.flatMap((destination) =>
 	publishedTourRows.filter((row) => row.destination_slug === destination.slug).flatMap(detailsFromRow),
 );
+
+export const toursUpdatedAt = latestDate(tourDetails.map((details) => details.updatedAt));
 
 export const destinationTourDetails = (destination: Destination) => tourDetails.filter((details) => details.destination.id === destination.id);
 

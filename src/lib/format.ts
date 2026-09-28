@@ -6,6 +6,8 @@ export const formatLongDate = (date: Date) => longDateFormatter.format(date);
 
 export const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
 
+export const latestDate = (dates: Date[]) => (dates.length > 0 ? new Date(Math.max(...dates.map((date) => date.getTime()))) : undefined);
+
 export function estimateReadingMinutes(text = '') {
 	const wordCount = text.split(/\s+/).filter(Boolean).length;
 	return Math.max(1, Math.round(wordCount / wordsPerMinute));

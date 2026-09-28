@@ -22,6 +22,32 @@ function readBuiltPage(outDirs: URL[], pageUrl: string): BuiltPage {
 	return { isIndexable: !noindexMeta.test(html), lastModified: html.match(dateModifiedField)?.[1] };
 }
 
+async function fetchLatestReviewDate(supabaseUrl: string, publishableKey: string) {
+	const endpoint = new URL('/rest/v1/reviews', supabaseUrl);
+	endpoint.search = new URLSearchParams({
+		select: 'published_at',
+		status: 'eq.published',
+		locale: 'eq.es',
+		published_at: 'not.is.null',
+		order: 'published_at.desc',
+		limit: '1',
+	}).toString();
+	const response = await fetch(endpoint, { headers: { apikey: publishableKey } });
+	if (!response.ok) return undefined;
+	const [latest] = (await response.json()) as { published_at: string }[];
+	return latest?.published_at;
+}
+
+export function latestReviewDateReader(supabaseUrl?: string, publishableKey?: string) {
+	let latest: Promise<string | undefined> | undefined;
+
+	return () => {
+		if (!supabaseUrl || !publishableKey) return Promise.resolve(undefined);
+		latest ??= fetchLatestReviewDate(supabaseUrl, publishableKey).catch(() => undefined);
+		return latest;
+	};
+}
+
 export function builtPageReader(...outDirs: URL[]) {
 	const pages = new Map<string, BuiltPage>();
 

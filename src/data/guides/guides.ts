@@ -1,4 +1,5 @@
 import type { SiteImage } from '../../lib/images';
+import { latestDate } from '../../lib/format';
 import { publishedGuideRows } from '../../lib/guides/published-guides';
 import { destinationHref, destinations, findDestination, type DestinationId } from '../tours/destinations';
 import { routes } from '../site/routes';
@@ -49,6 +50,8 @@ export const guides: Guide[] = publishedGuideRows.flatMap((row) =>
 			]
 		: [],
 );
+
+export const guidesUpdatedAt = latestDate(guides.map((guide) => guide.updatedAt ?? guide.publishedAt));
 
 function siloDetails(silo: GuideSilo) {
 	if (silo === 'general') return { anchor: 'planear-el-viaje', title: 'Planear el viaje' };

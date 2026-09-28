@@ -4,7 +4,9 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 import { legacyRedirects } from './src/data/site/redirects.ts';
-import { builtPageReader } from './src/lib/seo/sitemap.ts';
+import { builtPageReader, latestReviewDateReader } from './src/lib/seo/sitemap.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 import { satteri } from '@astrojs/markdown-satteri';
 import { contentTokensPlugin } from './src/lib/markdown-content-tokens.ts';
 
@@ -22,7 +24,14 @@ const watchContentTokenSources = {
 
 const buildStartedAt = new Date().toISOString();
 
-const serverRenderedIndexablePages = ['https://canoa.tours/opiniones'];
+const localEnvFile = new URL('./.env.local', import.meta.url);
+const env = { ...(existsSync(localEnvFile) ? parseEnv(readFileSync(localEnvFile, 'utf8')) : {}), ...process.env };
+
+const serverRenderedPageLastModified = {
+  'https://canoa.tours/opiniones': latestReviewDateReader(env.SUPABASE_URL, env.SUPABASE_PUBLISHABLE_KEY),
+};
+
+const serverRenderedIndexablePages = Object.keys(serverRenderedPageLastModified);
 
 const builtPage = builtPageReader(
   new URL('./dist/client/', import.meta.url),
@@ -39,7 +48,10 @@ export default defineConfig({
     sitemap({
       customPages: serverRenderedIndexablePages,
       filter: (pageUrl) => serverRenderedIndexablePages.includes(pageUrl) || builtPage(pageUrl).isIndexable,
-      serialize: (item) => ({ ...item, lastmod: builtPage(item.url).lastModified ?? item.lastmod }),
+      serialize: async (item) => ({
+        ...item,
+        lastmod: builtPage(item.url).lastModified ?? (await serverRenderedPageLastModified[item.url]?.()) ?? item.lastmod,
+      }),
     }),
   ],
   redirects: legacyRedirects,

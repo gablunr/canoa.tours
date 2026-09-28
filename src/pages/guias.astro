@@ -4,7 +4,7 @@ import PageHeader from '../components/sections/page/PageHeader.astro';
 import FeaturedGuide from '../components/sections/guides/FeaturedGuide.astro';
 import GuidesByDestination from '../components/sections/guides/GuidesByDestination.astro';
 import EdgeWaves from '../components/ui/EdgeWaves.astro';
-import { guides, guidesIntro } from '../data/guides/guides';
+import { guides, guidesIntro, guidesUpdatedAt } from '../data/guides/guides';
 import { catalogLink, guidesLink } from '../data/site/navigation';
 ---
 
@@ -13,6 +13,7 @@ import { catalogLink, guidesLink } from '../data/site/navigation';
 	description={guidesIntro}
 	pageType="CollectionPage"
 	breadcrumbs={[{ name: guidesLink.label, path: guidesLink.href }]}
+	modifiedAt={guidesUpdatedAt}
 	noindex={guides.length === 0}
 >
 	<EdgeWaves />

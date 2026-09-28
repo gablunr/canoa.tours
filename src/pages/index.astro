@@ -11,7 +11,11 @@ import BookingCta from '../components/sections/home/BookingCta.astro';
 import { faqs } from '../data/booking/faq';
 import { faqSchema } from '../lib/seo/structured-data';
 import { lowestFromPrice } from '../data/tours/destinations';
-import { formatPrice } from '../lib/format';
+import { formatPrice, latestDate } from '../lib/format';
+import { reviews } from '../data/reviews/reviews';
+import { tourDetails } from '../data/tours/tours';
+
+const homeUpdatedAt = latestDate([...tourDetails.map((details) => details.updatedAt), ...reviews.map((review) => review.date)]);
 ---
 
 <Layout
@@ -19,6 +23,7 @@ import { formatPrice } from '../lib/format';
 	description={`Excursiones desde Punta Cana a Isla Saona, Samaná, Santo Domingo o Coco Bongo, desde ${formatPrice(lowestFromPrice)}. Pagas un depósito online y el resto el día del tour.`}
 	pageType="FAQPage"
 	mainEntity={faqSchema(faqs)}
+	modifiedAt={homeUpdatedAt}
 	footerOverlapsPhoto
 >
 	<Hero />
