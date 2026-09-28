@@ -69,9 +69,10 @@ export async function createCheckoutSession(input: {
 	payInFull: boolean;
 	customer: { id: string; email: string; name: string; stripeCustomerId: string | null };
 	origin: string;
+	browserKey: string;
 }): Promise<{ id: string; clientSecret: string }> {
 	const stripeCustomerId = await ensureStripeCustomer(input.customer);
-	const metadata = { booking_id: input.bookingId, booking_code: input.bookingCode, kind: 'deposit' };
+	const metadata = { booking_id: input.bookingId, booking_code: input.bookingCode, kind: 'deposit', browser_key: input.browserKey };
 	const paymentDescription = input.payInFull
 		? `Reserva ${input.bookingCode}. Pago completo de la excursión.`
 		: `Reserva ${input.bookingCode}. Pago al reservar, el resto se paga el día del tour.`;
@@ -112,8 +113,9 @@ export async function createCheckoutSession(input: {
 	return { id: session.id, clientSecret: session.client_secret };
 }
 
-export async function closeUnpaidCheckoutSession(sessionId: string): Promise<boolean> {
+export async function closeUnpaidCheckoutSession(sessionId: string, browserKey: string): Promise<boolean> {
 	const session = await stripe.checkout.sessions.retrieve(sessionId);
+	if (session.metadata?.browser_key !== browserKey) return false;
 	if (session.status === 'complete') return false;
 	if (session.status === 'expired') return true;
 

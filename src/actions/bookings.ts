@@ -1,4 +1,5 @@
-import { ActionError, defineAction, type ActionErrorCode } from 'astro:actions';
+import type { AstroCookies } from 'astro';
+import { ActionError, defineAction, type ActionAPIContext, type ActionErrorCode } from 'astro:actions';
 import { z } from 'astro/zod';
 import { bookingPolicy, termsVersion } from '../data/booking/booking-policy';
 import { findActiveProductId, loadBookableProduct, loadPickupOptions, type BookableProduct } from '../lib/booking/catalog';
@@ -8,7 +9,10 @@ import { quoteBooking, type Quote, type QuoteInput } from '../lib/booking/pricin
 import { siteOrigin } from '../lib/site-origin';
 import { supabaseAdmin } from '../lib/supabase/admin';
 
-const maxPendingBookingsPerCustomer = 2;
+const maxPendingBookingsPerIp = 5;
+const pendingBookingWindowMs = 31 * 60 * 1000;
+const browserKeyCookie = 'canoa_booking_browser';
+const browserKeyMaxAgeSeconds = 30 * 24 * 60 * 60;
 
 const productKeyInput = z.string().trim().min(1).max(100);
 
@@ -201,14 +205,42 @@ async function priceSelection(selection: BookingSelection): Promise<PricedSelect
 	return { bookable, pickup, coupon, couponValid, quote: quoteBooking(quoteInput) };
 }
 
-async function countActivePendingBookings(customerId: string): Promise<number> {
-	const { count, error } = await supabaseAdmin
+function bookingBrowserKey(cookies: AstroCookies): string {
+	const existing = cookies.get(browserKeyCookie)?.value;
+	if (existing) return existing;
+
+	const browserKey = crypto.randomUUID();
+	cookies.set(browserKeyCookie, browserKey, { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: browserKeyMaxAgeSeconds });
+	return browserKey;
+}
+
+function clientIp(context: ActionAPIContext): string {
+	try {
+		return context.clientAddress;
+	} catch {
+		return 'unknown';
+	}
+}
+
+async function countActivePendingBookingsFromIp(ip: string): Promise<number> {
+	const { data: events, error } = await supabaseAdmin
+		.from('booking_events')
+		.select('booking_id')
+		.eq('type', 'checkout_created')
+		.eq('data->>ip', ip)
+		.gt('created_at', new Date(Date.now() - pendingBookingWindowMs).toISOString());
+	if (error) throw error;
+
+	const bookingIds = [...new Set((events ?? []).map((event) => event.booking_id))];
+	if (bookingIds.length === 0) return 0;
+
+	const { count, error: countError } = await supabaseAdmin
 		.from('bookings')
 		.select('id', { count: 'exact', head: true })
-		.eq('customer_id', customerId)
+		.in('id', bookingIds)
 		.eq('status', 'pending_payment')
 		.gt('expires_at', new Date().toISOString());
-	if (error) throw error;
+	if (countError) throw countError;
 	return count ?? 0;
 }
 
@@ -266,7 +298,7 @@ async function expireBooking(bookingId: string) {
 	if (error) console.error('booking_not_expired', { bookingId, error });
 }
 
-async function releaseUnpaidBookings(customerId: string, productId: string) {
+async function releaseUnpaidBookings(customerId: string, productId: string, browserKey: string) {
 	const { data, error } = await supabaseAdmin
 		.from('bookings')
 		.select('id, stripe_checkout_session_id')
@@ -279,7 +311,7 @@ async function releaseUnpaidBookings(customerId: string, productId: string) {
 
 	await Promise.all(
 		(data ?? []).map(async (booking) => {
-			if (booking.stripe_checkout_session_id && (await closeUnpaidCheckoutSession(booking.stripe_checkout_session_id))) {
+			if (booking.stripe_checkout_session_id && (await closeUnpaidCheckoutSession(booking.stripe_checkout_session_id, browserKey))) {
 				await expireBooking(booking.id);
 			}
 		}),
@@ -360,15 +392,15 @@ export const bookings = {
 				if (input.couponCode && !couponValid) throw bookingActionError('coupon_not_valid');
 
 				const email = input.email.trim().toLowerCase();
+				const browserKey = bookingBrowserKey(context.cookies);
+				const ip = clientIp(context);
 				const existingCustomer = await findCustomerByEmail(email);
-				if (existingCustomer) {
-					await releaseUnpaidBookings(existingCustomer.id, bookable.product.id);
-					if ((await countActivePendingBookings(existingCustomer.id)) >= maxPendingBookingsPerCustomer) {
-						throw new ActionError({
-							code: 'TOO_MANY_REQUESTS',
-							message: 'Ya tienes dos reservas pendientes de pago. Complétalas o espera unos minutos para hacer otra.',
-						});
-					}
+				if (existingCustomer) await releaseUnpaidBookings(existingCustomer.id, bookable.product.id, browserKey);
+				if ((await countActivePendingBookingsFromIp(ip)) >= maxPendingBookingsPerIp) {
+					throw new ActionError({
+						code: 'TOO_MANY_REQUESTS',
+						message: 'Hay varias reservas pendientes de pago desde tu conexión. Complétalas o espera unos minutos para hacer otra.',
+					});
 				}
 
 				const customer = await upsertCustomer(existingCustomer, {
@@ -427,6 +459,7 @@ export const bookings = {
 							stripeCustomerId: customer.stripe_customer_id,
 						},
 						origin: siteOrigin(context.url),
+						browserKey,
 					});
 				} catch (checkoutError) {
 					await expireBooking(created.id);
@@ -435,7 +468,7 @@ export const bookings = {
 
 				const { error: eventError } = await supabaseAdmin
 					.from('booking_events')
-					.insert({ booking_id: created.id, type: 'checkout_created', data: { session_id: checkout.id, amount: quote.depositAmount } });
+					.insert({ booking_id: created.id, type: 'checkout_created', data: { session_id: checkout.id, amount: quote.depositAmount, ip } });
 				if (eventError) console.error('checkout_event_not_recorded', { bookingId: created.id, eventError });
 
 				return {
