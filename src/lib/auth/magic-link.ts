@@ -4,6 +4,8 @@ import { magicLinkEmail } from '../email/templates/magic-link';
 import { routes } from '../../data/site/routes';
 
 const defaultNextPath = '/account';
+const maxLinksPerEmailPerHour = 5;
+const maxLinksPerIpPerHour = 20;
 const allowedNextSections = ['/account', '/manage', routes.reviews];
 
 function isInAllowedSection(path: string) {
@@ -21,6 +23,20 @@ export function safeNextPath(next: string | null): string {
 
 function isAlreadyRegisteredError(error: { code?: string; status?: number; message: string }) {
 	return error.code === 'email_exists' || error.code === 'user_already_exists' || /already (been )?registered/i.test(error.message);
+}
+
+export async function allowMagicLinkRequest(email: string, ip: string): Promise<boolean> {
+	const { data, error } = await supabaseAdmin.rpc('register_auth_link_request', {
+		p_email: email.trim().toLowerCase(),
+		p_ip: ip,
+		p_max_per_email: maxLinksPerEmailPerHour,
+		p_max_per_ip: maxLinksPerIpPerHour,
+	});
+	if (error) {
+		console.error('magic_link_rate_limit_failed', error);
+		return true;
+	}
+	return data;
 }
 
 export async function sendMagicLink(email: string, next: string, origin: string): Promise<void> {

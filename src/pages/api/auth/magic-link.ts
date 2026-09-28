@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
+import type { APIContext, APIRoute } from 'astro';
 import { z } from 'astro/zod';
-import { sendMagicLink } from '../../../lib/auth/magic-link';
+import { allowMagicLinkRequest, sendMagicLink } from '../../../lib/auth/magic-link';
 import { siteOrigin } from '../../../lib/site-origin';
 
 export const prerender = false;
@@ -21,10 +21,26 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
 	}
 }
 
-export const POST: APIRoute = async ({ request, url }) => {
+function clientIp(context: APIContext): string {
+	try {
+		return context.clientAddress;
+	} catch {
+		return 'unknown';
+	}
+}
+
+export const POST: APIRoute = async (context) => {
+	const { request, url } = context;
 	const parsed = magicLinkRequest.safeParse(await readBody(request));
 	if (!parsed.success) {
 		return Response.json({ ok: false, error: 'Escribe un email válido.' }, { status: 400 });
+	}
+
+	if (!(await allowMagicLinkRequest(parsed.data.email, clientIp(context)))) {
+		return Response.json(
+			{ ok: false, error: 'Has pedido varios enlaces seguidos. Espera un rato y vuelve a intentarlo.' },
+			{ status: 429 },
+		);
 	}
 
 	try {
