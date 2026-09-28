@@ -1,0 +1,32 @@
+---
+import ListEditor from '../form/ListEditor.astro';
+import ListEditorField from '../form/ListEditorField.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { saleMinimums, tourLimits } from '../../../lib/tours/tour-schema';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+---
+
+<TourEditorCard section="itinerary" title="Itinerario">
+	<ListEditor
+		name="itinerary"
+		label="Pasos"
+		itemLabel="paso"
+		items={data.editable.content.itinerary}
+		min={1}
+		max={tourLimits.itinerarySteps}
+		labelField="title"
+		hint={`Al menos ${saleMinimums.itinerarySteps} pasos para ponerla a la venta.`}
+	>
+		<Fragment slot="item">
+			<ListEditorField field="time" label="Hora" type="time" optional />
+			<ListEditorField field="title" label="Título" maxlength={tourLimits.itineraryTitleLength} />
+			<ListEditorField field="text" label="Qué pasa" multiline optional maxlength={tourLimits.itineraryTextLength} />
+		</Fragment>
+	</ListEditor>
+</TourEditorCard>

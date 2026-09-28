@@ -1,0 +1,20 @@
+---
+interface Props {
+	name: string;
+	label: string;
+	hint?: string;
+	checked?: boolean;
+	disabled?: boolean;
+	[attribute: `data-${string}`]: string | boolean | undefined;
+}
+
+const { name, label, hint, checked = false, disabled = false, ...dataAttributes } = Astro.props;
+---
+
+<label class="flex w-fit cursor-pointer items-start gap-3 has-disabled:cursor-default">
+	<input type="checkbox" id={`field-${name}`} name={name} checked={checked} disabled={disabled} class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary disabled:cursor-default" {...dataAttributes} />
+	<span class="text-sm leading-relaxed">
+		<span class="block font-medium text-primary">{label}</span>
+		{hint && <span class="block text-muted">{hint}</span>}
+	</span>
+</label>

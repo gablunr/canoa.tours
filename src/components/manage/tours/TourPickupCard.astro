@@ -1,0 +1,77 @@
+---
+import { Copy } from '@lucide/astro';
+import TourEditorCard from './TourEditorCard.astro';
+import TourReadOnlyFacts from './TourReadOnlyFacts.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { pickupFacts } from './tour-editor-labels';
+import { tourLimits } from '../../../lib/tours/tour-schema';
+import { glassControl } from '../glass-classes';
+import { fieldError, fieldHint, fieldInput } from '../form/field-classes';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+}
+
+const { data, isAdmin } = Astro.props;
+const { operations } = data.editable;
+const fees = new Map(operations.pickupFees.map((fee) => [fee.zoneId, fee.fee]));
+---
+
+{isAdmin ? (
+	<TourEditorCard section="pickup" title="Recogida por zona" description="El importe es por persona. 0 significa que va incluida.">
+		{data.feeSources.length > 0 && (
+			<label class:list={[glassControl, 'relative w-full gap-2 rounded-full pr-3 pl-3.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:w-fit']}>
+				<Copy size={15} stroke-width={1.75} class="shrink-0 text-muted" aria-hidden="true" />
+				<span class="sr-only">Copiar tarifas de otra excursión</span>
+				<select class="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-base outline-none sm:text-[13px]" data-copy-fees>
+					<option value="">Copiar tarifas de…</option>
+					{data.feeSources.map((source) => <option value={source.id}>{source.name}</option>)}
+				</select>
+			</label>
+		)}
+		<fieldset id="field-pickupFees" class="min-w-0 scroll-mt-24" data-field data-fee-sources={JSON.stringify(data.feeSources)}>
+			<legend class="sr-only">Zonas de recogida</legend>
+			<ul class="divide-y divide-border">
+				{data.zones.map((zone) => {
+					const fee = fees.get(zone.id);
+					return (
+						<li class="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-3 py-3 first:pt-0" data-field data-pickup-zone={zone.id}>
+							<label class="flex min-w-0 cursor-pointer items-start gap-3">
+								<input type="checkbox" name={`serves-${zone.id}`} checked={fee !== undefined} class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary" data-serves-zone />
+								<span class="min-w-0 text-sm leading-relaxed">
+									<span class="block font-medium text-primary">{zone.name}</span>
+									<span class="block text-xs text-muted">Recogemos aquí</span>
+								</span>
+							</label>
+							<div class="relative">
+								<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base text-muted sm:text-sm">US$</span>
+								<input
+									type="number"
+									id={`field-fee-${zone.id}`}
+									name={`fee-${zone.id}`}
+									inputmode="decimal"
+									step="0.01"
+									min="0"
+									max={tourLimits.maxMoney}
+									value={fee}
+									disabled={fee === undefined}
+									aria-label={`Importe por persona en ${zone.name}`}
+									class:list={[fieldInput, 'pl-12 tabular-nums disabled:opacity-50']}
+									data-zone-fee
+								/>
+							</div>
+							<p data-field-error class:list={[fieldError, 'col-span-2']} hidden></p>
+						</li>
+					);
+				})}
+			</ul>
+			<p class={fieldHint}>Al menos una zona para ponerla a la venta.</p>
+			<p data-field-error class={fieldError} hidden></p>
+		</fieldset>
+	</TourEditorCard>
+) : (
+	<TourEditorCard section="pickup" title="Recogida por zona" lockedNote="Solo un admin puede cambiar la recogida.">
+		<TourReadOnlyFacts facts={pickupFacts(operations, data.zones)} />
+	</TourEditorCard>
+)}

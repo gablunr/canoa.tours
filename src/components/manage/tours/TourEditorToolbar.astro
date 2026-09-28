@@ -1,0 +1,66 @@
+---
+import { ArrowLeft, Eye } from '@lucide/astro';
+import type { TourEditorData } from './tour-editor-data';
+import { tourStatusLabels } from './tour-editor-sections';
+import { glassButton, glassButtonPrimary, glassCircle, glassGroup } from '../glass-classes';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+	notice: string | null;
+	listHref: string;
+}
+
+const { data, isAdmin, notice, listHref } = Astro.props;
+const { status } = data.row;
+const statusLabel = tourStatusLabels[status];
+const isActive = status === 'active';
+const statusChip = {
+	active: 'bg-accent-soft text-accent-strong',
+	draft: 'bg-white/75 text-secondary',
+	archived: 'bg-ink-300/60 text-secondary',
+}[status];
+---
+
+<div class="z-40 flex flex-col-reverse gap-2 max-lg:fixed max-lg:inset-x-3 max-lg:bottom-[max(0.75rem,env(safe-area-inset-bottom))] lg:sticky lg:top-[4.25rem] lg:flex-col">
+	<div class:list={[glassGroup, 'flex items-center gap-1.5 rounded-full p-1.5']}>
+		<a href={listHref} class:list={[glassCircle, 'shrink-0']} aria-label="Volver a todas las excursiones" title="Todas las excursiones">
+			<ArrowLeft size={16} stroke-width={1.75} aria-hidden="true" />
+		</a>
+		<div class="flex min-w-0 flex-1 items-center gap-2 px-1.5">
+			<span class:list={['hidden h-7 shrink-0 items-center rounded-full px-3 text-xs font-medium sm:inline-flex', statusChip]}>{statusLabel}</span>
+			<span class="min-w-0 truncate text-xs text-secondary" role="status" data-save-state>
+				{notice ?? <span class="sm:hidden">{statusLabel}</span>}
+			</span>
+		</div>
+		<a
+			href={`/manage/tours/${data.row.id}/preview`}
+			target="_blank"
+			class:list={[glassButton, 'shrink-0 max-sm:size-9 max-sm:px-0']}
+			aria-label="Vista previa"
+			title="Vista previa"
+			data-preview-link
+		>
+			<Eye size={15} stroke-width={1.75} aria-hidden="true" />
+			<span class="max-sm:hidden">Vista previa</span>
+		</a>
+		<button type="submit" class:list={[isActive ? glassButtonPrimary : glassButton, 'shrink-0 max-sm:px-3.5']} data-save>
+			<span data-button-label>{isActive ? 'Actualizar' : 'Guardar'}</span>
+		</button>
+		{isAdmin && status === 'draft' && (
+			<button type="button" class:list={[glassButtonPrimary, 'shrink-0 max-sm:px-3.5']} data-publish>
+				<span data-button-label>Poner a la venta</span>
+			</button>
+		)}
+	</div>
+	<div class="grid gap-2">
+		<div class="rounded-2xl bg-[#fbe9e7] px-4 py-2.5 text-sm text-error" role="alert" data-editor-error hidden>
+			<p data-editor-error-text></p>
+			<ul class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1" data-editor-error-links></ul>
+		</div>
+		<p class="rounded-2xl bg-sun-soft px-4 py-2.5 text-sm text-primary" role="status" data-editor-notice hidden>
+			<span data-editor-notice-text></span>
+			<a href="/manage/departures" class="font-medium underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Ver salidas</a>
+		</p>
+	</div>
+</div>

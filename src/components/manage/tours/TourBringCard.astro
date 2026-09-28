@@ -1,0 +1,26 @@
+---
+import ListEditor from '../form/ListEditor.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { tourLimits } from '../../../lib/tours/tour-schema';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+---
+
+<TourEditorCard section="bring" title="Qué llevar">
+	<ListEditor
+		name="bring"
+		label="Qué llevar"
+		itemLabel="cosa"
+		items={data.editable.content.bring}
+		min={1}
+		max={tourLimits.bring}
+		maxlength={tourLimits.listItemLength}
+		suggestions={data.suggestions.bring}
+		hint="Recomendado. Ayuda a llegar preparado."
+	/>
+</TourEditorCard>

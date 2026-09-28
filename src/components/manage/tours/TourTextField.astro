@@ -1,0 +1,49 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { fieldError, fieldHint, fieldInput, fieldLabel, fieldOptional } from '../form/field-classes';
+
+interface Props extends Omit<HTMLAttributes<'input'>, 'id' | 'class' | 'name' | 'value'> {
+	label: string;
+	name: string;
+	value?: string | number | null;
+	hint?: string;
+	optional?: boolean;
+	counter?: boolean;
+	prefix?: string;
+}
+
+const { label, name, value, hint, optional = false, counter = false, prefix, maxlength, ...attributes } = Astro.props;
+
+const inputId = `field-${name}`;
+const hintId = `${inputId}-hint`;
+const errorId = `${inputId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+const initialLength = String(value ?? '').length;
+---
+
+<div data-field class="min-w-0">
+	<label for={inputId} class={fieldLabel}>
+		{label}
+		{counter ? (
+			<span class="text-xs font-normal text-muted tabular-nums">
+				<span data-count-for={inputId}>{initialLength}</span>{maxlength ? `/${maxlength}` : ''}
+			</span>
+		) : (
+			optional && <span class={fieldOptional}>Opcional</span>
+		)}
+	</label>
+	<div class="relative mt-1.5">
+		{prefix && <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base text-muted sm:text-sm">{prefix}</span>}
+		<input
+			{...attributes}
+			id={inputId}
+			name={name}
+			value={value ?? undefined}
+			maxlength={maxlength}
+			aria-describedby={describedBy}
+			class:list={[fieldInput, prefix && 'pl-12']}
+		/>
+	</div>
+	{hint && <p id={hintId} class={fieldHint}>{hint}</p>}
+	<p id={errorId} data-field-error class={fieldError} hidden></p>
+</div>

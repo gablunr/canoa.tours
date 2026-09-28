@@ -1,0 +1,39 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import type { HTMLAttributes } from 'astro/types';
+import { fieldError, fieldHint, fieldInput, fieldLabel, fieldOptional } from '../form/field-classes';
+
+interface Props extends Omit<HTMLAttributes<'select'>, 'id' | 'class' | 'name' | 'value'> {
+	label: string;
+	name: string;
+	options: readonly { value: string; label: string }[];
+	value?: string | null;
+	hint?: string;
+	optional?: boolean;
+}
+
+const { label, name, options, value, hint, optional = false, ...attributes } = Astro.props;
+
+const selectId = `field-${name}`;
+const hintId = `${selectId}-hint`;
+const errorId = `${selectId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+const selectedValue = value ?? '';
+---
+
+<div data-field class="min-w-0">
+	<label for={selectId} class={fieldLabel}>
+		{label}
+		{optional && <span class={fieldOptional}>Opcional</span>}
+	</label>
+	<div class="relative mt-1.5">
+		<select {...attributes} id={selectId} name={name} aria-describedby={describedBy} class:list={[fieldInput, 'cursor-pointer appearance-none pr-9 disabled:cursor-default disabled:opacity-70']}>
+			{options.map((option) => (
+				<option value={option.value} selected={option.value === selectedValue}>{option.label}</option>
+			))}
+		</select>
+		<ChevronDown size={16} stroke-width={1.75} class="pointer-events-none absolute top-3 right-3 text-muted" aria-hidden="true" />
+	</div>
+	{hint && <p id={hintId} class={fieldHint}>{hint}</p>}
+	<p id={errorId} data-field-error class={fieldError} hidden></p>
+</div>

@@ -1,0 +1,58 @@
+---
+import WeekdayPicker from '../form/WeekdayPicker.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import TourReadOnlyFacts from './TourReadOnlyFacts.astro';
+import TourSelectField from './TourSelectField.astro';
+import TourTextField from './TourTextField.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { durationOptions, portOptions, scheduleFacts } from './tour-editor-labels';
+import { tourLimits } from '../../../lib/tours/tour-schema';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+}
+
+const { data, isAdmin } = Astro.props;
+const { operations } = data.editable;
+const { schedule } = operations;
+---
+
+{isAdmin ? (
+	<TourEditorCard section="schedule" title="Horario y salidas">
+		<WeekdayPicker label="Días de salida" selected={schedule.weekdays} />
+		<div class="grid gap-5 sm:grid-cols-3">
+			<TourTextField label="Recogida desde" name="startTime" type="time" value={schedule.startTime} />
+			<TourTextField label="Recogida hasta" name="pickupTo" type="time" value={schedule.pickupTo} />
+			<TourTextField label="Vuelta" name="returnAt" type="time" value={schedule.returnAt} hint="Las de noche pueden volver de madrugada." />
+		</div>
+		<div class="grid gap-5 sm:grid-cols-2">
+			<TourSelectField label="Duración" name="durationCategory" options={durationOptions} value={operations.durationCategory} />
+			<TourTextField
+				label="Horas"
+				name="durationHours"
+				type="number"
+				inputmode="decimal"
+				min="0.5"
+				max={tourLimits.durationHours}
+				step="0.5"
+				value={operations.durationHours}
+			/>
+		</div>
+		<div class="grid gap-5 sm:grid-cols-2">
+			<TourSelectField label="Puerto de salida" name="departurePort" options={portOptions} value={operations.departurePort} />
+			<TourTextField
+				label="Punto de encuentro"
+				name="meetingPoint"
+				value={operations.meetingPoint}
+				maxlength={tourLimits.meetingPointLength}
+				autocomplete="off"
+				placeholder="Muelle de Bayahibe"
+			/>
+		</div>
+	</TourEditorCard>
+) : (
+	<TourEditorCard section="schedule" title="Horario y salidas" lockedNote="Solo un admin puede cambiar el horario.">
+		<TourReadOnlyFacts facts={scheduleFacts(operations)} />
+	</TourEditorCard>
+)}

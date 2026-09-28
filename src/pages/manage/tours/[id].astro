@@ -1,0 +1,121 @@
+---
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import ConfirmDialog from '../../../components/manage/ConfirmDialog.astro';
+import TourBasicsCard from '../../../components/manage/tours/TourBasicsCard.astro';
+import TourBringCard from '../../../components/manage/tours/TourBringCard.astro';
+import TourDestinationPageCard from '../../../components/manage/tours/TourDestinationPageCard.astro';
+import TourEditorSidebar from '../../../components/manage/tours/TourEditorSidebar.astro';
+import TourEditorToolbar from '../../../components/manage/tours/TourEditorToolbar.astro';
+import TourFaqsCard from '../../../components/manage/tours/TourFaqsCard.astro';
+import TourIncludesCard from '../../../components/manage/tours/TourIncludesCard.astro';
+import TourItineraryCard from '../../../components/manage/tours/TourItineraryCard.astro';
+import TourPhotosCard from '../../../components/manage/tours/TourPhotosCard.astro';
+import TourPickupCard from '../../../components/manage/tours/TourPickupCard.astro';
+import TourPriceCard from '../../../components/manage/tours/TourPriceCard.astro';
+import TourRequirementsCard from '../../../components/manage/tours/TourRequirementsCard.astro';
+import TourScheduleCard from '../../../components/manage/tours/TourScheduleCard.astro';
+import { loadTourEditor, loadTourRow } from '../../../components/manage/tours/tour-editor-data';
+import { sectionAnchor, sidebarAnchor, tourEditorSections } from '../../../components/manage/tours/tour-editor-sections';
+import { destinationPathPrefix } from '../../../components/manage/tours/tour-list-data';
+import { glassChipButton } from '../../../components/manage/glass-classes';
+import { canOpenSection } from '../../../data/manage/sections';
+import { destinations } from '../../../data/tours/destinations';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'tours')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const row = await loadTourRow(Astro.params.id);
+if (!row) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const data = await loadTourEditor(row, Astro.locals.user?.id ?? null);
+const isAdmin = Astro.locals.staffRole === 'admin';
+const { status } = row;
+
+const doneNotices: Record<string, string> = {
+	published: 'A la venta, sale en la web en unos minutos',
+	archived: 'Archivada, deja de verse en la web en unos minutos',
+	restored: 'Restaurada como borrador',
+};
+const notice = doneNotices[Astro.url.searchParams.get('done') ?? ''] ?? null;
+const listHref = `/manage/tours?status=${status}`;
+const pathPrefixes = Object.fromEntries(destinations.map((destination) => [destination.slug, destinationPathPrefix(destination)]));
+const futureBookingsText =
+	data.futureBookings === 0
+		? 'No tiene reservas futuras.'
+		: data.futureBookings === 1
+			? 'La reserva futura que tiene sigue en pie.'
+			: `Las ${data.futureBookings} reservas futuras que tiene siguen en pie.`;
+const editorTitle = data.details.shortName || data.details.title;
+---
+
+<ManageLayout title={editorTitle} section="tours">
+	<div
+		data-tour-editor
+		data-tour-id={row.id}
+		data-tour-status={status}
+		data-role={isAdmin ? 'admin' : 'editor'}
+		data-initial={JSON.stringify(data.editable)}
+		data-zones={JSON.stringify(data.zones)}
+		data-taken-slugs={JSON.stringify(data.takenSlugs)}
+		data-path-prefixes={JSON.stringify(pathPrefixes)}
+	>
+		<form class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]" novalidate data-tour-form>
+			<div class="lg:col-span-2">
+				<TourEditorToolbar data={data} isAdmin={isAdmin} notice={notice} listHref={listHref} />
+			</div>
+
+			<div class="grid min-w-0 gap-4">
+				<nav aria-label="Secciones" class="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
+					<ul class="flex w-max gap-1.5">
+						<li><a href={`#${sidebarAnchor}`} class={glassChipButton}>Estado</a></li>
+						{tourEditorSections.map((section) => (
+							<li><a href={`#${sectionAnchor(section.id)}`} class={glassChipButton}>{section.label}</a></li>
+						))}
+					</ul>
+				</nav>
+				<TourBasicsCard data={data} />
+				<TourPhotosCard data={data} />
+				<TourPriceCard data={data} isAdmin={isAdmin} />
+				<TourScheduleCard data={data} isAdmin={isAdmin} />
+				<TourPickupCard data={data} isAdmin={isAdmin} />
+				<TourIncludesCard data={data} />
+				<TourBringCard data={data} />
+				<TourItineraryCard data={data} />
+				<TourRequirementsCard data={data} />
+				<TourFaqsCard data={data} />
+				<TourDestinationPageCard data={data} />
+			</div>
+
+			<TourEditorSidebar data={data} isAdmin={isAdmin} />
+		</form>
+
+		<ConfirmDialog
+			name="price-changes"
+			title="¿Cambiar los precios?"
+			description="Se aplica a las reservas nuevas desde ahora. Las ya hechas mantienen su precio."
+			confirmLabel="Guardar cambios"
+		>
+			<ul class="mt-4 grid gap-1.5 rounded-2xl bg-background px-4 py-3 text-sm text-primary tabular-nums" data-price-change-list></ul>
+		</ConfirmDialog>
+		<ConfirmDialog
+			name="archive"
+			title="¿Archivar la excursión?"
+			description={`${status === 'active' ? 'Deja de verse en la web en unos minutos y no admite reservas nuevas.' : 'No admite reservas nuevas.'} ${futureBookingsText}`}
+			confirmLabel="Archivar"
+		/>
+		<ConfirmDialog
+			name="remove"
+			title="¿Borrar el borrador?"
+			description="Se borran los textos, precios y fotos. No se puede deshacer."
+			confirmLabel="Borrar"
+			variant="danger"
+		/>
+	</div>
+</ManageLayout>
+
+<script>
+	import { initTourEditor } from '../../../scripts/manage/tour-editor';
+
+	document.querySelectorAll<HTMLElement>('[data-tour-editor]').forEach(initTourEditor);
+</script>

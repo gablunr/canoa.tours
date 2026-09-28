@@ -1,0 +1,60 @@
+---
+import TourCheckbox from './TourCheckbox.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import TourTextField from './TourTextField.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { pregnancyOptions } from './tour-editor-labels';
+import { tourLimits } from '../../../lib/tours/tour-schema';
+import { glassRadioOption } from '../glass-classes';
+import { fieldError } from '../form/field-classes';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+const { content } = data.editable;
+---
+
+<TourEditorCard section="requirements" title="Requisitos">
+	<div class="grid gap-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
+		<TourTextField
+			label="Edad mínima"
+			name="minAge"
+			type="number"
+			inputmode="numeric"
+			min="0"
+			max={tourLimits.maxAge}
+			step="1"
+			value={content.minAge}
+			optional
+		/>
+		<TourTextField
+			label="Nota sobre la edad"
+			name="ageNote"
+			value={content.ageNote}
+			maxlength={tourLimits.noteLength}
+			optional
+			autocomplete="off"
+			placeholder="Los menores van con un adulto"
+		/>
+	</div>
+
+	<fieldset id="field-pregnancy" class="min-w-0" data-field>
+		<legend class="text-[13px] font-medium text-primary">Embarazadas</legend>
+		<div class="mt-2 flex flex-wrap items-center gap-1.5">
+			{pregnancyOptions.map((option) => (
+				<label class={glassRadioOption}>
+					<input type="radio" name="pregnancy" value={option.value} checked={content.pregnancy === option.value} class="sr-only" data-pregnancy />
+					{option.label}
+				</label>
+			))}
+		</div>
+		<p data-field-error class={fieldError} hidden></p>
+	</fieldset>
+	<div class="max-w-40" hidden={content.pregnancy !== 'limited'} data-pregnancy-months>
+		<TourTextField label="Hasta el mes" name="pregnancyMaxMonths" type="number" inputmode="numeric" min="1" max="9" step="1" value={content.pregnancyMaxMonths} />
+	</div>
+
+	<TourCheckbox name="wheelchair" label="Pueden ir personas en silla de ruedas" checked={content.wheelchair} />
+</TourEditorCard>

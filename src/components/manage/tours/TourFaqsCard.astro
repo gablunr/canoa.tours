@@ -1,0 +1,38 @@
+---
+import ListEditor from '../form/ListEditor.astro';
+import ListEditorField from '../form/ListEditorField.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { saleMinimums, tourLimits } from '../../../lib/tours/tour-schema';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+---
+
+<TourEditorCard section="faqs" title="Preguntas frecuentes">
+	<ListEditor
+		name="faqs"
+		label="Preguntas"
+		itemLabel="pregunta"
+		items={data.editable.content.faqs}
+		max={tourLimits.faqs}
+		labelField="question"
+		hint={`Recomendado: al menos ${saleMinimums.faqs}.`}
+	>
+		<Fragment slot="item">
+			<ListEditorField field="question" label="Pregunta" maxlength={tourLimits.questionLength} />
+			<ListEditorField field="answer" label="Respuesta" multiline rows={3} maxlength={tourLimits.answerLength} />
+		</Fragment>
+	</ListEditor>
+	{data.autoFaqQuestions.length > 0 && (
+		<div class="rounded-2xl bg-background p-4">
+			<p class="text-[13px] font-medium text-primary">Estas se añaden solas, no hace falta repetirlas</p>
+			<ul class="mt-2 grid gap-1 text-sm text-secondary">
+				{data.autoFaqQuestions.map((question) => <li>{question}</li>)}
+			</ul>
+		</div>
+	)}
+</TourEditorCard>

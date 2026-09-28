@@ -1,0 +1,39 @@
+---
+import ListEditor from '../form/ListEditor.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { saleMinimums, tourLimits } from '../../../lib/tours/tour-schema';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+const { content } = data.editable;
+---
+
+<TourEditorCard section="includes" title="Qué incluye y qué no">
+	<div class="grid gap-6 lg:grid-cols-2">
+		<ListEditor
+			name="includes"
+			label="Qué incluye"
+			itemLabel="elemento"
+			items={content.includes}
+			min={1}
+			max={tourLimits.includes}
+			maxlength={tourLimits.listItemLength}
+			suggestions={data.suggestions.includes}
+			hint={`Al menos ${saleMinimums.includes} para ponerla a la venta.`}
+		/>
+		<ListEditor
+			name="excludes"
+			label="Qué no incluye"
+			itemLabel="elemento"
+			items={content.excludes}
+			optional
+			max={tourLimits.excludes}
+			maxlength={tourLimits.listItemLength}
+			suggestions={data.suggestions.excludes}
+		/>
+	</div>
+</TourEditorCard>

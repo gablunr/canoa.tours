@@ -1,0 +1,97 @@
+---
+import MoneyField from '../form/MoneyField.astro';
+import TourCheckbox from './TourCheckbox.astro';
+import TourEditorCard from './TourEditorCard.astro';
+import TourReadOnlyFacts from './TourReadOnlyFacts.astro';
+import TourTextField from './TourTextField.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { priceFacts } from './tour-editor-labels';
+import { tourLimits } from '../../../lib/tours/tour-schema';
+import { glassRadioOption } from '../glass-classes';
+import { fieldError } from '../form/field-classes';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+}
+
+const { data, isAdmin } = Astro.props;
+const { operations } = data.editable;
+const perGroup = operations.pricingMode === 'per_group';
+const child = operations.prices.child;
+const pricingModeOptions = [
+	{ value: 'per_person', label: 'Por persona' },
+	{ value: 'per_group', label: 'Por grupo' },
+];
+---
+
+{isAdmin ? (
+	<TourEditorCard section="price" title="Precio">
+		<fieldset id="field-pricingMode" class="min-w-0" data-field>
+			<legend class="text-[13px] font-medium text-primary">Cómo se cobra</legend>
+			<div class="mt-2 flex flex-wrap gap-1.5">
+				{pricingModeOptions.map((option) => (
+					<label class={glassRadioOption}>
+						<input type="radio" name="pricingMode" value={option.value} checked={operations.pricingMode === option.value} class="sr-only" data-pricing-mode />
+						{option.label}
+					</label>
+				))}
+			</div>
+			<p data-field-error class={fieldError} hidden></p>
+		</fieldset>
+
+		<div hidden={!perGroup} data-group-only>
+			<TourTextField
+				label="Hasta cuántas personas"
+				name="maxGroupSize"
+				type="number"
+				inputmode="numeric"
+				min="1"
+				max={tourLimits.maxGroupSize}
+				step="1"
+				value={operations.maxGroupSize}
+			/>
+		</div>
+
+		<div class="grid gap-5 sm:grid-cols-2">
+			<MoneyField label={perGroup ? 'Precio del grupo' : 'Precio del adulto'} name="basePrice" value={operations.prices.base} required max={tourLimits.maxMoney} />
+			<TourTextField
+				label="Texto junto al precio"
+				name="priceUnit"
+				value={operations.priceUnit}
+				maxlength={tourLimits.priceUnitLength}
+				placeholder={perGroup ? 'por grupo de hasta 6 personas' : 'por persona'}
+				autocomplete="off"
+			/>
+		</div>
+
+		<div class="grid gap-4" hidden={perGroup} data-person-only>
+			<TourCheckbox name="childPrice" label="Precio de niño" hint="Si no lo pones, los niños pagan como adultos." checked={child !== null} data-child-toggle />
+			<div class="grid gap-5 sm:grid-cols-3" hidden={child === null} data-child-fields>
+				<MoneyField label="Precio del niño" name="childAmount" value={child?.amount} required max={tourLimits.maxMoney} />
+				<TourTextField label="Desde (años)" name="childMinAge" type="number" inputmode="numeric" min="0" max={tourLimits.childMaxAge} step="1" value={child?.minAge} />
+				<TourTextField label="Hasta (años)" name="childMaxAge" type="number" inputmode="numeric" min="0" max={tourLimits.childMaxAge} step="1" value={child?.maxAge} />
+			</div>
+		</div>
+
+		<TourCheckbox name="infantsOccupySeat" label="Los bebés ocupan plaza" hint="Los bebés no pagan." checked={operations.infantsOccupySeat} />
+
+		<MoneyField
+			label="Depósito"
+			name="depositValue"
+			value={operations.depositValue}
+			required
+			max={tourLimits.maxMoney}
+			hint="Se paga al reservar. No puede superar el precio más bajo."
+		/>
+
+		<p class="rounded-2xl bg-background px-4 py-3 text-sm text-secondary">
+			<span class="text-muted">Así se verá en la ficha:</span>
+			<span class="font-medium text-primary" data-price-sample></span>
+		</p>
+	</TourEditorCard>
+) : (
+	<TourEditorCard section="price" title="Precio" lockedNote="Solo un admin puede cambiar precios.">
+		<TourReadOnlyFacts facts={priceFacts(operations)} />
+	</TourEditorCard>
+)}

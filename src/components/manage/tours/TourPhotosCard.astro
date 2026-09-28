@@ -1,0 +1,78 @@
+---
+import { ArrowDown, ArrowUp, ImagePlus } from '@lucide/astro';
+import TourEditorCard from './TourEditorCard.astro';
+import TourTextField from './TourTextField.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { idealImageCount, tourLimits } from '../../../lib/tours/tour-schema';
+import { glassChipButton, glassCircle } from '../glass-classes';
+import { fieldError, fieldInput, fieldLabel } from '../form/field-classes';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+const photoButton = [glassCircle, 'cursor-pointer disabled:pointer-events-none disabled:opacity-40'];
+---
+
+<TourEditorCard section="photos" title="Fotos" description={`La primera es la portada. Lo ideal son ${idealImageCount} o más.`}>
+	<div
+		id="field-photos"
+		class="grid min-w-0 scroll-mt-24 gap-4"
+		data-field
+		data-photos
+		data-photos-initial={JSON.stringify(data.photos)}
+		data-photo-limit={tourLimits.images}
+	>
+		<label
+			class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border-strong px-4 py-7 text-center transition-colors duration-300 ease-smooth hover:border-muted has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent data-dragging:border-primary data-dragging:bg-ink-100"
+			data-photo-drop
+		>
+			<ImagePlus size={22} stroke-width={1.75} class="text-muted" aria-hidden="true" />
+			<span class="text-sm font-medium text-primary">Suelta las fotos aquí o elígelas</span>
+			<span class="text-xs text-muted">JPG, PNG o WebP de hasta 25 MB. Se reducen a 2400 px antes de subir.</span>
+			<input type="file" accept="image/jpeg,image/png,image/webp" multiple class="sr-only" data-photo-input />
+		</label>
+
+		<p class="text-xs text-muted" data-photo-summary></p>
+		<ol class="grid gap-3 xl:grid-cols-2" data-photo-list></ol>
+		<p id="field-photos-error" data-field-error class={fieldError} hidden></p>
+		<p class="sr-only" aria-live="polite" data-photo-status></p>
+
+		<template data-photo-template>
+			<li class="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 rounded-2xl border border-border p-3 sm:grid-cols-[7.5rem_minmax(0,1fr)]" data-photo>
+				<div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-ink-100">
+					<img alt="" class="size-full object-cover" data-photo-image />
+					<span class="absolute top-1.5 left-1.5 rounded-full bg-primary/90 px-2 py-0.5 text-[11px] font-medium text-white" data-photo-cover-badge hidden>Portada</span>
+				</div>
+				<div class="min-w-0">
+					<div data-field>
+						<label class={fieldLabel} data-photo-alt-label>Texto alternativo</label>
+						<input type="text" maxlength={tourLimits.noteLength} autocomplete="off" placeholder="Qué se ve en la foto" class:list={[fieldInput, 'mt-1.5']} data-photo-alt />
+						<p data-field-error class={fieldError} hidden></p>
+					</div>
+					<p class="mt-1.5 text-xs text-secondary" data-photo-state hidden></p>
+					<div class="mt-2 h-1 overflow-hidden rounded-full bg-ink-200" data-photo-progress hidden>
+						<span class="block h-full w-1/3 animate-pulse rounded-full bg-primary"></span>
+					</div>
+					<div class="mt-2.5 flex flex-wrap items-center gap-1.5">
+						<button type="button" class:list={photoButton} data-photo-action="up"><ArrowUp size={15} stroke-width={1.75} aria-hidden="true" /></button>
+						<button type="button" class:list={photoButton} data-photo-action="down"><ArrowDown size={15} stroke-width={1.75} aria-hidden="true" /></button>
+						<button type="button" class={glassChipButton} data-photo-action="cover">Usar de portada</button>
+						<button type="button" class={glassChipButton} data-photo-action="remove">Quitar</button>
+					</div>
+				</div>
+			</li>
+		</template>
+	</div>
+
+	<TourTextField
+		label="Texto alternativo de la foto del destino"
+		name="imageAlt"
+		value={data.editable.content.imageAlt}
+		maxlength={tourLimits.noteLength}
+		optional
+		autocomplete="off"
+		hint="Se usa mientras la excursión no tenga fotos propias."
+	/>
+</TourEditorCard>

@@ -1,0 +1,60 @@
+---
+import TourEditorCard from './TourEditorCard.astro';
+import TourTextField from './TourTextField.astro';
+import type { TourEditorData } from './tour-editor-data';
+import { tourLimits, lowestTourPrice } from '../../../lib/tours/tour-schema';
+import { formatPrice } from '../../../lib/format';
+
+interface Props {
+	data: TourEditorData;
+}
+
+const { data } = Astro.props;
+const { content, operations } = data.editable;
+const lowest = lowestTourPrice(operations);
+const sampleCell = 'min-w-0 px-3 py-2.5 align-top';
+---
+
+<TourEditorCard section="destination-page" title={`En la página de ${data.destination.name}`} description="Salen en la tabla que compara las excursiones del destino.">
+	<TourTextField
+		label="Ideal para"
+		name="bestFor"
+		value={content.bestFor}
+		maxlength={tourLimits.bestForLength}
+		counter
+		autocomplete="off"
+		placeholder="Familias con niños pequeños"
+	/>
+	<TourTextField
+		label="Resumen de lo que incluye"
+		name="includesSummary"
+		value={content.includesSummary}
+		maxlength={tourLimits.includesSummaryLength}
+		counter
+		autocomplete="off"
+		placeholder="Barco, almuerzo y bebidas"
+	/>
+	<div class="min-w-0">
+		<p class="text-[13px] font-medium text-primary">Así sale en la comparativa</p>
+		<div class="mt-2 overflow-x-auto rounded-2xl border border-border">
+			<table class="w-full min-w-[32rem] text-left text-sm">
+				<thead class="bg-background text-xs text-muted">
+					<tr>
+						<th scope="col" class={sampleCell}>Excursión</th>
+						<th scope="col" class={sampleCell}>Ideal para</th>
+						<th scope="col" class={sampleCell}>Incluye</th>
+						<th scope="col" class={sampleCell}>Desde</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td class:list={[sampleCell, 'font-medium text-primary']} data-sample-name>{content.shortName || content.name}</td>
+						<td class:list={[sampleCell, 'text-secondary']} data-sample-best-for>{content.bestFor}</td>
+						<td class:list={[sampleCell, 'text-secondary']} data-sample-includes>{content.includesSummary}</td>
+						<td class:list={[sampleCell, 'whitespace-nowrap text-secondary tabular-nums']} data-sample-price>{lowest === null ? '' : formatPrice(lowest)}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</TourEditorCard>

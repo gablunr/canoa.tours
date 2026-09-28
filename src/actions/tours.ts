@@ -1,11 +1,35 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { z } from 'astro/zod';
+import sharp from 'sharp';
+import {
+	archiveBlockReason,
+	countActiveToursInDestination,
+	countFutureBookings,
+	findDestinationBySlug,
+	hasTourHistory,
+	loadTourRow,
+	tourImagePrefix,
+} from '../components/manage/tours/tour-editor-data';
 import { findDestinationById, mergeTourOrder, sortToursForDestination } from '../components/manage/tours/tour-list-data';
-import { destinations } from '../data/tours/destinations';
+import { destinations, type Destination } from '../data/tours/destinations';
 import { triggerRebuild } from '../lib/deploy-hook';
 import { requireStaff } from '../lib/manage/guards';
 import { supabaseAdmin } from '../lib/supabase/admin';
+import type { Json } from '../lib/supabase/database.types';
+import { publicMediaUrl } from '../lib/supabase/media';
 import type { StaffRole } from '../lib/supabase/types';
+import { tourRowToEditable, type TourRow } from '../lib/tours/tour-rows';
+import {
+	missingForSale,
+	toContentPayload,
+	toImagesPayload,
+	toOperationsPayload,
+	tourContentSchema,
+	tourImagesSchema,
+	tourOperationsSchema,
+	type TourEditable,
+	type TourImage,
+} from '../lib/tours/tour-schema';
 
 export const tourEditors: StaffRole[] = ['admin', 'editor'];
 export const tourAdmins: StaffRole[] = ['admin'];
@@ -60,6 +84,87 @@ export async function assertSlugFreeOfGuides(slug: string) {
 	const { data, error } = await supabaseAdmin.from('guides').select('id').eq('locale', 'es').eq('status', 'published').eq('slug', slug).limit(1);
 	if (error) failWithDbError(error);
 	if (data.length > 0) throw new ActionError({ code: 'CONFLICT', message: takenByGuideMessage });
+}
+
+const maxUploadBytes = 10 * 1024 * 1024;
+const imageExtensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const mediaBucket = 'media';
+const rotatedOrientations = new Set([5, 6, 7, 8]);
+
+async function requireTourRow(id: string): Promise<TourRow> {
+	let row: TourRow | null = null;
+	try {
+		row = await loadTourRow(id);
+	} catch (error) {
+		failWithDbError(error as DbError, 'No pudimos cargar la excursión.');
+	}
+	if (!row) throw new ActionError({ code: 'NOT_FOUND', message: rpcErrorMessages.product_not_found });
+	return row;
+}
+
+const missingLabels = (tour: TourEditable) =>
+	missingForSale(tour)
+		.required.map((item) => item.label)
+		.join(', ');
+
+function assertStillComplete(tour: TourEditable) {
+	const missing = missingLabels(tour);
+	if (missing) throw new ActionError({ code: 'BAD_REQUEST', message: `Está a la venta y tiene que seguir completa. Falta: ${missing}.` });
+}
+
+function assertOwnImages(tourId: string, images: TourImage[]) {
+	const prefix = tourImagePrefix(tourId);
+	const foreign = images.some((image) => {
+		const fileName = image.path.slice(prefix.length);
+		return !image.path.startsWith(prefix) || fileName.length === 0 || fileName.includes('/') || fileName.includes('..');
+	});
+	if (foreign) throw new ActionError({ code: 'BAD_REQUEST', message: 'Una de las fotos no es de esta excursión. Súbela de nuevo.' });
+}
+
+async function storedImagePaths(tourId: string) {
+	const prefix = tourImagePrefix(tourId);
+	const { data, error } = await supabaseAdmin.storage.from(mediaBucket).list(prefix.slice(0, -1), { limit: 1000 });
+	if (error) {
+		console.error('tour image listing failed', error);
+		return [];
+	}
+	return data.filter((entry) => Boolean(entry.id)).map((entry) => `${prefix}${entry.name}`);
+}
+
+async function removeStoredImages(tourId: string, keptPaths: string[] = []) {
+	const kept = new Set(keptPaths);
+	const prefix = tourImagePrefix(tourId);
+	const unused = (await storedImagePaths(tourId)).filter((path) => path.startsWith(prefix) && !kept.has(path));
+	if (unused.length === 0) return;
+	const { error } = await supabaseAdmin.storage.from(mediaBucket).remove(unused);
+	if (error) console.error('tour image removal failed', error);
+}
+
+async function updateDraftKey(tourId: string, destination: Destination, slug: string) {
+	const { error } = await supabaseAdmin.from('products').update({ key: `${destination.id}/${slug}` }).eq('id', tourId).is('published_at', null);
+	if (error) failWithDbError(error);
+}
+
+async function imageSize(buffer: Buffer) {
+	try {
+		const metadata = await sharp(buffer).metadata();
+		if (!metadata.width || !metadata.height) return null;
+		const rotated = rotatedOrientations.has(metadata.orientation ?? 1);
+		return rotated ? { width: metadata.height, height: metadata.width } : { width: metadata.width, height: metadata.height };
+	} catch {
+		return null;
+	}
+}
+
+function readSaveResult(data: Json) {
+	const result = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+	const futureBookings = Number(result.future_bookings_on_removed_weekdays ?? 0);
+	return { futureBookingsOnRemovedWeekdays: Number.isFinite(futureBookings) ? futureBookings : 0 };
+}
+
+async function setTourStatus(tourId: string, userId: string, status: TourRow['status']) {
+	const { error } = await supabaseAdmin.rpc('admin_set_tour_status', { p_product_id: tourId, p_user_id: userId, p_status: status });
+	if (error) failWithDbError(error, 'No se pudo cambiar el estado de la excursión.');
 }
 
 function destinationFor(id: string) {
@@ -134,6 +239,141 @@ export const tours = {
 
 			const touchesLiveTours = current.some((tour) => tour.status === 'active' && productIds.includes(tour.id));
 			if (touchesLiveTours) await triggerRebuild('Orden de excursiones cambiado', userId);
+			return { ok: true };
+		},
+	}),
+
+	save: defineAction({
+		input: z.object({
+			id: z.uuid(),
+			content: tourContentSchema,
+			operations: tourOperationsSchema.nullable().default(null),
+			images: tourImagesSchema,
+		}),
+		handler: async ({ id, content, operations, images }, context) => {
+			const { userId, role } = requireStaff(context, tourEditors);
+			if (operations && role !== 'admin') {
+				throw new ActionError({ code: 'FORBIDDEN', message: 'Solo un admin puede cambiar precios, horario y recogida.' });
+			}
+			const row = await requireTourRow(id);
+			const current = tourRowToEditable(row);
+			const destination = findDestinationBySlug(content.destinationSlug);
+			if (!destination) throw new ActionError({ code: 'BAD_REQUEST', message: 'Elige un destino.' });
+
+			const routeChanged = content.slug !== current.content.slug || content.destinationSlug !== current.content.destinationSlug;
+			if (routeChanged && (row.published_at !== null || row.status === 'active')) failWithDbError({ message: 'slug_locked' });
+			if (content.slug !== current.content.slug) await assertSlugFreeOfGuides(content.slug);
+			assertOwnImages(id, images);
+			if (row.status === 'active') assertStillComplete({ content, operations: operations ?? current.operations, images });
+
+			const { data, error } = await supabaseAdmin.rpc('admin_save_tour', {
+				p_product_id: id,
+				p_user_id: userId,
+				p_content: toContentPayload(content) as Json,
+				...(operations ? { p_operations: toOperationsPayload(operations) as Json } : {}),
+				p_images: toImagesPayload(images) as Json,
+			});
+			if (error) failWithDbError(error);
+
+			if (routeChanged) await updateDraftKey(id, destination, content.slug);
+			await removeStoredImages(
+				id,
+				images.map((image) => image.path),
+			);
+			if (row.status === 'active') await triggerRebuild('Excursión editada', userId);
+			return readSaveResult(data);
+		},
+	}),
+
+	uploadImage: defineAction({
+		accept: 'form',
+		input: z.object({
+			id: z.uuid(),
+			image: z
+				.instanceof(File)
+				.refine((file) => file.size > 0, 'Elige una foto.')
+				.refine((file) => file.size <= maxUploadBytes, 'La foto no puede pasar de 10 MB.')
+				.refine((file) => file.type in imageExtensions, 'Usa fotos JPG, PNG o WebP.'),
+		}),
+		handler: async ({ id, image }, context) => {
+			requireStaff(context, tourEditors);
+			await requireTourRow(id);
+
+			const buffer = Buffer.from(await image.arrayBuffer());
+			const size = await imageSize(buffer);
+			if (!size) throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos leer la foto. Prueba con otra.' });
+
+			const path = `${tourImagePrefix(id)}${Date.now()}.${imageExtensions[image.type]}`;
+			const { error } = await supabaseAdmin.storage.from(mediaBucket).upload(path, buffer, { contentType: image.type, upsert: false });
+			if (error) {
+				console.error('tour image upload failed', error);
+				throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos subir la foto. Prueba de nuevo.' });
+			}
+			return { path, width: size.width, height: size.height, url: publicMediaUrl(path) };
+		},
+	}),
+
+	publish: defineAction({
+		input: z.object({ id: z.uuid() }),
+		handler: async ({ id }, context) => {
+			const { userId } = requireStaff(context, tourAdmins);
+			const row = await requireTourRow(id);
+			if (row.status === 'active') return { ok: true };
+			if (row.status === 'archived') throw new ActionError({ code: 'BAD_REQUEST', message: 'Restáurala antes de ponerla a la venta.' });
+
+			const missing = missingLabels(tourRowToEditable(row));
+			if (missing) throw new ActionError({ code: 'BAD_REQUEST', message: `Para ponerla a la venta falta: ${missing}.` });
+			const translation = row.translations.find((candidate) => candidate.locale === 'es');
+			if (translation) await assertSlugFreeOfGuides(translation.slug);
+
+			await setTourStatus(id, userId, 'active');
+			await triggerRebuild('Excursión puesta a la venta', userId);
+			return { ok: true };
+		},
+	}),
+
+	archive: defineAction({
+		input: z.object({ id: z.uuid() }),
+		handler: async ({ id }, context) => {
+			const { userId } = requireStaff(context, tourAdmins);
+			const row = await requireTourRow(id);
+			if (row.status === 'archived') return { futureBookings: await countFutureBookings(id) };
+
+			const block = archiveBlockReason(row, row.status === 'active' ? await countActiveToursInDestination(row.destination_slug) : 0);
+			if (block) throw new ActionError({ code: 'BAD_REQUEST', message: block });
+
+			await setTourStatus(id, userId, 'archived');
+			if (row.status === 'active') await triggerRebuild('Excursión archivada', userId);
+			return { futureBookings: await countFutureBookings(id) };
+		},
+	}),
+
+	restore: defineAction({
+		input: z.object({ id: z.uuid() }),
+		handler: async ({ id }, context) => {
+			const { userId } = requireStaff(context, tourAdmins);
+			const row = await requireTourRow(id);
+			if (row.status !== 'archived') return { ok: true };
+			await setTourStatus(id, userId, 'draft');
+			return { ok: true };
+		},
+	}),
+
+	remove: defineAction({
+		input: z.object({ id: z.uuid() }),
+		handler: async ({ id }, context) => {
+			requireStaff(context, tourAdmins);
+			const row = await requireTourRow(id);
+			if (row.status !== 'draft' || row.published_at !== null) {
+				throw new ActionError({ code: 'BAD_REQUEST', message: 'Solo se borran los borradores que nunca salieron a la venta.' });
+			}
+			if (await hasTourHistory(id)) {
+				throw new ActionError({ code: 'BAD_REQUEST', message: 'Tiene reservas, opiniones o cupones, así que no se puede borrar. Archívala.' });
+			}
+
+			const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+			if (error) failWithDbError(error, 'No se pudo borrar la excursión.');
+			await removeStoredImages(id);
 			return { ok: true };
 		},
 	}),

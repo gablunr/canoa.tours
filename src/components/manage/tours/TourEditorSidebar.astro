@@ -1,0 +1,203 @@
+---
+import { Check, ChevronDown, Circle, ExternalLink, Lock } from '@lucide/astro';
+import TourSelectField from './TourSelectField.astro';
+import TourTextField from './TourTextField.astro';
+import { seoDescriptionLimit, seoTitleLimit, type TourEditorData } from './tour-editor-data';
+import { sectionAnchor, sidebarAnchor } from './tour-editor-sections';
+import { destinations, destinationHref } from '../../../data/tours/destinations';
+import { saleChecklist, tourLimits, type ChecklistItem } from '../../../lib/tours/tour-schema';
+import { glassButton, surfacePanel } from '../glass-classes';
+
+interface Props {
+	data: TourEditorData;
+	isAdmin: boolean;
+}
+
+const { data, isAdmin } = Astro.props;
+const { row, editable, googlePreview } = data;
+const { status } = row;
+const checklist = saleChecklist(editable);
+const missingRequired = checklist.required.filter((item) => !item.done).length;
+
+const statusTexts = {
+	draft: 'Borrador. Solo lo ve el equipo hasta que la pongas a la venta.',
+	active: 'A la venta. Lo que actualices tarda unos minutos en verse.',
+	archived: 'Archivada. No sale en la web ni admite reservas.',
+};
+
+const readyText = 'Tiene todo lo necesario.';
+const missingText = (count: number) => `${count === 1 ? 'Falta 1 dato' : `Faltan ${count} datos`}.`;
+
+const destinationOptions = destinations.map((destination) => ({ value: destination.slug, label: destination.name }));
+const pathPrefix = `${destinationHref(data.destination)}/`;
+
+const panel = 'group/panel border-b border-border last:border-b-0';
+const panelSummary =
+	'flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset [&::-webkit-details-marker]:hidden';
+const panelChevron = 'text-muted transition-transform duration-300 ease-smooth group-open/panel:rotate-180';
+const panelBody = 'grid gap-4 px-5 pb-5';
+const textButton = 'w-fit cursor-pointer rounded-full text-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-accent';
+const checkLink = 'rounded text-sm outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent';
+
+const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required' | 'recommended' }[] = [
+	{ title: 'Para ponerla a la venta', items: checklist.required, kind: 'required' },
+	{ title: 'Recomendado', items: checklist.recommended, kind: 'recommended' },
+];
+---
+
+<aside
+	id={sidebarAnchor}
+	aria-label="Ajustes de la excursión"
+	class="min-w-0 scroll-mt-4 lg:sticky lg:top-[8.25rem] lg:max-h-[calc(100dvh-9.5rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[1.75rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+>
+	<div class:list={[surfacePanel, 'overflow-hidden']}>
+		<details class={panel} open>
+			<summary class={panelSummary}>Estado<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<p class="text-sm leading-relaxed text-secondary">{statusTexts[status]}</p>
+				{status === 'active' && (
+					<a href={data.publicPath} target="_blank" rel="noopener" class:list={[glassButton, 'w-fit']}>
+						<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
+						Ver en la web
+					</a>
+				)}
+
+				<div class="grid gap-4" data-checklist>
+					{checklistGroups.map((group) => (
+						<div>
+							<h3 class="flex items-baseline justify-between gap-3 text-[13px] font-semibold text-primary">
+								{group.title}
+								{group.kind === 'required' && (
+									<span class="text-xs font-normal text-muted" data-checklist-summary data-ready-text={readyText}>
+										{missingRequired === 0 ? readyText : missingText(missingRequired)}
+									</span>
+								)}
+							</h3>
+							<ul class="mt-2 grid gap-1.5">
+								{group.items.map((item) => (
+									<li class="flex items-start gap-2" data-check-item={item.id} data-check-kind={group.kind} data-done={item.done ? '' : undefined}>
+										<span class="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-accent text-white" data-check-done hidden={!item.done}>
+											<Check size={11} stroke-width={3} aria-hidden="true" />
+										</span>
+										<span class="mt-0.5 flex size-4 shrink-0 items-center justify-center text-subtle" data-check-todo hidden={item.done}>
+											<Circle size={14} stroke-width={2} aria-hidden="true" />
+										</span>
+										<a href={`#${sectionAnchor(item.section)}`} class:list={[checkLink, item.done ? 'text-muted' : 'text-primary']} data-check-link>
+											{item.label}
+											<span class="sr-only" data-check-state>{item.done ? ', hecho' : ', pendiente'}</span>
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
+				</div>
+
+				{isAdmin && (
+					<div class="grid gap-2 border-t border-border pt-4">
+						{status !== 'archived' && (
+							data.archiveBlock ? (
+								<div>
+									<button type="button" class:list={[glassButton, 'w-fit']} disabled aria-describedby="archive-block">Archivar</button>
+									<p id="archive-block" class="mt-2 text-xs leading-relaxed text-muted">{data.archiveBlock}</p>
+								</div>
+							) : (
+								<button type="button" class:list={[glassButton, 'w-fit']} data-archive>
+									<span data-button-label>Archivar</span>
+								</button>
+							)
+						)}
+						{status === 'archived' && (
+							<button type="button" class:list={[glassButton, 'w-fit']} data-restore>
+								<span data-button-label>Restaurar como borrador</span>
+							</button>
+						)}
+						{data.canRemove && (
+							<button type="button" class:list={[textButton, 'text-error decoration-error/30 hover:decoration-error']} data-remove>
+								Borrar borrador
+							</button>
+						)}
+					</div>
+				)}
+			</div>
+		</details>
+
+		<details class={panel} open>
+			<summary class={panelSummary}>Dirección<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<TourSelectField label="Destino" name="destinationSlug" options={destinationOptions} value={row.destination_slug} disabled={data.slugLocked} data-destination-select />
+				<div class="min-w-0">
+					<TourTextField
+						label="Dirección de la página"
+						name="slug"
+						value={editable.content.slug}
+						required
+						minlength="3"
+						maxlength={tourLimits.slugLength}
+						pattern="[a-z0-9]+(-[a-z0-9]+)*"
+						autocomplete="off"
+						autocapitalize="none"
+						autocorrect="off"
+						spellcheck="false"
+						readonly={data.slugLocked}
+						data-slug-input
+					/>
+					<p class="mt-1.5 text-xs break-all text-muted">canoa.tours<span data-slug-path>{`${pathPrefix}${editable.content.slug}`}</span></p>
+					{data.slugLocked && (
+						<p class="mt-2 flex items-start gap-2 text-xs leading-relaxed text-muted">
+							<Lock size={13} stroke-width={2} class="mt-px shrink-0" aria-hidden="true" />
+							Ya salió a la venta, así que la dirección queda fija.
+						</p>
+					)}
+				</div>
+			</div>
+		</details>
+
+		<slot />
+
+		<details class={panel} open>
+			<summary class={panelSummary}>Cupo diario<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				{isAdmin ? (
+					<TourTextField
+						label="Plazas al día"
+						name="dailyCapacity"
+						type="number"
+						inputmode="numeric"
+						min="0"
+						max={tourLimits.dailyCapacity}
+						step="1"
+						value={editable.operations.dailyCapacity}
+					/>
+				) : (
+					<p class="text-sm text-primary">{editable.operations.dailyCapacity} plazas al día</p>
+				)}
+				<a href="/manage/capacity" class="w-fit text-sm font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Cupo de días concretos</a>
+			</div>
+		</details>
+
+		<details class={panel} open>
+			<summary class={panelSummary}>Vista en Google<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
+			<div class={panelBody}>
+				<div
+					class="rounded-2xl bg-background p-4"
+					data-google-preview
+					data-title-suffix={googlePreview.titleSuffix}
+					data-description-suffix={googlePreview.descriptionSuffix}
+					data-description-limit={seoDescriptionLimit}
+					data-host={googlePreview.host}
+				>
+					<p class="truncate text-xs text-secondary" data-google-url>{`${googlePreview.host}${data.publicPath}`}</p>
+					<p class="mt-1 text-[15px] leading-snug font-medium text-[#1a0dab]" data-google-title>{googlePreview.title}</p>
+					<p class="mt-1 text-[13px] leading-relaxed text-secondary" data-google-description>{googlePreview.description}</p>
+				</div>
+				<p class="flex justify-between gap-3 text-xs text-muted tabular-nums">
+					<span>Título: <span data-google-title-count>{googlePreview.title.length}</span>/{seoTitleLimit}</span>
+					<span>Descripción: <span data-google-description-count>{googlePreview.description.length}</span>/{seoDescriptionLimit}</span>
+				</p>
+			</div>
+		</details>
+
+		<p class="px-5 py-4 text-xs text-muted" data-updated-label>{data.updatedLabel}</p>
+	</div>
+</aside>
