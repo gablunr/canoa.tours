@@ -64,7 +64,7 @@ export const company: Company = {
 	brandName: 'Canoa Tours',
 	schemaType: 'TravelAgency',
 	description:
-		'Canoa Tours es una agencia local de excursiones en Punta Cana. Organizamos nuestros propios tours, sin intermediarios, y te recogemos en el hotel.',
+		'Canoa Tours es una agencia local de Punta Cana. Seleccionamos excursiones por la zona y las reservas online, con recogida en tu hotel.',
 	email: 'hola@canoa.tours',
 	whatsapp: whatsappFrom('+44 7366 329699', '+447366329699'),
 	serviceAreas: [{ name: 'Punta Cana', kind: 'City' }],
