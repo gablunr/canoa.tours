@@ -470,22 +470,28 @@ export type Database = {
       }
       pickup_zones: {
         Row: {
+          description: string | null
           id: string
           name: string
           position: number
           slug: string
+          updated_at: string
         }
         Insert: {
+          description?: string | null
           id?: string
           name: string
           position?: number
           slug: string
+          updated_at?: string
         }
         Update: {
+          description?: string | null
           id?: string
           name?: string
           position?: number
           slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -514,6 +520,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "product_days_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_images: {
+        Row: {
+          alt: string
+          created_at: string
+          height: number
+          id: string
+          path: string
+          position: number
+          product_id: string
+          width: number
+        }
+        Insert: {
+          alt: string
+          created_at?: string
+          height: number
+          id?: string
+          path: string
+          position?: number
+          product_id: string
+          width: number
+        }
+        Update: {
+          alt?: string
+          created_at?: string
+          height?: number
+          id?: string
+          path?: string
+          position?: number
+          product_id?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -638,22 +685,64 @@ export type Database = {
       }
       product_translations: {
         Row: {
+          age_note: string | null
+          best_for: string | null
+          bring: string[]
+          excludes: string[]
+          faqs: Json
+          highlights: string[]
+          image_alt: string | null
+          includes: string[]
+          includes_summary: string | null
+          itinerary: Json
           locale: Database["public"]["Enums"]["site_locale"]
+          meeting_point: string | null
           name: string
+          price_unit: string | null
           product_id: string
+          short_name: string | null
           slug: string
+          summary: string | null
         }
         Insert: {
+          age_note?: string | null
+          best_for?: string | null
+          bring?: string[]
+          excludes?: string[]
+          faqs?: Json
+          highlights?: string[]
+          image_alt?: string | null
+          includes?: string[]
+          includes_summary?: string | null
+          itinerary?: Json
           locale: Database["public"]["Enums"]["site_locale"]
+          meeting_point?: string | null
           name: string
+          price_unit?: string | null
           product_id: string
+          short_name?: string | null
           slug: string
+          summary?: string | null
         }
         Update: {
+          age_note?: string | null
+          best_for?: string | null
+          bring?: string[]
+          excludes?: string[]
+          faqs?: Json
+          highlights?: string[]
+          image_alt?: string | null
+          includes?: string[]
+          includes_summary?: string | null
+          itinerary?: Json
           locale?: Database["public"]["Enums"]["site_locale"]
+          meeting_point?: string | null
           name?: string
+          price_unit?: string | null
           product_id?: string
+          short_name?: string | null
           slug?: string
+          summary?: string | null
         }
         Relationships: [
           {
@@ -670,52 +759,86 @@ export type Database = {
           created_at: string
           currency: string
           daily_capacity: number
+          departure_port: string | null
           deposit_type: Database["public"]["Enums"]["amount_type"]
           deposit_value: number
           destination_slug: string
+          duration_category: Database["public"]["Enums"]["tour_duration"] | null
+          duration_hours: number | null
           id: string
           infants_occupy_seat: boolean
           key: string
           max_group_size: number | null
           min_age: number | null
+          most_booked_position: number | null
+          position: number
+          pregnancy: Database["public"]["Enums"]["pregnancy_policy"] | null
+          pregnancy_max_months: number | null
           pricing_mode: Database["public"]["Enums"]["pricing_mode"]
+          published_at: string | null
           status: Database["public"]["Enums"]["product_status"]
           supplier_id: string
           updated_at: string
+          updated_by: string | null
+          wheelchair: boolean
         }
         Insert: {
           created_at?: string
           currency?: string
           daily_capacity?: number
+          departure_port?: string | null
           deposit_type?: Database["public"]["Enums"]["amount_type"]
           deposit_value: number
           destination_slug: string
+          duration_category?:
+            | Database["public"]["Enums"]["tour_duration"]
+            | null
+          duration_hours?: number | null
           id?: string
           infants_occupy_seat?: boolean
           key: string
           max_group_size?: number | null
           min_age?: number | null
+          most_booked_position?: number | null
+          position?: number
+          pregnancy?: Database["public"]["Enums"]["pregnancy_policy"] | null
+          pregnancy_max_months?: number | null
           pricing_mode?: Database["public"]["Enums"]["pricing_mode"]
+          published_at?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           supplier_id: string
           updated_at?: string
+          updated_by?: string | null
+          wheelchair?: boolean
         }
         Update: {
           created_at?: string
           currency?: string
           daily_capacity?: number
+          departure_port?: string | null
           deposit_type?: Database["public"]["Enums"]["amount_type"]
           deposit_value?: number
           destination_slug?: string
+          duration_category?:
+            | Database["public"]["Enums"]["tour_duration"]
+            | null
+          duration_hours?: number | null
           id?: string
           infants_occupy_seat?: boolean
           key?: string
           max_group_size?: number | null
           min_age?: number | null
+          most_booked_position?: number | null
+          position?: number
+          pregnancy?: Database["public"]["Enums"]["pregnancy_policy"] | null
+          pregnancy_max_months?: number | null
           pricing_mode?: Database["public"]["Enums"]["pricing_mode"]
+          published_at?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           supplier_id?: string
           updated_at?: string
+          updated_by?: string | null
+          wheelchair?: boolean
         }
         Relationships: [
           {
@@ -832,6 +955,27 @@ export type Database = {
           },
         ]
       }
+      site_rebuilds: {
+        Row: {
+          id: number
+          reason: string
+          requested_at: string
+          requested_by: string | null
+        }
+        Insert: {
+          id?: never
+          reason: string
+          requested_at?: string
+          requested_by?: string | null
+        }
+        Update: {
+          id?: never
+          reason?: string
+          requested_at?: string
+          requested_by?: string | null
+        }
+        Relationships: []
+      }
       staff: {
         Row: {
           role: Database["public"]["Enums"]["staff_role"]
@@ -891,6 +1035,27 @@ export type Database = {
           gross_sales: number
         }[]
       }
+      admin_create_pickup_zone: {
+        Args: {
+          p_default_fee: number
+          p_description: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: string
+      }
+      admin_create_tour: {
+        Args: {
+          p_copy_from?: string
+          p_destination_slug: string
+          p_key: string
+          p_name: string
+          p_short_name: string
+          p_slug: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       admin_daily_series: {
         Args: { p_from: string; p_to: string }
         Returns: {
@@ -920,6 +1085,44 @@ export type Database = {
           product_name: string
           seats_sold: number
         }[]
+      }
+      admin_reorder_pickup_zones: {
+        Args: { p_zone_ids: string[] }
+        Returns: undefined
+      }
+      admin_reorder_tours: {
+        Args: {
+          p_destination_slug: string
+          p_product_ids: string[]
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      admin_save_tour: {
+        Args: {
+          p_content: Json
+          p_images?: Json
+          p_operations?: Json
+          p_product_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_save_zone_fees: {
+        Args: { p_fees: Json; p_zone_id: string }
+        Returns: undefined
+      }
+      admin_set_most_booked: {
+        Args: { p_position: number; p_product_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_set_tour_status: {
+        Args: {
+          p_product_id: string
+          p_status: Database["public"]["Enums"]["product_status"]
+          p_user_id: string
+        }
+        Returns: undefined
       }
       admin_sources: {
         Args: { p_from: string; p_to: string }
@@ -1037,6 +1240,7 @@ export type Database = {
         Args: { p_roles?: Database["public"]["Enums"]["staff_role"][] }
         Returns: boolean
       }
+      jsonb_to_text_array: { Args: { p_value: Json }; Returns: string[] }
       local_today: { Args: never; Returns: string }
       lock_coupon: {
         Args: {
@@ -1076,6 +1280,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_product_price: {
+        Args: {
+          p_amount: number
+          p_max_age?: number
+          p_min_age?: number
+          p_passenger_type: Database["public"]["Enums"]["passenger_type"]
+          p_product_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       amount_type: "percent" | "fixed"
@@ -1091,12 +1305,14 @@ export type Database = {
       payment_kind: "deposit" | "balance" | "no_show_charge" | "refund"
       payment_provider: "stripe" | "paypal" | "cash"
       payment_status: "pending" | "succeeded" | "failed"
+      pregnancy_policy: "allowed" | "limited" | "not_allowed"
       pricing_mode: "per_person" | "per_group"
       product_status: "draft" | "active" | "archived"
       review_source: "booking" | "manual"
       review_status: "pending" | "published" | "rejected"
       site_locale: "es" | "en"
       staff_role: "admin" | "operations" | "editor"
+      tour_duration: "full_day" | "half_day" | "night"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1238,12 +1454,14 @@ export const Constants = {
       payment_kind: ["deposit", "balance", "no_show_charge", "refund"],
       payment_provider: ["stripe", "paypal", "cash"],
       payment_status: ["pending", "succeeded", "failed"],
+      pregnancy_policy: ["allowed", "limited", "not_allowed"],
       pricing_mode: ["per_person", "per_group"],
       product_status: ["draft", "active", "archived"],
       review_source: ["booking", "manual"],
       review_status: ["pending", "published", "rejected"],
       site_locale: ["es", "en"],
       staff_role: ["admin", "operations", "editor"],
+      tour_duration: ["full_day", "half_day", "night"],
     },
   },
 } as const
