@@ -11,7 +11,7 @@ import {
 	tourImagePrefix,
 } from '../components/manage/tours/tour-editor-data';
 import { findDestinationById, mergeTourOrder, sortToursForDestination } from '../components/manage/tours/tour-list-data';
-import { destinations, type Destination } from '../data/tours/destinations';
+import { destinationDefinitions, type DestinationDefinition } from '../data/tours/destination-definitions';
 import { triggerRebuild } from '../lib/deploy-hook';
 import { requireStaff } from '../lib/manage/guards';
 import { supabaseAdmin } from '../lib/supabase/admin';
@@ -34,7 +34,7 @@ import {
 export const tourEditors: StaffRole[] = ['admin', 'editor'];
 export const tourAdmins: StaffRole[] = ['admin'];
 
-const destinationIds: string[] = destinations.map((destination) => destination.id);
+const destinationIds: string[] = destinationDefinitions.map((destination) => destination.id);
 
 const text = (min: number, max: number) => z.string().trim().min(min).max(max);
 
@@ -165,7 +165,7 @@ async function removeStoredImages(tourId: string, keptPaths: string[] = [], { ke
 	if (error) console.error('tour image removal failed', error);
 }
 
-async function updateDraftKey(tourId: string, destination: Destination, slug: string) {
+async function updateDraftKey(tourId: string, destination: Pick<DestinationDefinition, 'id'>, slug: string) {
 	const { error } = await supabaseAdmin.from('products').update({ key: `${destination.id}/${slug}` }).eq('id', tourId).is('published_at', null);
 	if (error) failWithDbError(error);
 }

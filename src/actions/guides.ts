@@ -1,8 +1,7 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { z } from 'astro/zod';
 import { unknownContentTokens } from '../data/guides/content-tokens';
-import { destinations } from '../data/tours/destinations';
-import { tourDetails } from '../data/tours/tours';
+import { destinationDefinitions } from '../data/tours/destination-definitions';
 import { triggerRebuild } from '../lib/deploy-hook';
 import { requireStaff } from '../lib/manage/guards';
 import { supabaseAdmin } from '../lib/supabase/admin';
@@ -10,7 +9,7 @@ import type { Json } from '../lib/supabase/database.types';
 import type { StaffRole } from '../lib/supabase/types';
 
 const guideEditors: StaffRole[] = ['admin', 'editor'];
-const siloIds: string[] = ['general', ...destinations.map((destination) => destination.id)];
+const siloIds: string[] = ['general', ...destinationDefinitions.map((destination) => destination.id)];
 const wordsPerMinute = 200;
 const maxImageBytes = 5 * 1024 * 1024;
 const imageExtensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
@@ -72,9 +71,19 @@ function failWithDbError(error: { code?: string } | null, fallback = 'No se pudo
 	throw new ActionError({ code: 'BAD_REQUEST', message: fallback });
 }
 
-function assertRouteIsFree(guideSilo: string, guideSlug: string) {
-	const takenByTour = tourDetails.some((details) => details.destination.id === guideSilo && details.tour.slug === guideSlug);
-	if (takenByTour) throw new ActionError({ code: 'CONFLICT', message: 'Esa dirección ya la usa una excursión de este destino. Elige otra.' });
+async function assertRouteIsFree(guideSilo: string, guideSlug: string) {
+	const destination = destinationDefinitions.find((candidate) => candidate.id === guideSilo);
+	if (!destination) return;
+	const { data, error } = await supabaseAdmin
+		.from('product_translations')
+		.select('product_id, products!inner(destination_slug, status)')
+		.eq('locale', 'es')
+		.eq('slug', guideSlug)
+		.eq('products.status', 'active')
+		.eq('products.destination_slug', destination.slug)
+		.limit(1);
+	if (error) failWithDbError(error);
+	if (data.length > 0) throw new ActionError({ code: 'CONFLICT', message: 'Esa dirección ya la usa una excursión de este destino. Elige otra.' });
 }
 
 function readingMinutes(fields: GuideFields) {
@@ -158,7 +167,7 @@ export const guides = {
 		input: z.object({ title: text(5, 120), slug, silo }),
 		handler: async (input, context) => {
 			const { userId } = requireStaff(context, guideEditors);
-			assertRouteIsFree(input.silo, input.slug);
+			await assertRouteIsFree(input.silo, input.slug);
 
 			const { data, error } = await supabaseAdmin
 				.from('guides')
@@ -174,7 +183,7 @@ export const guides = {
 		input: guideFields.extend({ id: z.uuid() }),
 		handler: async ({ id, ...fields }, context) => {
 			const { userId } = requireStaff(context, guideEditors);
-			assertRouteIsFree(fields.silo, fields.slug);
+			await assertRouteIsFree(fields.silo, fields.slug);
 			assertKnownTokens(fields);
 			const current = await loadGuide(id);
 			const tourProductId = await productIdByKey(fields.tourProductKey);
