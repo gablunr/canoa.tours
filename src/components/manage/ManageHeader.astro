@@ -42,7 +42,7 @@ const accordion =
 const accordionSummary =
 	'flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-3 text-[15px] text-muted-on-dark outline-none transition-colors duration-300 ease-smooth group-open/section:text-white hover:text-white focus-visible:ring-2 focus-visible:ring-accent-on-dark [&::-webkit-details-marker]:hidden';
 const signOutButton =
-	'flex cursor-pointer items-center gap-2 rounded-full bg-white/10 text-[13px] font-medium text-white outline-none transition-colors duration-300 ease-smooth hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
+	'flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-white/10 text-[13px] whitespace-nowrap font-medium text-white outline-none transition-colors duration-300 ease-smooth hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
 ---
 
 <header class="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3" data-manage-header>
@@ -87,7 +87,7 @@ const signOutButton =
 				))}
 			</ul>
 
-			<form method="post" action="/api/auth/sign-out" class="hidden lg:block">
+			<form method="post" action="/api/auth/sign-out" class="hidden shrink-0 lg:block">
 				<button type="submit" title={email ? `Cerrar la sesión de ${email}` : undefined} class:list={[signOutButton, 'h-10 px-4']}>
 					<LogOut size={15} stroke-width={1.75} aria-hidden="true" />
 					Cerrar sesión

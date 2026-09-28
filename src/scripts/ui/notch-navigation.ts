@@ -46,7 +46,7 @@ export function initNotchNavigation(header: HTMLElement) {
 			closedWidth = notch.getBoundingClientRect().width;
 			notch.style.width = `${closedWidth}px`;
 			void notch.offsetWidth;
-			notch.style.width = 'var(--mega-width)';
+			notch.style.width = `max(${closedWidth}px, var(--mega-width))`;
 			setMegaOpen(true);
 		}
 		activeMenu = id;
