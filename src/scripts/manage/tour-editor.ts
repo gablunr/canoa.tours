@@ -61,7 +61,12 @@ function parseJson<Value>(value: string | undefined, fallback: Value): Value {
 const missingText = (count: number) => `${count === 1 ? 'Falta 1 dato' : `Faltan ${count} datos`}.`;
 const pendingText = (count: number) => `${count === 1 ? '1 pendiente' : `${count} pendientes`}.`;
 
+function openEnclosingPanels(target: HTMLElement) {
+	for (let panel = target.closest('details'); panel; panel = panel.parentElement?.closest('details') ?? null) panel.open = true;
+}
+
 function focusField(target: HTMLElement) {
+	openEnclosingPanels(target);
 	target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 	const focusable = target.matches('input, select, textarea, button') ? target : target.querySelector<HTMLElement>('input, select, textarea, button');
 	focusable?.focus({ preventScroll: true });

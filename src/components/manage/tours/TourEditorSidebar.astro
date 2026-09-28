@@ -67,7 +67,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 	class="min-w-0 scroll-mt-20 lg:sticky lg:top-[5.25rem] lg:max-h-[calc(100dvh-6.5rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[1.75rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 >
 	<div class:list={[surfacePanel, 'overflow-hidden']}>
-		<details class={panel} open>
+		<details class={panel}>
 			<summary class={panelSummary}>Estado<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
 			<div class={panelBody}>
 				<p class="text-sm leading-relaxed text-secondary">{statusTexts[status]}</p>
@@ -80,7 +80,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 
 				<div class="grid gap-2" data-checklist>
 					{checklistGroups.map((group) => (
-						<details class="group/check rounded-2xl bg-background" open={group.kind === 'required' && missingRequired > 0}>
+						<details class="group/check rounded-2xl bg-background">
 							<summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
 								<span class="min-w-0">
 									<span class="block text-[13px] font-semibold text-primary">{group.title}</span>
@@ -139,7 +139,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 			</div>
 		</details>
 
-		<details class={panel} open>
+		<details class={panel}>
 			<summary class={panelSummary}>Dirección<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
 			<div class={panelBody}>
 				<TourSelectField label="Destino" name="destinationSlug" options={destinationOptions} value={row.destination_slug} disabled={data.slugLocked} data-destination-select />
@@ -172,7 +172,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 
 		<slot />
 
-		<details class={panel} open>
+		<details class={panel}>
 			<summary class={panelSummary}>Cupo diario<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
 			<div class={panelBody}>
 				{isAdmin ? (
@@ -195,7 +195,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 			</div>
 		</details>
 
-		<details class={panel} open>
+		<details class={panel}>
 			<summary class={panelSummary}>Vista en Google<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
 			<div class={panelBody}>
 				<div

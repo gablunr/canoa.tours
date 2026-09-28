@@ -28,7 +28,7 @@ const panelSummary =
 const panelChevron = 'text-muted transition-transform duration-300 ease-smooth group-open/panel:rotate-180';
 ---
 
-<details class={panel} open>
+<details class={panel}>
 	<summary class={panelSummary}>Las más reservadas<ChevronDown size={16} stroke-width={1.75} class={panelChevron} aria-hidden="true" /></summary>
 	<div class="grid gap-3 px-5 pb-5">
 		{isAdmin && row.status === 'active' ? (
