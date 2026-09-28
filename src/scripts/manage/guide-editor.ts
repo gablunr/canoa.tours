@@ -6,7 +6,7 @@ import { createEditorSession, type SaveResult } from './editor-session';
 import { actionErrorMessage, readRouteConfig, setBusy, showMessage, slugify, wireSlugField } from './form-helpers';
 
 const wordsPerMinute = 200;
-const maxImageBytes = 5 * 1024 * 1024;
+const maxImageBytes = 4 * 1024 * 1024;
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
 const isTextField = (element: unknown): element is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement =>
@@ -169,7 +169,7 @@ function initImageUpload(root: HTMLElement, guideId: string, isPublished: boolea
 			return;
 		}
 		if (file.size > maxImageBytes) {
-			setStatus('La imagen no puede pasar de 5 MB.', 'error');
+			setStatus('La imagen no puede pasar de 4 MB.', 'error');
 			fileInput.value = '';
 			return;
 		}

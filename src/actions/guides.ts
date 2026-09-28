@@ -11,7 +11,7 @@ import type { StaffRole } from '../lib/supabase/types';
 const guideEditors: StaffRole[] = ['admin', 'editor'];
 const siloIds: string[] = ['general', ...destinationDefinitions.map((destination) => destination.id)];
 const wordsPerMinute = 200;
-const maxImageBytes = 5 * 1024 * 1024;
+const maxImageBytes = 4 * 1024 * 1024;
 const imageExtensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 const text = (min: number, max: number) => z.string().trim().min(min).max(max);
@@ -223,7 +223,7 @@ export const guides = {
 			image: z
 				.instanceof(File)
 				.refine((file) => file.size > 0, 'Elige una imagen.')
-				.refine((file) => file.size <= maxImageBytes, 'La imagen no puede pasar de 5 MB.')
+				.refine((file) => file.size <= maxImageBytes, 'La imagen no puede pasar de 4 MB.')
 				.refine((file) => file.type in imageExtensions, 'Usa una imagen JPG, PNG o WebP.'),
 			imageAlt: text(5, 200),
 		}),
