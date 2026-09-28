@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets';
 import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Star } from '@lucide/astro';
 import type { TourListItem } from './tour-list-data';
 import { glassCircle } from '../glass-classes';
@@ -25,8 +24,6 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 	<span class="block aspect-[4/3] w-20 shrink-0 overflow-hidden rounded-[0.875rem] bg-ink-200/60 sm:w-28">
 		{tour.imageUrl ? (
 			<img src={tour.imageUrl} alt="" loading="lazy" decoding="async" width="112" height="84" class="size-full object-cover" />
-		) : tour.placeholder ? (
-			<Image src={tour.placeholder} alt="" width={224} height={168} loading="lazy" decoding="async" class="size-full object-cover" />
 		) : (
 			<span class="flex size-full items-center justify-center text-muted">
 				<ImageOff size={18} stroke-width={1.75} aria-hidden="true" />

@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ImageMetadata } from 'astro';
-import { destinationHref, destinations, tourImage, type Destination } from '../../../data/tours/destinations';
+import { destinationHref, destinations, type Destination } from '../../../data/tours/destinations';
 import { formatPrice } from '../../../lib/format';
 import { currentBuildStartedAt, hasPendingChanges } from '../../../lib/manage/site-status';
 import type { Database, Json } from '../../../lib/supabase/database.types';
@@ -22,7 +21,6 @@ export interface TourListItem {
 	path: string;
 	position: number;
 	imageUrl: string | null;
-	placeholder: ImageMetadata | undefined;
 	basePrice: number | null;
 	facts: string[];
 	mostBookedPosition: number | null;
@@ -239,7 +237,6 @@ export async function loadTourList(supabase: Supabase, now = new Date()): Promis
 			path: `${destinationPathPrefix(destination)}${translation.slug}`,
 			position: row.position,
 			imageUrl: cover ? publicMediaUrl(cover.path) : null,
-			placeholder: cover ? undefined : tourImage(destination, { name: shortName, slug: translation.slug }),
 			basePrice,
 			facts,
 			mostBookedPosition: row.most_booked_position,

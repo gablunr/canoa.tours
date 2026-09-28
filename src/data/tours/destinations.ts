@@ -140,25 +140,10 @@ const placeholderImage = (destination: Destination) =>
 
 export const destinationImage = (destination: Destination) => destination.image ?? placeholderImage(destination);
 
-const placeholderTourImages = import.meta.glob<{ default: ImageMetadata }>(
-	'../../assets/images/placeholders/tours/*/*.{jpg,jpeg,png,webp}',
-	{ eager: true },
-);
-
-export const tourImage = (destination: Destination, tour: Tour) =>
-	Object.entries(placeholderTourImages).find(([path]) => path.includes(`/${destination.slug}/${tour.slug}.`))?.[1].default;
-
 export function findDestination(destinationId: DestinationId) {
 	const destination = destinations.find((candidate) => candidate.id === destinationId);
 	if (!destination) throw new Error(`Unknown destination: ${destinationId}`);
 	return destination;
-}
-
-export function findTour(destinationId: DestinationId, tourSlug: string) {
-	const destination = findDestination(destinationId);
-	const tour = destination.tours.find((candidate) => candidate.slug === tourSlug);
-	if (!tour) throw new Error(`Unknown tour: ${destinationId}/${tourSlug}`);
-	return { destination, tour };
 }
 
 export const destinationHref = (destination: Destination) => `/${destination.slug}`;

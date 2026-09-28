@@ -5,7 +5,7 @@ import { tourRowToDetails, type TourRow } from '../../lib/tours/tour-rows';
 import type { OfferOptions, QuestionAndAnswer } from '../../lib/seo/structured-data';
 import { cancellationInsurancePriceLabel, cancellationNoticeLabel } from '../booking/booking-policy';
 import { departurePorts } from './departure-ports';
-import { destinationImage, destinations, tourHref, type Destination, type DestinationId, type Tour } from './destinations';
+import { destinationImage, destinations, tourHref, type Destination, type Tour } from './destinations';
 import { scheduleLabel, scheduleSentence, type Weekday } from './schedule-text';
 
 export type DurationCategory = 'full-day' | 'half-day' | 'night';
@@ -111,12 +111,6 @@ function detailsFromRow(row: TourRow): TourDetails[] {
 export const tourDetails: TourDetails[] = destinations.flatMap((destination) =>
 	publishedTourRows.filter((row) => row.destination_slug === destination.slug).flatMap(detailsFromRow),
 );
-
-export function findTourDetails(destinationId: DestinationId, tourSlug: string) {
-	const details = tourDetails.find((candidate) => candidate.destination.id === destinationId && candidate.tour.slug === tourSlug);
-	if (!details) throw new Error(`Unknown tour: ${destinationId}/${tourSlug}`);
-	return details;
-}
 
 export const destinationTourDetails = (destination: Destination) => tourDetails.filter((details) => details.destination.id === destination.id);
 
