@@ -2,7 +2,7 @@
 import PageSection from '../page/PageSection.astro';
 import TourCard from '../../ui/cards/TourCard.astro';
 import type { PillarPage } from '../../../data/pillars/pillar-page';
-import { durationLabel, scheduleLabel, tourDeparture, tourDetailsHref, tourPhoto } from '../../../data/tours/tours';
+import { durationLabel, scheduleLabel, tourDeparture, tourDetailsHref, tourPhoto, tourPhotoAlt } from '../../../data/tours/tours';
 import { formatPrice } from '../../../lib/format';
 
 interface Props {
@@ -41,6 +41,7 @@ const sizes = pair
 					schedule={scheduleLabel(details.days)}
 					departure={tourDeparture(details)}
 					image={tourPhoto(details)}
+					imageAlt={tourPhotoAlt(details)}
 					sizes={sizes}
 					frameClass={frameClass}
 					glowClass="max-lg:hidden"

@@ -2,7 +2,7 @@ import { formatPrice } from '../../lib/format';
 import type { SiteImage } from '../../lib/images';
 import { publishedTourRows } from '../../lib/tours/published-tours';
 import { tourHref, type Destination, type Tour } from './destinations';
-import { scheduleLabel, tourDeparture, tourDetails, tourNotes, tourPhoto, type TourDetails } from './tours';
+import { scheduleLabel, tourDeparture, tourDetails, tourNotes, tourPhoto, tourPhotoAlt, type TourDetails } from './tours';
 
 export interface MostBookedTour {
 	destination: Destination;
@@ -15,6 +15,7 @@ export interface MostBookedTour {
 	departure: string;
 	notes: string[];
 	photo?: SiteImage;
+	photoAlt: string;
 }
 
 export const mostBookedLimit = 4;
@@ -31,6 +32,7 @@ export function tourCardSummary(details: TourDetails): MostBookedTour {
 		schedule: scheduleLabel(details.days),
 		departure: tourDeparture(details),
 		notes: tourNotes(details),
+		photoAlt: tourPhotoAlt(details),
 		...(photo ? { photo } : {}),
 	};
 }

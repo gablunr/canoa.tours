@@ -126,6 +126,8 @@ export const tourProductKey = (details: TourDetails) => details.productKey;
 
 export const tourPhoto = (details: TourDetails): SiteImage | undefined => details.images[0]?.image ?? destinationImage(details.destination);
 
+export const tourPhotoAlt = (details: TourDetails) => details.images[0]?.alt || details.title;
+
 export const tourCountText = (count: number) => `${count} ${count === 1 ? 'excursión' : 'excursiones'}`;
 
 export const toursByDuration = Object.fromEntries(

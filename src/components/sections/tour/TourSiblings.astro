@@ -12,6 +12,7 @@ import {
 	tourDeparture,
 	tourDetailsHref,
 	tourPhoto,
+	tourPhotoAlt,
 	type TourDetails,
 } from '../../../data/tours/tours';
 import { formatPrice } from '../../../lib/format';
@@ -41,6 +42,7 @@ const allToursLabel = `Ver todas las ${toursTitle.charAt(0).toLowerCase()}${tour
 						schedule={scheduleLabel(sibling.days)}
 						departure={tourDeparture(sibling)}
 						image={tourPhoto(sibling)}
+						imageAlt={tourPhotoAlt(sibling)}
 						sizes="(min-width: 1024px) 24rem, (min-width: 640px) 50vw, 100vw"
 						frameClass="h-96"
 					/>
