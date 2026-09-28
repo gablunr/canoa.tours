@@ -1,5 +1,5 @@
 ---
-import { MapPinned, Plus, Search } from '@lucide/astro';
+import { ChevronDown, MapPin, MapPinned, Plus, Search } from '@lucide/astro';
 import ManageLayout from '../../../layouts/ManageLayout.astro';
 import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
 import SiteStatus from '../../../components/manage/SiteStatus.astro';
@@ -54,14 +54,14 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 		<ManagePageHeader title="Excursiones" description={headerDescription}>
 			<SiteStatus />
 			{isAdmin && (
-				<button type="button" class:list={[glassPrimaryButton, 'flex-1 sm:flex-none']} data-new-tour-open>
+				<button type="button" class:list={[glassPrimaryButton, 'ml-auto sm:ml-0']} data-new-tour-open>
 					<Plus size={15} stroke-width={2} aria-hidden="true" />
 					Nueva excursión
 				</button>
 			)}
 		</ManagePageHeader>
 
-		<div class="mb-1 grid animate-fade-up gap-2.5 sm:mt-5 sm:mb-3" style="animation-delay: 100ms">
+		<div class="mt-1 mb-1 grid animate-fade-up gap-2.5 sm:mt-5 sm:mb-3" style="animation-delay: 100ms">
 			<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
 				<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
 					{statusTabs.map((tab) => (
@@ -76,19 +76,32 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 						</a>
 					))}
 				</nav>
-				<div role="search" class="w-full sm:w-72">
-					<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
-						<span class="sr-only">Buscar excursiones</span>
-						<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-						<input
-							type="search"
-							maxlength="80"
-							placeholder="Buscar una excursión"
-							autocomplete="off"
-							class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 text-base font-normal outline-none placeholder:text-muted sm:text-[13px] disabled:opacity-50"
-							data-tour-search
-						/>
-					</label>
+				<div class="flex gap-2 sm:w-72">
+					<div role="search" class="min-w-0 flex-1">
+						<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
+							<span class="sr-only">Buscar excursiones</span>
+							<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+							<input
+								type="search"
+								maxlength="80"
+								placeholder="Buscar"
+								autocomplete="off"
+								class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 text-base font-normal outline-none placeholder:text-muted sm:text-[13px] disabled:opacity-50"
+								data-tour-search
+							/>
+						</label>
+					</div>
+					{destinationFilters.length > 1 && (
+						<label class:list={[glassControl, 'relative h-11 w-[46%] shrink-0 hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:hidden']}>
+							<span class="sr-only">Destino</span>
+							<MapPin size={15} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+							<select class="h-full w-full min-w-0 cursor-pointer appearance-none truncate rounded-full bg-transparent pr-9 pl-9 text-base font-normal outline-none disabled:opacity-50" data-destination-select>
+								<option value="">Todos</option>
+								{destinationFilters.map((filter) => <option value={filter.id}>{filter.name}</option>)}
+							</select>
+							<ChevronDown size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" aria-hidden="true" />
+						</label>
+					)}
 				</div>
 			</div>
 
@@ -96,15 +109,15 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 				<div
 					role="group"
 					aria-label="Destino"
-					class="-mx-4 mt-1 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:mt-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+					class="mt-6 hidden flex-wrap gap-1.5 sm:flex"
 					data-destination-filters
 				>
-					<button type="button" class:list={[glassOption, 'group/filter h-8 shrink-0 sm:px-3.5']} aria-pressed="true" data-destination-filter="">
+					<button type="button" class:list={[glassOption, 'group/filter h-8 px-3.5']} aria-pressed="true" data-destination-filter="">
 						Todos
 						<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{activeTabCount}</span>
 					</button>
 					{destinationFilters.map((filter) => (
-						<button type="button" class:list={[glassOption, 'group/filter h-8 shrink-0 sm:px-3.5']} aria-pressed="false" data-destination-filter={filter.id}>
+						<button type="button" class:list={[glassOption, 'group/filter h-8 px-3.5']} aria-pressed="false" data-destination-filter={filter.id}>
 							{filter.name}
 							<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{filter.count}</span>
 						</button>

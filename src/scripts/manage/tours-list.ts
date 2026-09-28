@@ -67,6 +67,7 @@ function initListView(root: HTMLElement): ListView {
 	const previousButton = root.querySelector<HTMLButtonElement>('[data-tour-page-previous]');
 	const nextButton = root.querySelector<HTMLButtonElement>('[data-tour-page-next]');
 	const filterButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-destination-filter]')];
+	const destinationSelect = root.querySelector<HTMLSelectElement>('[data-destination-select]');
 	const groups = [...root.querySelectorAll<HTMLElement>('[data-tour-group]')];
 
 	const params = new URLSearchParams(window.location.search);
@@ -131,6 +132,10 @@ function initListView(root: HTMLElement): ListView {
 			button.setAttribute('aria-pressed', String((button.dataset.destinationFilter ?? '') === destination));
 			button.disabled = sortingGroup !== null;
 		});
+		if (destinationSelect) {
+			destinationSelect.value = destination;
+			destinationSelect.disabled = sortingGroup !== null;
+		}
 
 		if (listPanel) listPanel.hidden = shown.size === 0;
 		if (results) results.hidden = !term;
@@ -177,6 +182,11 @@ function initListView(root: HTMLElement): ListView {
 			apply();
 		}),
 	);
+	destinationSelect?.addEventListener('change', () => {
+		destination = destinationSelect.value;
+		page = 1;
+		apply();
+	});
 	previousButton?.addEventListener('click', () => goToPage(page - 1));
 	nextButton?.addEventListener('click', () => goToPage(page + 1));
 	pageNumbers?.addEventListener('click', (event) => {
