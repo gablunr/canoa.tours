@@ -1,0 +1,54 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { paginationItems } from '../../lib/account/pagination';
+
+interface Props {
+	label: string;
+	page: number;
+	totalPages: number;
+	href: (page: number) => string;
+	class?: string;
+}
+
+const { label, page, totalPages, href, class: className } = Astro.props;
+
+const maxPageSlots = 5;
+const pageSlot = 'liquid-glass flex size-9 items-center justify-center bg-white/60 text-[13px] font-medium text-secondary tabular-nums';
+const pageLink = `${pageSlot} transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-[current=page]:bg-primary aria-[current=page]:text-white`;
+const disabledSlot = `${pageSlot} opacity-40`;
+const items = paginationItems(page, totalPages, maxPageSlots);
+---
+
+{totalPages > 1 && (
+	<nav aria-label={label} class={className}>
+		<div class="flex items-center gap-1">
+			{page > 1 ? (
+				<a href={href(page - 1)} rel="prev" class={pageLink} aria-label="Página anterior">
+					<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+				</a>
+			) : (
+				<span class={disabledSlot} aria-hidden="true">
+					<ChevronLeft size={16} stroke-width={2} />
+				</span>
+			)}
+			{items.map((entry) =>
+				entry.kind === 'gap' ? (
+					<span class="flex size-9 items-center justify-center text-[13px] text-muted" aria-hidden="true">…</span>
+				) : (
+					<a href={href(entry.page)} class={pageLink} aria-label={`Página ${entry.page}`} aria-current={entry.page === page ? 'page' : undefined}>
+						{entry.page}
+					</a>
+				),
+			)}
+			{page < totalPages ? (
+				<a href={href(page + 1)} rel="next" class={pageLink} aria-label="Página siguiente">
+					<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+				</a>
+			) : (
+				<span class={disabledSlot} aria-hidden="true">
+					<ChevronRight size={16} stroke-width={2} />
+				</span>
+			)}
+		</div>
+	</nav>
+)}

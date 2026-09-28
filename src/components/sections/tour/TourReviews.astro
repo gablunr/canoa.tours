@@ -3,8 +3,9 @@ import { MessageSquareText } from '@lucide/astro';
 import TourSection from './TourSection.astro';
 import RatingBadge from '../../ui/RatingBadge.astro';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
-import ReviewBrowser from '../reviews/ReviewBrowser.astro';
+import ReviewCard from '../../ui/cards/ReviewCard.astro';
 import { reviewStats, reviewsForTour } from '../../../data/reviews/reviews';
+import { reviewListHref, reviewPageSize } from '../../../data/reviews/review-filters';
 import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
 import type { TourDetails } from '../../../data/tours/tours';
 import { routes } from '../../../data/site/routes';
@@ -16,6 +17,8 @@ interface Props {
 const { details } = Astro.props;
 
 const tourReviews = reviewsForTour(details);
+const latestReviews = tourReviews.slice(0, reviewPageSize);
+const allReviewsHref = tourReviews.length > latestReviews.length ? reviewListHref({ tour: details }) : null;
 const stats = reviewStats(tourReviews);
 const reviewFormHref = `${routes.reviews}#${reviewFormAnchor}`;
 ---
@@ -24,8 +27,15 @@ const reviewFormHref = `${routes.reviews}#${reviewFormAnchor}`;
 	{stats ? (
 		<div class="flex flex-col gap-6">
 			<p class="max-lg:text-center"><RatingBadge stats={stats} /></p>
-			<ReviewBrowser id="tour-reviews" reviews={tourReviews} showTour={false} listClass="sm:grid-cols-2" />
-			<p class="max-lg:text-center">
+			<ul class="grid gap-4 sm:grid-cols-2">
+				{latestReviews.map((review) => (
+					<li>
+						<ReviewCard review={review} showTour={false} />
+					</li>
+				))}
+			</ul>
+			<p class="flex flex-wrap gap-x-6 gap-y-3 max-lg:justify-center">
+				{allReviewsHref && <UnderlineLink href={allReviewsHref} tone="accent">{`Ver las ${tourReviews.length} opiniones`}</UnderlineLink>}
 				<UnderlineLink href={reviewFormHref} tone="accent">Deja tu opinión</UnderlineLink>
 			</p>
 		</div>

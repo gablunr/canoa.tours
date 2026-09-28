@@ -22,6 +22,8 @@ const watchContentTokenSources = {
 
 const buildStartedAt = new Date().toISOString();
 
+const serverRenderedIndexablePages = ['https://canoa.tours/opiniones'];
+
 const builtPage = builtPageReader(
   new URL('./dist/client/', import.meta.url),
   new URL('./.vercel/output/static/', import.meta.url),
@@ -35,7 +37,8 @@ export default defineConfig({
   integrations: [
     watchContentTokenSources,
     sitemap({
-      filter: (pageUrl) => builtPage(pageUrl).isIndexable,
+      customPages: serverRenderedIndexablePages,
+      filter: (pageUrl) => serverRenderedIndexablePages.includes(pageUrl) || builtPage(pageUrl).isIndexable,
       serialize: (item) => ({ ...item, lastmod: builtPage(item.url).lastModified ?? item.lastmod }),
     }),
   ],

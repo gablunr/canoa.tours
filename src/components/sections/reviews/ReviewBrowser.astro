@@ -1,79 +1,87 @@
 ---
 import { ChevronDown } from '@lucide/astro';
-import ClientPagination from '../../ui/ClientPagination.astro';
-import FilterPills from '../../ui/FilterPills.astro';
+import FilterLinks from '../../ui/FilterLinks.astro';
+import Pagination from '../../ui/Pagination.astro';
 import ReviewCard from '../../ui/cards/ReviewCard.astro';
-import type { Review } from '../../../data/reviews/reviews';
-import { reviewPageSize, reviewRatingFilters } from '../../../data/reviews/review-filters';
-import { destinations } from '../../../data/tours/destinations';
-import { tourProductKey } from '../../../data/tours/tours';
+import { allReviewRatings, reviewListParams, reviewPageSize, reviewTourKey } from '../../../data/reviews/review-filters';
+import { routes } from '../../../data/site/routes';
+import { hasActiveReviewFilters, reviewPageHref, type ReviewPage } from '../../../lib/reviews/review-page';
 
 interface Props {
 	id: string;
-	reviews: Review[];
-	showTour?: boolean;
-	tourFilter?: boolean;
+	reviewPage: ReviewPage;
 	listClass?: string;
 	class?: string;
 }
 
-const { id, reviews, showTour = true, tourFilter = false, listClass, class: className } = Astro.props;
+const { id, reviewPage, listClass, class: className } = Astro.props;
+const { filters, reviews, page, totalPages, ratingOptions, tourGroups, totalCount } = reviewPage;
 
-const hasControls = reviews.length > reviewPageSize;
-const ratingOptions = reviewRatingFilters.map(({ matches, ...filter }) => ({
-	...filter,
-	count: reviews.filter((review) => matches(review.rating)).length,
-}));
-
-const tourGroups = destinations
-	.map((destination) => {
-		const tours = destination.tours.flatMap((tour) => {
-			const count = reviews.filter((review) => review.tour.destination.id === destination.id && review.tour.tour.slug === tour.slug).length;
-			return count > 0 ? [{ value: `${destination.id}/${tour.slug}`, label: `${tour.name} (${count})` }] : [];
-		});
-		return { label: destination.name, tours };
-	})
-	.filter((group) => group.tours.length > 0);
-const showTourFilter = hasControls && tourFilter && tourGroups.flatMap((group) => group.tours).length > 1;
+const withAnchor = (href: string) => `${href}#${id}`;
+const showControls = totalCount > reviewPageSize || hasActiveReviewFilters(filters);
+const showTourFilter = filters.tour !== null || tourGroups.flatMap((group) => group.tours).length > 1;
+const activeTourKey = filters.tour ? reviewTourKey(filters.tour) : '';
 const tourSelectId = `${id}-excursion`;
 ---
 
-<div id={id} class:list={['grid scroll-mt-24 gap-5', className]} data-review-browser>
-	{hasControls && (
+<div id={id} class:list={['grid scroll-mt-24 gap-5', className]}>
+	{showControls && (
 		<div class="flex flex-wrap items-center gap-3 max-lg:justify-center">
-			<FilterPills legend="Filtrar por puntuación" name={`${id}-rating`} options={ratingOptions} checked="all" />
+			<FilterLinks
+				label="Filtrar por puntuación"
+				options={ratingOptions.map((option) => ({ ...option, href: withAnchor(option.href) }))}
+				current={filters.rating.value}
+			/>
 			{showTourFilter && (
-				<span class="liquid-glass relative inline-flex h-9 items-center bg-white/60 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-focus-visible:ring-2 has-focus-visible:ring-accent">
-					<label for={tourSelectId} class="sr-only">Excursión</label>
-					<select id={tourSelectId} class="h-full cursor-pointer appearance-none bg-transparent pr-9 pl-4 outline-none" data-review-tour-filter>
-						<option value="">Todas las excursiones</option>
-						{tourGroups.map((group) => (
-							<optgroup label={group.label}>
-								{group.tours.map((tour) => <option value={tour.value}>{tour.label}</option>)}
-							</optgroup>
-						))}
-					</select>
-					<ChevronDown size={14} stroke-width={2} class="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2" aria-hidden="true" />
-				</span>
+				<form method="get" action={withAnchor(routes.reviews)} data-review-tour-form>
+					{filters.rating !== allReviewRatings && <input type="hidden" name={reviewListParams.rating} value={filters.rating.value} />}
+					<span class="liquid-glass relative inline-flex h-9 items-center bg-white/60 text-[13px] font-medium text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary has-focus-visible:ring-2 has-focus-visible:ring-accent">
+						<label for={tourSelectId} class="sr-only">Excursión</label>
+						<select id={tourSelectId} name={reviewListParams.tour} class="h-full cursor-pointer appearance-none bg-transparent pr-9 pl-4 outline-none">
+							<option value="" selected={!activeTourKey}>Todas las excursiones</option>
+							{tourGroups.map((group) => (
+								<optgroup label={group.label}>
+									{group.tours.map((tour) => (
+										<option value={tour.value} selected={tour.value === activeTourKey}>
+											{tour.label}
+										</option>
+									))}
+								</optgroup>
+							))}
+						</select>
+						<ChevronDown size={14} stroke-width={2} class="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2" aria-hidden="true" />
+					</span>
+					<noscript>
+						<button type="submit" class="ml-2 text-[13px] font-medium text-accent-strong underline">Ver</button>
+					</noscript>
+				</form>
 			)}
 		</div>
 	)}
 
-	<ul class:list={['grid gap-4', listClass]}>
-		{reviews.map((review, index) => (
-			<li data-review-item data-rating={review.rating} data-tour={tourProductKey(review.tour)} hidden={index >= reviewPageSize}>
-				<ReviewCard review={review} showTour={showTour} />
-			</li>
-		))}
-	</ul>
+	{reviews.length > 0 ? (
+		<ul class:list={['grid gap-4', listClass]}>
+			{reviews.map((review) => (
+				<li data-review-item>
+					<ReviewCard review={review} />
+				</li>
+			))}
+		</ul>
+	) : (
+		<p class="text-[15px] leading-relaxed text-muted max-lg:text-center">No hay opiniones con ese filtro.</p>
+	)}
 
-	<p class="text-[15px] leading-relaxed text-muted max-lg:text-center" data-review-browser-empty hidden>No hay opiniones con ese filtro.</p>
-
-	{hasControls && <ClientPagination label="Páginas de opiniones" class="flex justify-end max-lg:justify-center" />}
+	<Pagination
+		label="Páginas de opiniones"
+		page={page}
+		totalPages={totalPages}
+		href={(targetPage) => withAnchor(reviewPageHref(filters, targetPage))}
+		class="flex justify-end max-lg:justify-center"
+	/>
 </div>
 
 <script>
-	import { initReviewBrowser } from '../../../scripts/reviews/review-browser';
-
-	document.querySelectorAll<HTMLElement>('[data-review-browser]').forEach(initReviewBrowser);
+	document.querySelectorAll<HTMLFormElement>('[data-review-tour-form]').forEach((form) => {
+		form.querySelector('select')?.addEventListener('change', () => form.requestSubmit());
+	});
 </script>

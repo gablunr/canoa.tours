@@ -1,0 +1,38 @@
+---
+import { Star } from '@lucide/astro';
+
+interface FilterLink {
+	value: string;
+	label: string;
+	href: string;
+	count?: number;
+	starred?: boolean;
+	accessibleLabel?: string;
+}
+
+interface Props {
+	label: string;
+	options: FilterLink[];
+	current: string;
+	class?: string;
+}
+
+const { label, options, current, class: className } = Astro.props;
+---
+
+<nav aria-label={label} class:list={['flex flex-wrap gap-1.5 max-lg:justify-center sm:gap-2', className]}>
+	{options.map((option) => (
+		<a
+			href={option.href}
+			aria-current={option.value === current ? 'page' : undefined}
+			class="liquid-glass inline-flex h-9 shrink-0 items-center gap-1.5 bg-white/60 px-3 text-[13px] font-medium whitespace-nowrap text-secondary transition-colors duration-300 ease-smooth hover:bg-white/90 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-[current=page]:bg-primary aria-[current=page]:text-white sm:px-4"
+		>
+			<span class="inline-flex items-center gap-1" aria-hidden={option.accessibleLabel ? 'true' : undefined}>
+				{option.label}
+				{option.starred && <Star size={12} stroke-width={0} fill="currentColor" class="text-sun" />}
+			</span>
+			{option.accessibleLabel && <span class="sr-only">{option.accessibleLabel}</span>}
+			{option.count !== undefined && <span class="tabular-nums opacity-60">{option.count}</span>}
+		</a>
+	))}
+</nav>

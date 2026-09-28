@@ -4,11 +4,33 @@ import PageHeader from '../components/sections/page/PageHeader.astro';
 import ReviewsPage from '../components/sections/reviews/ReviewsPage.astro';
 import EdgeWaves from '../components/ui/EdgeWaves.astro';
 import { reviewsLink } from '../data/site/navigation';
-import { reviewsIntro } from '../data/reviews/reviews-page';
+import { routes } from '../data/site/routes';
+import { reviewsIntroFor } from '../data/reviews/reviews-page';
+import { hasActiveReviewFilters, loadReviewPage, readReviewPageRequest, reviewPageHref } from '../lib/reviews/review-page';
+
+export const prerender = false;
+
+const request = readReviewPageRequest(Astro.url.searchParams);
+const reviewPage = await loadReviewPage(request.filters, request.page ?? 1);
+if (request.page !== null && request.page !== reviewPage.page) return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page));
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+
+const filtered = hasActiveReviewFilters(reviewPage.filters);
+const baseTitle = 'Opiniones de clientes sobre nuestras excursiones';
+const title = reviewPage.page > 1 ? `${baseTitle}, página ${reviewPage.page}` : baseTitle;
+const intro = reviewsIntroFor(reviewPage.totalCount > 0);
+const canonicalPath = filtered ? routes.reviews : reviewPageHref(reviewPage.filters, reviewPage.page);
 ---
 
-<Layout title="Opiniones de clientes sobre nuestras excursiones" description={reviewsIntro} breadcrumbs={[{ name: reviewsLink.label, path: reviewsLink.href }]}>
+<Layout
+	title={title}
+	description={intro}
+	breadcrumbs={[{ name: reviewsLink.label, path: reviewsLink.href }]}
+	noindex={filtered}
+	canonicalPath={canonicalPath}
+>
 	<EdgeWaves />
-	<PageHeader title={reviewsLink.label} intro={reviewsIntro} />
-	<ReviewsPage />
+	<PageHeader title={reviewsLink.label} intro={intro} />
+	<ReviewsPage reviewPage={reviewPage} />
 </Layout>

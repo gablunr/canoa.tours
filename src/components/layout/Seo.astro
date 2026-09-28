@@ -35,6 +35,7 @@ export interface Props {
 	article?: { publishedAt: Date };
 	modifiedAt?: Date;
 	noindex?: boolean;
+	canonicalPath?: string;
 }
 
 const {
@@ -49,9 +50,10 @@ const {
 	article,
 	modifiedAt = article?.publishedAt,
 	noindex = false,
+	canonicalPath,
 } = Astro.props;
 
-const url = canonicalUrl(Astro.url.pathname);
+const url = canonicalUrl(canonicalPath ?? Astro.url.pathname);
 const shareImage = await socialImage(image);
 const organizationImage = image === defaultSocialImage ? shareImage : await socialImage(defaultSocialImage);
 const logoImage = await getImage({ src: logo, format: 'png' });
@@ -89,7 +91,7 @@ const structuredDataJson = JSON.stringify(structuredData).replaceAll('<', '\\u00
 <title>{pageTitle(title)}</title>
 <meta name="description" content={description} />
 <meta name="robots" content={robots} />
-{!noindex && <link rel="canonical" href={url} />}
+{(!noindex || canonicalPath) && <link rel="canonical" href={url} />}
 
 <meta property="og:locale" content={openGraphLocale} />
 <meta property="og:site_name" content={company.brandName} />

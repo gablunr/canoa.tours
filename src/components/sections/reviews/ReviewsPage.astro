@@ -12,14 +12,19 @@ import { whatsappIcon as WhatsAppIcon } from '../../../data/site/brand-icons';
 import { company, whatsappMessageHref } from '../../../data/site/company';
 import { cancellationsLink, contactLink } from '../../../data/site/navigation';
 import { routes } from '../../../data/site/routes';
-import { reviewStats, reviews } from '../../../data/reviews/reviews';
 import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
+import type { ReviewPage } from '../../../lib/reviews/review-page';
 import { tourDetails, tourPhoto } from '../../../data/tours/tours';
 import { seoImageSource } from '../../../lib/images';
 
+interface Props {
+	reviewPage: ReviewPage;
+}
+
+const { reviewPage } = Astro.props;
+const { stats } = reviewPage;
 const { whatsapp } = company;
 const questionMessage = 'Hola, estoy pensando en reservar la excursión [nombre] para el [fecha] y tengo una pregunta';
-const stats = reviewStats(reviews);
 const signInHref = `/account/sign-in?next=${encodeURIComponent(`${routes.reviews}#${reviewFormAnchor}`)}`;
 
 const tourThumbnails = Object.fromEntries(
@@ -45,7 +50,7 @@ const pickerFilters = [
 {stats && (
 	<PageSection id="reviews-list-title" title="Opiniones publicadas">
 		<p data-reveal class="max-lg:text-center"><RatingBadge stats={stats} /></p>
-		<ReviewBrowser id="all-reviews" reviews={reviews} tourFilter listClass="md:grid-cols-2" class="mt-8" />
+		<ReviewBrowser id="all-reviews" reviewPage={reviewPage} listClass="md:grid-cols-2" class="mt-8" />
 	</PageSection>
 )}
 
