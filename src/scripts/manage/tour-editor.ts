@@ -59,6 +59,7 @@ function parseJson<Value>(value: string | undefined, fallback: Value): Value {
 }
 
 const missingText = (count: number) => `${count === 1 ? 'Falta 1 dato' : `Faltan ${count} datos`}.`;
+const pendingText = (count: number) => `${count === 1 ? '1 pendiente' : `${count} pendientes`}.`;
 
 function focusField(target: HTMLElement) {
 	target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -206,7 +207,8 @@ export function initTourEditor(root: HTMLElement) {
 		form.querySelector<HTMLElement>('#field-pickupFees')?.dispatchEvent(new Event('input', { bubbles: true }));
 	});
 
-	const checklistSummary = form.querySelector<HTMLElement>('[data-checklist-summary]');
+	const requiredSummary = form.querySelector<HTMLElement>('[data-checklist-summary="required"]');
+	const recommendedSummary = form.querySelector<HTMLElement>('[data-checklist-summary="recommended"]');
 	const refreshChecklist = (editable: TourEditable) => {
 		const checklist = saleChecklist(editable);
 		[...checklist.required, ...checklist.recommended].forEach((item) => {
@@ -224,7 +226,9 @@ export function initTourEditor(root: HTMLElement) {
 			if (state) state.textContent = item.done ? ', hecho' : ', pendiente';
 		});
 		const missing = checklist.required.filter((item) => !item.done).length;
-		if (checklistSummary) checklistSummary.textContent = missing === 0 ? (checklistSummary.dataset.readyText ?? '') : missingText(missing);
+		const pending = checklist.recommended.filter((item) => !item.done).length;
+		if (requiredSummary) requiredSummary.textContent = missing === 0 ? (requiredSummary.dataset.readyText ?? '') : missingText(missing);
+		if (recommendedSummary) recommendedSummary.textContent = pending === 0 ? (recommendedSummary.dataset.readyText ?? '') : pendingText(pending);
 	};
 
 	const googlePreview = form.querySelector<HTMLElement>('[data-google-preview]');

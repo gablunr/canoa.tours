@@ -26,7 +26,9 @@ const statusTexts = {
 };
 
 const readyText = 'Tiene todo lo necesario.';
+const recommendedReadyText = 'Todo hecho.';
 const missingText = (count: number) => `${count === 1 ? 'Falta 1 dato' : `Faltan ${count} datos`}.`;
+const pendingText = (count: number) => `${count === 1 ? '1 pendiente' : `${count} pendientes`}.`;
 
 const destinationOptions = destinations.map((destination) => ({ value: destination.slug, label: destination.name }));
 const pathPrefix = `${destinationHref(data.destination)}/`;
@@ -39,9 +41,23 @@ const panelBody = 'grid gap-4 px-5 pb-5';
 const textButton = 'w-fit cursor-pointer rounded-full text-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-accent';
 const checkLink = 'rounded text-sm outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent';
 
-const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required' | 'recommended' }[] = [
-	{ title: 'Para ponerla a la venta', items: checklist.required, kind: 'required' },
-	{ title: 'Recomendado', items: checklist.recommended, kind: 'recommended' },
+const pendingRecommended = checklist.recommended.filter((item) => !item.done).length;
+
+const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required' | 'recommended'; readyText: string; statusText: string }[] = [
+	{
+		title: 'Para ponerla a la venta',
+		items: checklist.required,
+		kind: 'required',
+		readyText,
+		statusText: missingRequired === 0 ? readyText : missingText(missingRequired),
+	},
+	{
+		title: 'Recomendado',
+		items: checklist.recommended,
+		kind: 'recommended',
+		readyText: recommendedReadyText,
+		statusText: pendingRecommended === 0 ? recommendedReadyText : pendingText(pendingRecommended),
+	},
 ];
 ---
 
@@ -62,18 +78,19 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 					</a>
 				)}
 
-				<div class="grid gap-4" data-checklist>
+				<div class="grid gap-2" data-checklist>
 					{checklistGroups.map((group) => (
-						<div>
-							<h3 class="flex items-baseline justify-between gap-3 text-[13px] font-semibold text-primary">
-								{group.title}
-								{group.kind === 'required' && (
-									<span class="text-xs font-normal text-muted" data-checklist-summary data-ready-text={readyText}>
-										{missingRequired === 0 ? readyText : missingText(missingRequired)}
+						<details class="group/check rounded-2xl bg-background" open={group.kind === 'required' && missingRequired > 0}>
+							<summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+								<span class="min-w-0">
+									<span class="block text-[13px] font-semibold text-primary">{group.title}</span>
+									<span class="mt-0.5 block text-xs text-muted" data-checklist-summary={group.kind} data-ready-text={group.readyText}>
+										{group.statusText}
 									</span>
-								)}
-							</h3>
-							<ul class="mt-2 grid gap-1.5">
+								</span>
+								<ChevronDown size={15} stroke-width={1.75} class="shrink-0 text-muted transition-transform duration-300 ease-smooth group-open/check:rotate-180" aria-hidden="true" />
+							</summary>
+							<ul class="grid gap-1.5 px-3.5 pb-3.5">
 								{group.items.map((item) => (
 									<li class="flex items-start gap-2" data-check-item={item.id} data-check-kind={group.kind} data-done={item.done ? '' : undefined}>
 										<span class="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-accent text-white" data-check-done hidden={!item.done}>
@@ -89,7 +106,7 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 									</li>
 								))}
 							</ul>
-						</div>
+						</details>
 					))}
 				</div>
 
