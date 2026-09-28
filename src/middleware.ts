@@ -3,6 +3,7 @@ import { supabaseAdmin } from './lib/supabase/admin';
 import { createSupabaseServerClient } from './lib/supabase/server';
 
 const noindexSections = ['/manage', '/account', '/booking', '/api'];
+const sessionSections = ['/account', '/api/account', '/manage', '/api/manage', '/_actions'];
 const publicAccountPaths = ['/account/sign-in', '/account/callback', '/account/reviews/new'];
 const ticketPathPattern = /^\/account\/bookings\/[^/]+$/;
 
@@ -29,9 +30,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	const { pathname, search } = context.url;
 	const supabase = createSupabaseServerClient(context);
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
+	const needsSession = sessionSections.some((section) => isInSection(pathname, section));
+	const user = needsSession ? (await supabase.auth.getUser()).data.user : null;
 
 	let staffRole: App.Locals['staffRole'] = null;
 	if (user) {
