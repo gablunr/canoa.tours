@@ -1,4 +1,5 @@
 import type Stripe from 'stripe';
+import { claimBookingEmail, releaseBookingEmailClaim } from '../email/booking-email-claims';
 import { sendBookingEmail, type BookingEmailKind, type BookingEmailOptions } from '../email/booking-emails';
 import { stripe } from '../stripe';
 import { supabaseAdmin } from '../supabase/admin';
@@ -21,6 +22,21 @@ export async function sendBookingEmailSafely(kind: BookingEmailKind, bookingId: 
 		await sendBookingEmail(kind, bookingId, options);
 	} catch (error) {
 		console.error('booking_email_not_sent', { kind, bookingId, error });
+	}
+}
+
+async function sendNoSeatsEmailOnce(bookingId: string, origin: string, refundAmount: number) {
+	const claimed = await claimBookingEmail(bookingId, 'no_seats_refunded').catch((error) => {
+		console.error('booking_email_claim_failed', { bookingId, error });
+		return true;
+	});
+	if (!claimed) return;
+
+	try {
+		await sendBookingEmail('no_seats_refunded', bookingId, { origin, refundAmount });
+	} catch (error) {
+		console.error('booking_email_not_sent', { kind: 'no_seats_refunded', bookingId, error });
+		await releaseBookingEmailClaim(bookingId, 'no_seats_refunded');
 	}
 }
 
@@ -88,5 +104,5 @@ export async function fulfillDepositCheckout(session: Stripe.Checkout.Session, o
 	const { error: cancelError } = await supabaseAdmin.rpc('cancel_booking', { p_booking_id: bookingId, p_reason: code });
 	if (cancelError) throw cancelError;
 
-	await sendBookingEmailSafely('no_seats_refunded', bookingId, { origin, refundAmount: refund?.amount ?? paidAmount });
+	await sendNoSeatsEmailOnce(bookingId, origin, refund?.amount ?? paidAmount);
 }
