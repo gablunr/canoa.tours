@@ -45,7 +45,7 @@ export function renderBookingEmail(kind: BookingEmailKind, details: BookingDetai
 			return bookingCancelledEmail(details, { refundAmount: options.refundAmount, tourUrl });
 		case 'balance_payment_link':
 			if (!options.paymentUrl) throw new Error('payment_url_required');
-			return balancePaymentLinkEmail(details, { paymentUrl: options.paymentUrl, amount: details.balanceAmount });
+			return balancePaymentLinkEmail(details, { paymentUrl: options.paymentUrl, amount: options.chargedAmount ?? details.balanceAmount });
 		case 'tour_reminder':
 			return tourReminderEmail(details, { ticketUrl: bookingTicketUrl });
 		case 'review_request':

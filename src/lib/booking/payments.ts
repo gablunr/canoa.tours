@@ -175,30 +175,34 @@ export async function refundDepositSafely(bookingId: string, amount: number, rea
 	}
 }
 
-async function createBalancePaymentLink(details: BookingDetails, origin: string, stripeCustomerId: string | null): Promise<string> {
+async function createBalancePaymentLink(details: BookingDetails, origin: string, amount: number): Promise<string> {
 	const metadata = { booking_id: details.id, booking_code: details.code, kind: 'no_show_charge' };
 	const bookingTicketUrl = ticketUrl(origin, details.code);
+	const amountCents = toCents(amount);
 
-	const session = await stripe.checkout.sessions.create({
-		mode: 'payment',
-		...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: details.customerEmail }),
-		client_reference_id: details.id,
-		line_items: [
-			{
-				quantity: 1,
-				price_data: {
-					currency: details.currency.toLowerCase(),
-					unit_amount: toCents(details.balanceAmount),
-					product_data: { name: details.productName, description: `Saldo pendiente de la reserva ${details.code}` },
+	const session = await stripe.checkout.sessions.create(
+		{
+			mode: 'payment',
+			...(details.stripeCustomerId ? { customer: details.stripeCustomerId } : { customer_email: details.customerEmail }),
+			client_reference_id: details.id,
+			line_items: [
+				{
+					quantity: 1,
+					price_data: {
+						currency: details.currency.toLowerCase(),
+						unit_amount: amountCents,
+						product_data: { name: details.productName, description: `Saldo pendiente de la reserva ${details.code}` },
+					},
 				},
-			},
-		],
-		payment_intent_data: { description: `Saldo pendiente de la reserva ${details.code}`, metadata },
-		metadata,
-		success_url: bookingTicketUrl,
-		cancel_url: bookingTicketUrl,
-		locale: 'es',
-	});
+			],
+			payment_intent_data: { description: `Saldo pendiente de la reserva ${details.code}`, metadata },
+			metadata,
+			success_url: bookingTicketUrl,
+			cancel_url: bookingTicketUrl,
+			locale: 'es',
+		},
+		{ idempotencyKey: `no_show_link_${details.id}_${amountCents}` },
+	);
 
 	if (!session.url) throw new Error('checkout_url_missing');
 	return session.url;
@@ -209,11 +213,22 @@ async function recordBookingEvent(bookingId: string, type: string, data: Record<
 	if (error) console.error('booking_event_not_recorded', { bookingId, type, error });
 }
 
-async function sendBalancePaymentLink(details: BookingDetails, origin: string) {
-	const paymentUrl = await createBalancePaymentLink(details, origin, details.stripeCustomerId);
-	await sendBookingEmail('balance_payment_link', details.id, { origin, paymentUrl });
-	await recordBookingEvent(details.id, 'no_show_payment_link_sent', { amount: details.balanceAmount });
+async function sendBalancePaymentLink(details: BookingDetails, origin: string, amount: number) {
+	const paymentUrl = await createBalancePaymentLink(details, origin, amount);
+	await sendBookingEmail('balance_payment_link', details.id, { origin, paymentUrl, chargedAmount: amount });
+	await recordBookingEvent(details.id, 'no_show_payment_link_sent', { amount });
 	return { status: 'payment_link_sent' as const };
+}
+
+async function balanceAlreadyCollected(bookingId: string): Promise<number> {
+	const { data, error } = await supabaseAdmin
+		.from('payments')
+		.select('amount')
+		.eq('booking_id', bookingId)
+		.in('kind', ['balance', 'no_show_charge'])
+		.in('status', ['succeeded', 'pending']);
+	if (error) throw error;
+	return (data ?? []).reduce((total, payment) => total + Number(payment.amount), 0);
 }
 
 export async function chargeNoShowBalance(
@@ -224,9 +239,12 @@ export async function chargeNoShowBalance(
 	if (!details) return { status: 'failed', message: 'booking_not_found' };
 	if (details.balanceAmount <= 0 || details.hasInsurance) return { status: 'nothing_to_charge' };
 
+	const amountDue = (toCents(details.balanceAmount) - toCents(await balanceAlreadyCollected(details.id))) / 100;
+	if (amountDue <= 0) return { status: 'nothing_to_charge' };
+
 	if (!details.stripeCustomerId || !details.stripePaymentMethodId) {
 		try {
-			return await sendBalancePaymentLink(details, origin);
+			return await sendBalancePaymentLink(details, origin, amountDue);
 		} catch (error) {
 			return { status: 'failed', message: error instanceof Error ? error.message : 'payment_link_failed' };
 		}
@@ -235,7 +253,7 @@ export async function chargeNoShowBalance(
 	try {
 		const paymentIntent = await stripe.paymentIntents.create(
 			{
-				amount: toCents(details.balanceAmount),
+				amount: toCents(amountDue),
 				currency: details.currency.toLowerCase(),
 				customer: details.stripeCustomerId,
 				payment_method: details.stripePaymentMethodId,
@@ -244,10 +262,10 @@ export async function chargeNoShowBalance(
 				description: `Saldo por no presentarse, reserva ${details.code}`,
 				metadata: { booking_id: details.id, booking_code: details.code, kind: 'no_show_charge' },
 			},
-			{ idempotencyKey: `no_show_charge_${details.id}` },
+			{ idempotencyKey: `no_show_charge_${details.id}_${toCents(amountDue)}` },
 		);
 
-		if (paymentIntent.status === 'requires_action') return await sendBalancePaymentLink(details, origin);
+		if (paymentIntent.status === 'requires_action') return await sendBalancePaymentLink(details, origin, amountDue);
 
 		const chargedAmount = paymentIntent.amount / 100;
 		await recordPayment({
@@ -269,7 +287,7 @@ export async function chargeNoShowBalance(
 	} catch (error) {
 		if (error instanceof Stripe.errors.StripeError && error.code === 'authentication_required') {
 			try {
-				return await sendBalancePaymentLink(details, origin);
+				return await sendBalancePaymentLink(details, origin, amountDue);
 			} catch (linkError) {
 				return { status: 'failed', message: linkError instanceof Error ? linkError.message : 'payment_link_failed' };
 			}
