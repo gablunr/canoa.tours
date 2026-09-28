@@ -229,7 +229,6 @@ export type TourContentInput = z.input<typeof tourContentSchema>;
 export type TourOperations = z.output<typeof tourOperationsSchema>;
 export type TourOperationsInput = z.input<typeof tourOperationsSchema>;
 export type TourImage = z.output<typeof tourImageSchema>;
-export type TourImages = z.output<typeof tourImagesSchema>;
 
 export interface TourEditable {
 	content: TourContent;
@@ -442,5 +441,3 @@ export function missingForSale(tour: TourEditable): { required: MissingItem[]; r
 		recommended: checklist.recommended.filter((item) => !item.done).map(withoutDone),
 	};
 }
-
-export const isReadyForSale = (tour: TourEditable) => missingForSale(tour).required.length === 0;

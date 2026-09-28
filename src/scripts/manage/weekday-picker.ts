@@ -40,11 +40,3 @@ export function initWeekdayPickers(root: ParentNode = document) {
 export function readWeekdays(picker: HTMLElement): number[] {
 	return normalizeWeekdays(checkboxesOf(picker).filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value));
 }
-
-export function setWeekdays(picker: HTMLElement, days: readonly number[]) {
-	const selected = new Set(normalizeWeekdays(days));
-	checkboxesOf(picker).forEach((checkbox) => {
-		checkbox.checked = selected.has(Number(checkbox.value));
-	});
-	refreshShortcut(picker);
-}

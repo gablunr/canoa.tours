@@ -52,8 +52,6 @@ export interface Company {
 	paymentMethods: PaymentMethod[];
 }
 
-export const phoneFrom = (label: string, number: string): Phone => ({ label, number, href: `tel:${number}` });
-
 export const whatsappFrom = (label: string, number: string): Phone => ({ label, number, href: `https://wa.me/${number.replace(/\D/g, '')}` });
 
 export const whatsappMessageHref = (whatsapp: Phone, message: string) => `${whatsapp.href}?text=${encodeURIComponent(message)}`;

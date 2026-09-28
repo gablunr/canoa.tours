@@ -274,9 +274,3 @@ export function readListValues(listRoot: HTMLElement): ListValues {
 export const readTextList = (listRoot: HTMLElement) => readListValues(listRoot) as string[];
 
 export const readObjectList = (listRoot: HTMLElement) => readListValues(listRoot) as ListItem[];
-
-export function setListValues(listRoot: HTMLElement, items: readonly unknown[]) {
-	setUpListEditor(listRoot);
-	renderRows(listRoot, toRowValues(items));
-	notifyListChange(listRoot);
-}

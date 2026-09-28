@@ -11,8 +11,6 @@ export type SiteStatusSnapshot = {
 
 export const rebuildWindowMs = 10 * 60 * 1000;
 
-export const siteStatusPollMs = 20 * 1000;
-
 export function currentBuildStartedAt(): string {
 	return __BUILD_STARTED_AT__;
 }
