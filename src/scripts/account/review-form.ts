@@ -1,11 +1,15 @@
 import { actions, isInputError } from 'astro:actions';
 import { clearErrorOnInput, validateFields } from '../ui/form-validation';
+import { shrinkPhoto } from '../ui/shrink-photo';
 
 const ratingLabels = ['Muy mala', 'Mala', 'Normal', 'Buena', 'Excelente'];
 const maxPhotos = 5;
-const maxPhotoBytes = 5 * 1024 * 1024;
+const maxPhotosTotalBytes = 4 * 1024 * 1024;
+const photoLongEdge = 1600;
+const acceptedPhotoTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 const tooManyPhotosMessage = `Puedes subir hasta ${maxPhotos} fotos.`;
-const photoTooHeavyMessage = 'Cada foto puede pesar como máximo 5 MB.';
+const photosTooHeavyMessage = 'Las fotos pesan demasiado entre todas. Quita alguna para enviar tu opinión.';
+const unreadablePhotoMessage = 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.';
 
 function showMessage(element: HTMLElement | null | undefined, message: string | null) {
 	if (!element) return;
@@ -91,19 +95,20 @@ function initPhotos(form: HTMLFormElement) {
 		render();
 	};
 
-	const addPhotos = (picked: File[]) => {
+	const addPhotos = async (picked: File[]) => {
 		const images = picked.filter((file) => file.type.startsWith('image/'));
-		const light = images.filter((file) => file.size <= maxPhotoBytes);
-		const merged = [...photos, ...light];
+		const shrunk = await Promise.all(images.map((image) => shrinkPhoto(image, { longEdge: photoLongEdge })));
+		const readable = shrunk.filter((file) => acceptedPhotoTypes.includes(file.type));
+		const merged = [...photos, ...readable];
 		photos = merged.slice(0, maxPhotos);
 		sync();
 
 		if (merged.length > maxPhotos) showMessage(errorMessage, tooManyPhotosMessage);
-		else if (light.length < images.length) showMessage(errorMessage, photoTooHeavyMessage);
-		else showMessage(errorMessage, null);
+		else if (readable.length < images.length) showMessage(errorMessage, unreadablePhotoMessage);
+		else showMessage(errorMessage, photosProblem(photos));
 	};
 
-	input.addEventListener('change', () => addPhotos(Array.from(input.files ?? [])));
+	input.addEventListener('change', () => void addPhotos(Array.from(input.files ?? [])));
 
 	dropZone.addEventListener('dragover', (event) => {
 		event.preventDefault();
@@ -113,14 +118,13 @@ function initPhotos(form: HTMLFormElement) {
 	dropZone.addEventListener('drop', (event) => {
 		event.preventDefault();
 		dropZone.toggleAttribute('data-dragging', false);
-		addPhotos(Array.from(event.dataTransfer?.files ?? []));
+		void addPhotos(Array.from(event.dataTransfer?.files ?? []));
 	});
 }
 
-function photosProblem(input: HTMLInputElement | null): string | null {
-	const files = Array.from(input?.files ?? []);
+function photosProblem(files: File[]): string | null {
 	if (files.length > maxPhotos) return tooManyPhotosMessage;
-	if (files.some((file) => file.size > maxPhotoBytes)) return photoTooHeavyMessage;
+	if (files.reduce((total, file) => total + file.size, 0) > maxPhotosTotalBytes) return photosTooHeavyMessage;
 	return null;
 }
 
@@ -143,7 +147,7 @@ export function initReviewForm(form: HTMLFormElement) {
 		showMessage(errorMessage, null);
 		if (!validateFields(form)) return;
 
-		const photoError = photosProblem(photosInput);
+		const photoError = photosProblem(Array.from(photosInput?.files ?? []));
 		if (photoError) {
 			showMessage(errorMessage, photoError);
 			return;

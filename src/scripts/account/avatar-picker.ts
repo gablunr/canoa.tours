@@ -1,37 +1,14 @@
 import { actions, isInputError } from 'astro:actions';
 import { setAvatarImage } from '../ui/avatar';
+import { shrinkPhoto } from '../ui/shrink-photo';
 
 const maxUploadBytes = 4 * 1024 * 1024;
 const uploadShortEdge = 1024;
 
 type AvatarOutcome = { avatarUrl: string } | { errorMessage: string };
 
-async function shrinkForUpload(file: File): Promise<File> {
-	let bitmap: ImageBitmap;
-	try {
-		bitmap = await createImageBitmap(file);
-	} catch {
-		return file;
-	}
-
-	const scale = Math.min(1, uploadShortEdge / Math.min(bitmap.width, bitmap.height));
-	const canvas = document.createElement('canvas');
-	canvas.width = Math.round(bitmap.width * scale);
-	canvas.height = Math.round(bitmap.height * scale);
-	const context = canvas.getContext('2d');
-	if (!context) {
-		bitmap.close();
-		return file;
-	}
-	context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-	bitmap.close();
-
-	const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-	return blob ? new File([blob], 'avatar.jpg', { type: 'image/jpeg' }) : file;
-}
-
 async function uploadAvatar(file: File): Promise<AvatarOutcome> {
-	const upload = await shrinkForUpload(file);
+	const upload = await shrinkPhoto(file, { shortEdge: uploadShortEdge });
 	if (upload.size > maxUploadBytes) return { errorMessage: 'La foto puede pesar como máximo 4 MB.' };
 
 	const formData = new FormData();
