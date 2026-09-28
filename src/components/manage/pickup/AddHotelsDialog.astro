@@ -1,0 +1,40 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import TextAreaField from '../../ui/form/TextAreaField.astro';
+
+interface Props {
+	zoneName: string;
+}
+
+const { zoneName } = Astro.props;
+---
+
+<Dialog size="lg" aria-labelledby="anadir-hoteles-titulo" data-add-hotels-dialog>
+	<h2 id="anadir-hoteles-titulo" class="text-xl font-semibold tracking-[-0.03em]">Añadir hoteles</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Se añaden a {zoneName}.</p>
+
+	<form class="mt-6 grid gap-5" data-add-hotels-form novalidate>
+		<TextAreaField
+			label="Hoteles"
+			name="hotelNames"
+			required
+			rows={8}
+			hint="Pega la lista, un hotel por línea."
+			placeholder={'Barceló Bávaro Palace\nIberostar Selection Bávaro'}
+			requiredMessage="Pega al menos un hotel."
+		/>
+
+		<div class="grid gap-1.5 text-sm" aria-live="polite">
+			<p class="text-secondary" data-add-hotels-summary hidden></p>
+			<p class="text-sun-strong" data-add-hotels-duplicates hidden></p>
+		</div>
+
+		<p class="text-sm text-error" role="alert" data-add-hotels-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-add-hotels-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-add-hotels-submit>Añadir</DialogButton>
+		</div>
+	</form>
+</Dialog>

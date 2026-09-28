@@ -1,0 +1,45 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import SelectField from '../../ui/form/SelectField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { glassChipButton } from '../glass-classes';
+import type { PickupZone } from './pickup-data';
+
+interface Props {
+	zones: PickupZone[];
+}
+
+const { zones } = Astro.props;
+const zoneOptions = zones.map((zone) => ({ value: zone.id, label: zone.name }));
+---
+
+<Dialog aria-labelledby="editar-hotel-titulo" data-edit-hotel-dialog>
+	<h2 id="editar-hotel-titulo" class="text-xl font-semibold tracking-[-0.03em]">Editar hotel</h2>
+
+	<form class="mt-6 grid gap-5" data-edit-hotel-form novalidate>
+		<TextField label="Nombre" name="hotelName" required maxlength={120} autocomplete="off" requiredMessage="Escribe el nombre del hotel." />
+		<SelectField label="Zona" name="hotelZone" options={zoneOptions} required />
+		<p class="-mt-3 text-xs text-muted" data-edit-hotel-move-hint hidden>Sus reservas pasan también a la nueva zona.</p>
+
+		<label class="flex cursor-pointer items-start gap-3">
+			<input type="checkbox" name="hotelActive" class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary" />
+			<span class="text-sm leading-relaxed text-primary">
+				Se puede elegir al reservar
+				<span class="block text-xs text-muted">Si lo desmarcas, queda oculto en la web.</span>
+			</span>
+		</label>
+
+		<div class="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+			<button type="button" class={glassChipButton} data-edit-hotel-remove>Borrar hotel</button>
+			<p class="text-xs text-muted" data-edit-hotel-remove-note hidden>Tiene reservas, así que no se borra. Ocúltalo si ya no recogemos allí.</p>
+		</div>
+
+		<p class="text-sm text-error" role="alert" data-edit-hotel-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-edit-hotel-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-edit-hotel-submit>Guardar</DialogButton>
+		</div>
+	</form>
+</Dialog>

@@ -1,0 +1,33 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import TextAreaField from '../../ui/form/TextAreaField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import MoneyField from '../form/MoneyField.astro';
+---
+
+<Dialog size="lg" aria-labelledby="nueva-zona-titulo" data-new-zone-dialog>
+	<h2 id="nueva-zona-titulo" class="text-xl font-semibold tracking-[-0.03em]">Nueva zona</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Todas las excursiones empiezan recogiendo aquí con la misma tarifa.</p>
+
+	<form class="mt-6 grid gap-5" data-new-zone-form novalidate>
+		<TextField label="Nombre" name="newZoneName" required maxlength={80} autocomplete="off" placeholder="Juanillo" requiredMessage="Escribe el nombre de la zona." />
+		<TextAreaField label="Descripción" name="newZoneDescription" maxlength={400} rows={3} counter hint="Sale en Zonas de recogida." />
+		<MoneyField
+			label="Tarifa inicial por persona"
+			name="newZoneFee"
+			value={0}
+			max={1000}
+			required
+			hint="Para todas las excursiones. Luego la ajustas en cada una."
+			requiredMessage="Escribe la tarifa, aunque sea 0."
+		/>
+
+		<p class="text-sm text-error" role="alert" data-new-zone-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-new-zone-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-new-zone-submit>Crear zona</DialogButton>
+		</div>
+	</form>
+</Dialog>

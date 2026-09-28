@@ -1,0 +1,84 @@
+---
+import { formatPrice } from '../../../lib/format';
+import { glassButtonPrimary, surfacePanel } from '../glass-classes';
+import type { ZoneFeeGroup } from './pickup-data';
+
+interface Props {
+	zoneId: string;
+	groups: ZoneFeeGroup[];
+	canEdit: boolean;
+}
+
+const { zoneId, groups, canEdit } = Astro.props;
+const servedCount = groups.flatMap((group) => group.tours).filter((tour) => tour.served).length;
+const tourCount = groups.reduce((total, group) => total + group.tours.length, 0);
+const feeLabel = (fee: number | null) => (fee === null ? 'No recogemos' : fee === 0 ? 'Gratis' : `${formatPrice(fee)} por persona`);
+const feeInput =
+	'h-9 w-full rounded-full border border-border-strong bg-background pr-3 pl-10 text-base text-primary tabular-nums transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:opacity-40 aria-invalid:border-error sm:text-sm';
+---
+
+<section aria-labelledby="recogida-zona-titulo" class:list={[surfacePanel, 'animate-fade-up p-5 sm:p-6']} style="animation-delay: 200ms">
+	<div class="flex flex-wrap items-baseline justify-between gap-2">
+		<h2 id="recogida-zona-titulo" class="text-base font-semibold tracking-[-0.02em] text-primary">Recogida desde esta zona</h2>
+		<p class="text-xs text-muted tabular-nums">{servedCount} de {tourCount} excursiones</p>
+	</div>
+	<p class="mt-1 text-sm text-secondary">Lo que paga cada persona por recogerla aquí.</p>
+
+	{tourCount === 0 ? (
+		<p class="mt-5 text-sm text-secondary">Todavía no hay excursiones.</p>
+	) : (
+		<form class="mt-2" data-fees-form data-zone-id={zoneId} novalidate>
+			{groups.map((group) => (
+				<fieldset class="mt-4 first:mt-3">
+					<legend class="text-[13px] font-semibold text-primary">{group.destinationName}</legend>
+					<ul class="mt-1 divide-y divide-border">
+						{group.tours.map((tour) => (
+							<li class="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4" data-fee-row data-product-id={tour.productId}>
+								<p class="min-w-0 text-sm text-primary">
+									{tour.name}
+									{tour.isDraft && <span class="ml-1.5 inline-flex h-5 items-center rounded-full bg-ink-100 px-2 align-middle text-xs font-medium text-muted">Borrador</span>}
+								</p>
+								{canEdit ? (
+									<div class="flex shrink-0 items-center gap-3">
+										<label class="flex cursor-pointer items-center gap-2 text-[13px] whitespace-nowrap text-secondary">
+											<input type="checkbox" class="size-4 cursor-pointer accent-primary" checked={tour.served} data-fee-served aria-describedby={`tarifa-${tour.productId}`} />
+											Recogemos aquí
+										</label>
+										<div class="relative w-28">
+											<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted" aria-hidden="true">US$</span>
+											<input
+												id={`tarifa-${tour.productId}`}
+												type="number"
+												inputmode="decimal"
+												min="0"
+												max="1000"
+												step="0.01"
+												value={tour.fee ?? 0}
+												disabled={!tour.served}
+												aria-label={`Tarifa por persona para ${tour.name}`}
+												class={feeInput}
+												data-fee-amount
+											/>
+										</div>
+									</div>
+								) : (
+									<p class:list={['shrink-0 text-sm tabular-nums', tour.served ? 'text-primary' : 'text-muted']}>{feeLabel(tour.fee)}</p>
+								)}
+							</li>
+						))}
+					</ul>
+				</fieldset>
+			))}
+
+			{canEdit && (
+				<Fragment>
+					<p class="mt-4 text-sm text-error" role="alert" data-fees-error hidden></p>
+					<div class="mt-4 flex items-center justify-end gap-3">
+						<span class="text-xs text-muted" role="status" data-fees-status></span>
+						<button type="submit" class={glassButtonPrimary} data-fees-submit>Guardar tarifas</button>
+					</div>
+				</Fragment>
+			)}
+		</form>
+	)}
+</section>

@@ -1,0 +1,42 @@
+---
+import { ArrowDown, ArrowUp } from '@lucide/astro';
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import { glassCircle } from '../glass-classes';
+import type { PickupZone } from './pickup-data';
+
+interface Props {
+	zones: PickupZone[];
+}
+
+const { zones } = Astro.props;
+const moveButton = `${glassCircle} cursor-pointer disabled:pointer-events-none disabled:opacity-40`;
+---
+
+<Dialog aria-labelledby="ordenar-zonas-titulo" data-reorder-dialog>
+	<h2 id="ordenar-zonas-titulo" class="text-xl font-semibold tracking-[-0.03em]">Ordenar zonas</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Es el orden del buscador de la reserva y de la web.</p>
+
+	<ol class="mt-5 divide-y divide-border" data-reorder-list>
+		{zones.map((zone) => (
+			<li class="flex items-center justify-between gap-3 py-2" data-reorder-item data-zone-id={zone.id}>
+				<span class="min-w-0 truncate text-sm text-primary">{zone.name}</span>
+				<span class="flex shrink-0 gap-1.5">
+					<button type="button" class={moveButton} aria-label={`Subir ${zone.name}`} data-reorder-up>
+						<ArrowUp size={14} stroke-width={2} aria-hidden="true" />
+					</button>
+					<button type="button" class={moveButton} aria-label={`Bajar ${zone.name}`} data-reorder-down>
+						<ArrowDown size={14} stroke-width={2} aria-hidden="true" />
+					</button>
+				</span>
+			</li>
+		))}
+	</ol>
+
+	<p class="mt-4 text-sm text-error" role="alert" data-reorder-error hidden></p>
+
+	<div class="mt-6 grid gap-2.5 sm:grid-cols-2">
+		<DialogButton data-reorder-close>Cancelar</DialogButton>
+		<DialogButton variant="primary" data-reorder-submit>Guardar orden</DialogButton>
+	</div>
+</Dialog>

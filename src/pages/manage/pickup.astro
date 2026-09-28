@@ -1,0 +1,74 @@
+---
+import { MapPin } from '@lucide/astro';
+import ManageLayout from '../../layouts/ManageLayout.astro';
+import ConfirmDialog from '../../components/manage/ConfirmDialog.astro';
+import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
+import SiteStatus from '../../components/manage/SiteStatus.astro';
+import AddHotelsDialog from '../../components/manage/pickup/AddHotelsDialog.astro';
+import EditHotelDialog from '../../components/manage/pickup/EditHotelDialog.astro';
+import HotelsCard from '../../components/manage/pickup/HotelsCard.astro';
+import NewZoneDialog from '../../components/manage/pickup/NewZoneDialog.astro';
+import ReorderZonesDialog from '../../components/manage/pickup/ReorderZonesDialog.astro';
+import ZoneCard from '../../components/manage/pickup/ZoneCard.astro';
+import ZoneFeesCard from '../../components/manage/pickup/ZoneFeesCard.astro';
+import ZoneList from '../../components/manage/pickup/ZoneList.astro';
+import { loadPickupCatalog, loadZoneDetails } from '../../components/manage/pickup/pickup-data';
+import { canOpenSection } from '../../data/manage/sections';
+import { glassButton, glassPanel } from '../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'pickup')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const canEditZones = Astro.locals.staffRole === 'admin';
+const { zones, hotels } = await loadPickupCatalog();
+const requestedZone = Astro.url.searchParams.get('zone');
+const selectedZone = zones.find((zone) => zone.slug === requestedZone) ?? zones[0] ?? null;
+const details = selectedZone ? await loadZoneDetails(selectedZone, hotels) : null;
+
+const zoneNameById = new Map(zones.map((zone) => [zone.id, zone.name]));
+const knownHotels = hotels.map((hotel) => ({ name: hotel.name, zoneId: hotel.zoneId, zoneName: zoneNameById.get(hotel.zoneId) ?? '' }));
+---
+
+<ManageLayout title="Zonas y hoteles" section="pickup">
+	<div class="grid gap-4" data-pickup-page data-zone-id={selectedZone?.id} data-zone-slug={selectedZone?.slug} data-known-hotels={JSON.stringify(knownHotels)}>
+		<ManagePageHeader title="Zonas y hoteles" description="Dónde recogemos a los clientes y cuánto cuesta.">
+			<SiteStatus />
+		</ManagePageHeader>
+
+		<div class="mt-2 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
+			<ZoneList zones={zones} selectedZoneId={selectedZone?.id ?? null} canEditZones={canEditZones} />
+
+			{selectedZone && details ? (
+				<div class="grid min-w-0 gap-4">
+					<ZoneCard zone={selectedZone} bookingCount={details.bookingCount} canEdit={canEditZones} />
+					<HotelsCard hotels={details.hotels} />
+					<ZoneFeesCard zoneId={selectedZone.id} groups={details.feeGroups} canEdit={canEditZones} />
+				</div>
+			) : (
+				<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 120ms">
+					<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+						<MapPin size={20} stroke-width={1.75} aria-hidden="true" />
+					</span>
+					<p class="mt-4 text-sm text-secondary">Todavía no hay zonas de recogida.</p>
+					{canEditZones && (
+						<button type="button" class:list={[glassButton, 'mt-5']} data-new-zone-open>Crear la primera</button>
+					)}
+				</div>
+			)}
+		</div>
+
+		{canEditZones && <NewZoneDialog />}
+		{canEditZones && zones.length > 1 && <ReorderZonesDialog zones={zones} />}
+		{selectedZone && <AddHotelsDialog zoneName={selectedZone.name} />}
+		{selectedZone && <EditHotelDialog zones={zones} />}
+		{canEditZones && <ConfirmDialog name="remove-zone" title="¿Borrar esta zona?" description="Se quitan también sus tarifas. No se puede deshacer." confirmLabel="Borrar zona" variant="danger" />}
+		<ConfirmDialog name="remove-hotel" title="¿Borrar este hotel?" description="Deja de salir al reservar. No se puede deshacer." confirmLabel="Borrar hotel" variant="danger" />
+	</div>
+</ManageLayout>
+
+<script>
+	import { initPickupPage } from '../../scripts/manage/pickup';
+
+	document.querySelectorAll<HTMLElement>('[data-pickup-page]').forEach(initPickupPage);
+</script>

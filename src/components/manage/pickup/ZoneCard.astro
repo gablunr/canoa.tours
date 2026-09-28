@@ -1,0 +1,56 @@
+---
+import TextAreaField from '../../ui/form/TextAreaField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { glassButton, glassButtonPrimary, surfacePanel } from '../glass-classes';
+import type { PickupZone } from './pickup-data';
+
+interface Props {
+	zone: PickupZone;
+	bookingCount: number;
+	canEdit: boolean;
+}
+
+const { zone, bookingCount, canEdit } = Astro.props;
+const canRemove = zone.hotelCount === 0 && bookingCount === 0;
+const bookingLabel = `${bookingCount} ${bookingCount === 1 ? 'reserva' : 'reservas'}`;
+const hotelLabel = `${zone.hotelCount} ${zone.hotelCount === 1 ? 'hotel' : 'hoteles'}`;
+---
+
+<section aria-labelledby="zona-titulo" class:list={[surfacePanel, 'animate-fade-up p-5 sm:p-6']} style="animation-delay: 120ms">
+	<div class="flex flex-wrap items-baseline justify-between gap-2">
+		<h2 id="zona-titulo" class="text-base font-semibold tracking-[-0.02em] text-primary">Zona</h2>
+		<p class="text-xs text-muted tabular-nums">{hotelLabel}, {bookingLabel}</p>
+	</div>
+
+	{canEdit ? (
+		<form class="mt-4 grid gap-5" data-zone-form data-zone-id={zone.id} novalidate>
+			<TextField label="Nombre" name="zoneName" value={zone.name} required maxlength={80} autocomplete="off" />
+			<TextAreaField
+				label="Descripción"
+				name="zoneDescription"
+				value={zone.description}
+				maxlength={400}
+				rows={3}
+				counter
+				hint="Sale en Zonas de recogida."
+			/>
+			<p class="text-sm text-error" role="alert" data-zone-form-error hidden></p>
+			<div class="flex flex-wrap items-center justify-between gap-2.5">
+				{canRemove ? (
+					<button type="button" class={glassButton} data-zone-remove>Borrar zona</button>
+				) : (
+					<p class="text-xs text-muted">{zone.hotelCount > 0 ? 'Para borrarla, deja la zona sin hoteles.' : 'Tiene reservas, así que no se puede borrar.'}</p>
+				)}
+				<div class="ml-auto flex items-center gap-3">
+					<span class="text-xs text-muted" role="status" data-zone-form-status></span>
+					<button type="submit" class={glassButtonPrimary} data-zone-submit>Guardar</button>
+				</div>
+			</div>
+		</form>
+	) : (
+		<div class="mt-3">
+			<p class="text-lg font-semibold tracking-[-0.02em] text-primary">{zone.name}</p>
+			<p class="mt-1 text-sm leading-relaxed text-secondary">{zone.description || 'Sin descripción.'}</p>
+		</div>
+	)}
+</section>

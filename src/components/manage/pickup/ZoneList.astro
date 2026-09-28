@@ -1,0 +1,47 @@
+---
+import { ArrowUpDown, Plus } from '@lucide/astro';
+import { glassButton, glassButtonPrimary, glassGroup, glassOption } from '../glass-classes';
+import type { PickupZone } from './pickup-data';
+
+interface Props {
+	zones: PickupZone[];
+	selectedZoneId: string | null;
+	canEditZones: boolean;
+}
+
+const { zones, selectedZoneId, canEditZones } = Astro.props;
+---
+
+<aside class="grid min-w-0 animate-fade-up gap-2.5 lg:sticky lg:top-24" style="animation-delay: 100ms">
+	{zones.length > 0 && (
+		<nav aria-label="Zonas" class:list={[glassGroup, 'flex gap-1 overflow-x-auto p-1.5 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:rounded-[1.5rem]']}>
+			{zones.map((zone) => (
+				<a
+					href={`/manage/pickup?zone=${zone.slug}`}
+					class:list={[glassOption, 'group/tab shrink-0 lg:h-10 lg:justify-between lg:px-4']}
+					aria-current={zone.id === selectedZoneId ? 'page' : undefined}
+				>
+					<span class="truncate">{zone.name}</span>
+					<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">
+						{zone.hotelCount}
+						<span class="sr-only">{zone.hotelCount === 1 ? 'hotel' : 'hoteles'}</span>
+					</span>
+				</a>
+			))}
+		</nav>
+	)}
+	{canEditZones && (
+		<div class="flex gap-2">
+			<button type="button" class:list={[glassButtonPrimary, 'flex-1']} data-new-zone-open>
+				<Plus size={15} stroke-width={2} aria-hidden="true" />
+				Nueva zona
+			</button>
+			{zones.length > 1 && (
+				<button type="button" class:list={[glassButton, 'flex-1']} data-reorder-open>
+					<ArrowUpDown size={14} stroke-width={2} aria-hidden="true" />
+					Ordenar
+				</button>
+			)}
+		</div>
+	)}
+</aside>
