@@ -1,7 +1,7 @@
 ---
 import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Pencil, Star } from '@lucide/astro';
 import type { TourListItem } from './tour-list-data';
-import { glassButton, glassCircle, glassTile } from '../glass-classes';
+import { glassCircle, glassTile } from '../glass-classes';
 
 interface Props {
 	tour: TourListItem;
@@ -79,16 +79,15 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 				href={tour.path}
 				target="_blank"
 				rel="noopener"
-				class:list={[glassCircle, 'max-sm:hidden']}
+				class={glassCircle}
 				aria-label={`Ver «${tour.shortName}» en la web`}
 				title="Ver en la web"
 			>
 				<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
 			</a>
 		)}
-		<a href={`/manage/tours/${tour.id}`} class:list={[glassButton, 'h-8 px-3.5 sm:h-9']} aria-label={`Editar «${tour.shortName}»`}>
-			<Pencil size={14} stroke-width={1.75} aria-hidden="true" />
-			Editar
+		<a href={`/manage/tours/${tour.id}`} class={glassCircle} aria-label={`Editar «${tour.shortName}»`} title="Editar">
+			<Pencil size={15} stroke-width={1.75} aria-hidden="true" />
 		</a>
 	</div>
 </li>
