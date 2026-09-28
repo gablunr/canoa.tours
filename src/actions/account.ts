@@ -24,13 +24,11 @@ const photoExtensions: Record<string, string> = {
 	'image/png': 'png',
 	'image/webp': 'webp',
 	'image/avif': 'avif',
-	'image/heic': 'heic',
-	'image/heif': 'heif',
 };
 
 const reviewPhoto = z
 	.instanceof(File)
-	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP, AVIF o HEIC.')
+	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
 	.refine((file) => file.size <= maxPhotoBytes, 'Cada foto puede pesar como máximo 5 MB.');
 
 const reviewPhotos = z
@@ -44,7 +42,7 @@ const avatarEdge = 320;
 const avatarPhoto = z
 	.instanceof(File)
 	.refine((file) => file.size > 0, 'Elige una foto.')
-	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP, AVIF o HEIC.')
+	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP o AVIF.')
 	.refine((file) => file.size <= maxAvatarBytes, 'La foto puede pesar como máximo 4 MB.');
 
 const roundMoney = (amount: number) => Math.round(amount * 100) / 100;
