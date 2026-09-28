@@ -66,7 +66,8 @@ const geoCoordinates = ({ latitude, longitude }: Partial<GeoPoint>) =>
 	latitude !== undefined && longitude !== undefined ? { '@type': 'GeoCoordinates', latitude, longitude } : undefined;
 
 export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaNode {
-	const { office, openingHours, phone } = company;
+	const { office, openingHours } = company;
+	const phone = company.phone ?? company.whatsapp;
 	const geo = office && geoCoordinates(office);
 	const sameAs = [...company.socialProfiles.map((profile) => profile.url), ...(office?.mapsUrl ? [office.mapsUrl] : [])];
 
