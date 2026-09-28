@@ -1,5 +1,5 @@
 ---
-import { Lock } from '@lucide/astro';
+import { ChevronDown, Lock } from '@lucide/astro';
 import type { TourEditorSectionId } from '../../../lib/tours/tour-schema';
 import { surfacePanel } from '../glass-classes';
 import { sectionAnchor } from './tour-editor-sections';
@@ -16,18 +16,25 @@ const anchor = sectionAnchor(section);
 const titleId = `${anchor}-title`;
 ---
 
-<section id={anchor} aria-labelledby={titleId} class:list={[surfacePanel, 'min-w-0 scroll-mt-20 p-5 sm:p-6 lg:scroll-mt-24']} data-editor-section={section}>
-	<header>
-		<h2 id={titleId} class="text-lg font-semibold tracking-[-0.02em] text-primary">{title}</h2>
-		{description && <p class="mt-1 text-sm leading-relaxed text-secondary">{description}</p>}
-		{lockedNote && (
-			<p class="mt-3 flex items-center gap-2 text-xs font-medium text-muted">
-				<Lock size={13} stroke-width={2} aria-hidden="true" />
-				{lockedNote}
-			</p>
-		)}
-	</header>
-	<div class="mt-5 grid gap-5">
-		<slot />
-	</div>
+<section id={anchor} aria-labelledby={titleId} class:list={[surfacePanel, 'min-w-0 scroll-mt-20 lg:scroll-mt-24']} data-editor-section={section}>
+	<details class="group/card" data-editor-card>
+		<summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[1.75rem] p-5 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset sm:p-6 [&::-webkit-details-marker]:hidden">
+			<h2 id={titleId} class="text-lg font-semibold tracking-[-0.02em] text-primary">{title}</h2>
+			<span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-ink-200/60 text-muted transition-transform duration-300 ease-smooth group-open/card:rotate-180" aria-hidden="true">
+				<ChevronDown size={16} stroke-width={1.75} />
+			</span>
+		</summary>
+		<div class="-mt-3 px-5 pb-5 sm:-mt-4 sm:px-6 sm:pb-6">
+			{description && <p class="text-sm leading-relaxed text-secondary">{description}</p>}
+			{lockedNote && (
+				<p class:list={['flex items-center gap-2 text-xs font-medium text-muted', description && 'mt-3']}>
+					<Lock size={13} stroke-width={2} aria-hidden="true" />
+					{lockedNote}
+				</p>
+			)}
+			<div class:list={['grid gap-5', (description || lockedNote) && 'mt-5']}>
+				<slot />
+			</div>
+		</div>
+	</details>
 </section>

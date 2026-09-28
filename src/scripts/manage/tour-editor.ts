@@ -62,7 +62,16 @@ const missingText = (count: number) => `${count === 1 ? 'Falta 1 dato' : `Faltan
 const pendingText = (count: number) => `${count === 1 ? '1 pendiente' : `${count} pendientes`}.`;
 
 function openEnclosingPanels(target: HTMLElement) {
+	const ownCard = target.querySelector<HTMLDetailsElement>(':scope > [data-editor-card]');
+	if (ownCard) ownCard.open = true;
 	for (let panel = target.closest('details'); panel; panel = panel.parentElement?.closest('details') ?? null) panel.open = true;
+}
+
+function openLinkedSection(event: MouseEvent) {
+	const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+	const id = link?.getAttribute('href')?.slice(1);
+	const target = id ? document.getElementById(id) : null;
+	if (target) openEnclosingPanels(target);
 }
 
 function focusField(target: HTMLElement) {
@@ -76,6 +85,8 @@ export function initTourEditor(root: HTMLElement) {
 	const form = root.querySelector<HTMLFormElement>('[data-tour-form]');
 	const tourId = root.dataset.tourId;
 	if (!form || !tourId) return;
+
+	root.addEventListener('click', openLinkedSection);
 
 	const status = root.dataset.tourStatus ?? 'draft';
 	const isActive = status === 'active';
