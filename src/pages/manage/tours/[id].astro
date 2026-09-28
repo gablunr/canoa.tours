@@ -62,7 +62,7 @@ const editorTitle = data.details.shortName || data.details.title;
 		data-path-prefixes={JSON.stringify(pathPrefixes)}
 	>
 		<form class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]" novalidate data-tour-form>
-			<div class="z-40 lg:sticky lg:top-[4.25rem] lg:col-span-2">
+			<div class="lg:col-span-2">
 				<TourEditorToolbar data={data} isAdmin={isAdmin} notice={notice} listHref={listHref} />
 			</div>
 
