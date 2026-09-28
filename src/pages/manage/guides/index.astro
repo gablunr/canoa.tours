@@ -5,8 +5,9 @@ import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro'
 import SiteStatus from '../../../components/manage/SiteStatus.astro';
 import GuideList from '../../../components/manage/guides/GuideList.astro';
 import NewGuideDialog from '../../../components/manage/guides/NewGuideDialog.astro';
-import ReviewsPagination from '../../../components/manage/reviews/ReviewsPagination.astro';
+import ManagePagination from '../../../components/manage/ManagePagination.astro';
 import { canOpenSection } from '../../../data/manage/sections';
+import { pageState } from '../../../lib/manage/list-page';
 import { guidePathPrefixes, loadGuideCounts, loadGuideList, tourSlugsBySilo, type GuideStatus } from '../../../components/manage/guides/guide-data';
 import { glassButton, glassControl, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../../components/manage/glass-classes';
 
@@ -30,16 +31,16 @@ const defaultStatus: GuideStatus = counts.draft === 0 && counts.published > 0 ? 
 const activeTab = statusTabs.find((tab) => tab.id === requestedStatus) ?? statusTabs.find((tab) => tab.id === defaultStatus) ?? statusTabs[0];
 
 const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
-const totalPages = Math.max(1, Math.ceil(counts[activeTab.id] / pageSize));
-const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-const guides = await loadGuideList(supabase, activeTab.id, query, (currentPage - 1) * pageSize, pageSize);
-
+const listState = pageState(counts[activeTab.id], requestedPage, pageSize);
 const hrefFor = (status: GuideStatus, page = 1) => {
 	const params = new URLSearchParams({ status });
 	if (query) params.set('q', query);
 	if (page > 1) params.set('page', String(page));
 	return `/manage/guides?${params}`;
 };
+if (requestedPage > listState.totalPages) return Astro.redirect(hrefFor(activeTab.id, listState.totalPages));
+
+const guides = await loadGuideList(supabase, activeTab.id, query, listState.firstShown - 1, pageSize);
 
 const emptyMessage = query ? `Ninguna guía coincide con «${query}».` : activeTab.emptyMessage;
 const resultCount = counts[activeTab.id];
@@ -110,7 +111,13 @@ const resultLabel = `${resultCount} ${resultCount === 1 ? 'resultado' : 'resulta
 			<GuideList guides={guides} />
 		)}
 
-		<ReviewsPagination currentPage={currentPage} totalPages={totalPages} hrefForPage={(page) => hrefFor(activeTab.id, page)} />
+		<ManagePagination
+			state={listState}
+			hrefForPage={(page) => hrefFor(activeTab.id, page)}
+			label="Páginas de guías"
+			singular="guía"
+			plural="guías"
+		/>
 
 		<NewGuideDialog />
 	</div>

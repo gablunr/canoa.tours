@@ -4,10 +4,11 @@ import ManageLayout from '../../../layouts/ManageLayout.astro';
 import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
 import BookingsFilterBar from '../../../components/manage/bookings/BookingsFilterBar.astro';
 import BookingsTable from '../../../components/manage/bookings/BookingsTable.astro';
-import BookingsPagination from '../../../components/manage/bookings/BookingsPagination.astro';
+import ManagePagination from '../../../components/manage/ManagePagination.astro';
 import { canOpenSection } from '../../../data/manage/sections';
 import { localToday } from '../../../lib/account/bookings';
 import { bookingsPageSize, bookingsSearch, loadBookingsPage, loadProductOptions, readBookingsFilters } from '../../../lib/manage/bookings-query';
+import { pageState } from '../../../lib/manage/list-page';
 
 export const prerender = false;
 
@@ -19,13 +20,9 @@ const today = localToday();
 
 const [products, { rows, total }] = await Promise.all([loadProductOptions(supabase), loadBookingsPage(supabase, filters, today)]);
 
-const totalPages = Math.max(1, Math.ceil(total / bookingsPageSize));
-if (filters.page > totalPages) return Astro.redirect(`/manage/bookings${bookingsSearch(filters, { page: totalPages })}`);
+const listState = pageState(total, filters.page, bookingsPageSize);
+if (filters.page > listState.totalPages) return Astro.redirect(`/manage/bookings${bookingsSearch(filters, { page: listState.totalPages })}`);
 
-const firstShown = (filters.page - 1) * bookingsPageSize + 1;
-const lastShown = firstShown + rows.length - 1;
-const countLabel = total === 1 ? '1 reserva' : `${total.toLocaleString('es')} reservas`;
-const resultSummary = totalPages > 1 ? `${firstShown} a ${lastShown} de ${countLabel}` : countLabel;
 const hasFilters = Boolean(filters.q || filters.status !== 'all' || filters.product);
 const emptyMessage = hasFilters
 	? 'Prueba con otra búsqueda o quita algún filtro.'
@@ -45,7 +42,14 @@ const emptyMessage = hasFilters
 		{rows.length > 0 ? (
 			<>
 				<BookingsTable rows={rows} backSearch={bookingsSearch(filters)} today={today} />
-				<BookingsPagination filters={filters} totalPages={totalPages} summary={resultSummary} />
+				<ManagePagination
+					class="mt-4"
+					state={listState}
+					hrefForPage={(page) => `/manage/bookings${bookingsSearch(filters, { page })}`}
+					label="Páginas de reservas"
+					singular="reserva"
+					plural="reservas"
+				/>
 			</>
 		) : (
 			<section class="flex animate-fade-up flex-col items-center rounded-[1.75rem] bg-surface px-6 py-10 text-center sm:px-10" style="animation-delay: 180ms">

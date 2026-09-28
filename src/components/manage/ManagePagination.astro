@@ -1,0 +1,50 @@
+---
+import { ChevronLeft, ChevronRight } from '@lucide/astro';
+import { paginationItems } from '../../lib/account/pagination';
+import type { ListPageState } from '../../lib/manage/list-page';
+import { glassCircle, glassCircleDisabled, glassGroup } from './glass-classes';
+
+interface Props {
+	state: ListPageState;
+	hrefForPage: (page: number) => string;
+	label: string;
+	singular: string;
+	plural: string;
+	class?: string;
+}
+
+const { state, hrefForPage, label, singular, plural, class: className } = Astro.props;
+const { page, totalPages, matchCount, firstShown, lastShown } = state;
+const formatCount = (value: number) => value.toLocaleString('es');
+const countLabel = `${formatCount(matchCount)} ${matchCount === 1 ? singular : plural}`;
+const summary = totalPages > 1 ? `${formatCount(firstShown)} a ${formatCount(lastShown)} de ${countLabel}` : countLabel;
+---
+
+{matchCount > 0 && (
+	<div class:list={['flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-between', className]} style="animation-delay: 220ms">
+		<p class="px-2 text-xs text-muted tabular-nums">{summary}</p>
+		{totalPages > 1 && (
+			<nav class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']} aria-label={label}>
+				{page > 1 ? (
+					<a href={hrefForPage(page - 1)} class={glassCircle} aria-label="Página anterior"><ChevronLeft size={16} stroke-width={2} aria-hidden="true" /></a>
+				) : (
+					<span class={glassCircleDisabled} aria-hidden="true"><ChevronLeft size={16} stroke-width={2} /></span>
+				)}
+				{paginationItems(page, totalPages).map((item) =>
+					item.kind === 'gap' ? (
+						<span class="flex size-8 items-center justify-center text-[13px] text-muted sm:size-9" aria-hidden="true">…</span>
+					) : (
+						<a href={hrefForPage(item.page)} class={glassCircle} aria-current={item.page === page ? 'page' : undefined} aria-label={`Página ${item.page}`}>
+							{item.page}
+						</a>
+					),
+				)}
+				{page < totalPages ? (
+					<a href={hrefForPage(page + 1)} class={glassCircle} aria-label="Página siguiente"><ChevronRight size={16} stroke-width={2} aria-hidden="true" /></a>
+				) : (
+					<span class={glassCircleDisabled} aria-hidden="true"><ChevronRight size={16} stroke-width={2} /></span>
+				)}
+			</nav>
+		)}
+	</div>
+)}

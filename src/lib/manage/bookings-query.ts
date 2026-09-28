@@ -4,6 +4,7 @@ import { spanishTranslation } from '../booking/booking-details';
 import { formatMoney } from '../email/templates/layout';
 import { supabaseAdmin } from '../supabase/admin';
 import type { BookingStatus, Database } from '../supabase/types';
+import { pageRange } from './list-page';
 
 type Supabase = SupabaseClient<Database>;
 
@@ -127,8 +128,8 @@ export async function loadBookingsPage(supabase: Supabase, filters: BookingsFilt
 		query = query.order('created_at', { ascending: false });
 	}
 
-	const from = (filters.page - 1) * bookingsPageSize;
-	const { data, count, error } = await query.range(from, from + bookingsPageSize - 1);
+	const [from, to] = pageRange(filters.page, bookingsPageSize);
+	const { data, count, error } = await query.range(from, to);
 	if (error) {
 		if (error.code === 'PGRST103') return { rows: [] as BookingListRow[], total: count ?? 0 };
 		throw error;

@@ -5,10 +5,11 @@ import ManagePageHeader from '../../components/manage/ManagePageHeader.astro';
 import ReviewCard, { type ModerationReview, type ReviewStatus } from '../../components/manage/reviews/ReviewCard.astro';
 import ReplyDialog from '../../components/manage/reviews/ReplyDialog.astro';
 import ManualReviewDialog from '../../components/manage/reviews/ManualReviewDialog.astro';
-import ReviewsPagination from '../../components/manage/reviews/ReviewsPagination.astro';
+import ManagePagination from '../../components/manage/ManagePagination.astro';
 import BulkPublishDialog from '../../components/manage/reviews/BulkPublishDialog.astro';
 import { canOpenSection } from '../../data/manage/sections';
 import { publicMediaUrl } from '../../lib/supabase/media';
+import { pageRange, pageState } from '../../lib/manage/list-page';
 import { glassButton, glassButtonPrimary, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../components/manage/glass-classes';
 
 export const prerender = false;
@@ -44,9 +45,17 @@ const [pendingCount, publishedCount, rejectedCount, productsResult] = await Prom
 if (productsResult.error) throw productsResult.error;
 
 const counts: Record<ReviewStatus, number> = { pending: pendingCount, published: publishedCount, rejected: rejectedCount };
-const totalPages = Math.max(1, Math.ceil(counts[activeTab.id] / pageSize));
-const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-const rangeStart = (currentPage - 1) * pageSize;
+const listState = pageState(counts[activeTab.id], requestedPage, pageSize);
+const hrefFor = (status: ReviewStatus, page = 1) => {
+	const params = new URLSearchParams();
+	if (status !== 'pending') params.set('status', status);
+	if (page > 1) params.set('page', String(page));
+	const query = params.toString();
+	return query ? `/manage/reviews?${query}` : '/manage/reviews';
+};
+if (requestedPage > listState.totalPages) return Astro.redirect(hrefFor(activeTab.id, listState.totalPages));
+
+const [rangeFrom, rangeTo] = pageRange(listState.page, pageSize);
 
 const reviewsResult = await supabase
 	.from('reviews')
@@ -55,7 +64,7 @@ const reviewsResult = await supabase
 	)
 	.eq('status', activeTab.id)
 	.order('created_at', { ascending: false })
-	.range(rangeStart, rangeStart + pageSize - 1);
+	.range(rangeFrom, rangeTo);
 if (reviewsResult.error) throw reviewsResult.error;
 
 const spanishName = (product: { key: string; product_translations: { name: string; locale: string }[] } | null) =>
@@ -80,16 +89,6 @@ const productOptions = productsResult.data
 	.sort((first, second) => first.label.localeCompare(second.label, 'es'));
 
 const canBulkPublish = activeTab.id === 'pending' && reviews.length > 0;
-
-
-const hrefFor = (status: ReviewStatus, page = 1) => {
-	const params = new URLSearchParams();
-	if (status !== 'pending') params.set('status', status);
-	if (page > 1) params.set('page', String(page));
-	const query = params.toString();
-	return query ? `/manage/reviews?${query}` : '/manage/reviews';
-};
-
 
 ---
 
@@ -140,7 +139,13 @@ const hrefFor = (status: ReviewStatus, page = 1) => {
 			</div>
 		)}
 
-		<ReviewsPagination currentPage={currentPage} totalPages={totalPages} hrefForPage={(page) => hrefFor(activeTab.id, page)} />
+		<ManagePagination
+			state={listState}
+			hrefForPage={(page) => hrefFor(activeTab.id, page)}
+			label="Páginas de opiniones"
+			singular="opinión"
+			plural="opiniones"
+		/>
 
 		<ReplyDialog />
 		<ManualReviewDialog products={productOptions} />
