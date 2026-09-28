@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from 'astro:env/client';
 import type { Database } from '../supabase/database.types';
+import { withRetries } from '../supabase/retry';
 import { tourRowSelect, tourRowToEditable, type TourRow } from './tour-rows';
 import { missingForSale } from './tour-schema';
 
@@ -57,7 +58,7 @@ async function loadPublishedCatalog() {
 	return { tourRows, pickupZones };
 }
 
-const publishedCatalog = await loadPublishedCatalog();
+const publishedCatalog = await withRetries(loadPublishedCatalog);
 
 export const publishedTourRows: readonly TourRow[] = publishedCatalog.tourRows;
 

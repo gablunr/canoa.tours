@@ -3,6 +3,7 @@ import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from 'astro:env/client';
 import type { Database, Json } from '../supabase/database.types';
 import type { RemoteImage } from '../images';
 import { remoteMediaImage } from '../supabase/media';
+import { withRetries } from '../supabase/retry';
 
 export interface PublishedGuideRow {
 	slug: string;
@@ -54,4 +55,4 @@ async function loadPublishedGuideRows(): Promise<PublishedGuideRow[]> {
 	);
 }
 
-export const publishedGuideRows = await loadPublishedGuideRows();
+export const publishedGuideRows = await withRetries(loadPublishedGuideRows);
