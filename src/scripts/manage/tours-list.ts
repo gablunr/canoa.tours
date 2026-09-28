@@ -86,6 +86,14 @@ function initSearch(root: HTMLElement): SearchControl {
 	};
 }
 
+function announcePosition(status: HTMLElement | null, index: number) {
+	if (!status) return;
+	status.textContent = '';
+	window.setTimeout(() => {
+		status.textContent = `Movida a la posición ${index + 1}`;
+	}, 100);
+}
+
 function initOrdering(root: HTMLElement, group: HTMLElement, search: SearchControl) {
 	const list = group.querySelector<HTMLElement>('[data-tour-rows]');
 	const startButton = group.querySelector<HTMLButtonElement>('[data-sort-start]');
@@ -139,6 +147,7 @@ function initOrdering(root: HTMLElement, group: HTMLElement, search: SearchContr
 		if (button.dataset.move === 'up' && row.previousElementSibling) list.insertBefore(row, row.previousElementSibling);
 		if (button.dataset.move === 'down' && row.nextElementSibling) list.insertBefore(row.nextElementSibling, row);
 		refresh();
+		announcePosition(group.querySelector<HTMLElement>('[data-sort-status]'), Array.from(list.children).indexOf(row));
 
 		const fallback = row.querySelector<HTMLButtonElement>(`[data-move="${button.dataset.move === 'up' ? 'down' : 'up'}"]`);
 		(button.disabled ? fallback : button)?.focus();

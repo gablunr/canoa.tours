@@ -126,6 +126,14 @@ function initNewZone(root: HTMLElement) {
 	});
 }
 
+function announcePosition(status: HTMLElement | null, index: number) {
+	if (!status) return;
+	status.textContent = '';
+	window.setTimeout(() => {
+		status.textContent = `Movida a la posición ${index + 1}`;
+	}, 100);
+}
+
 function initReorder(root: HTMLElement) {
 	const dialog = root.querySelector<HTMLDialogElement>('[data-reorder-dialog]');
 	const list = dialog?.querySelector<HTMLOListElement>('[data-reorder-list]');
@@ -156,6 +164,7 @@ function initReorder(root: HTMLElement) {
 		if (movingUp) sibling.before(item);
 		else sibling.after(item);
 		syncButtons();
+		announcePosition(dialog.querySelector<HTMLElement>('[data-sort-status]'), items().indexOf(item));
 		const focusTarget = item.querySelector<HTMLButtonElement>(movingUp ? '[data-reorder-up]' : '[data-reorder-down]');
 		(focusTarget && !focusTarget.disabled ? focusTarget : button).focus();
 	});
