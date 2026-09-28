@@ -54,14 +54,14 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 		<ManagePageHeader title="Excursiones" description={headerDescription}>
 			<SiteStatus />
 			{isAdmin && (
-				<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-new-tour-open>
+				<button type="button" class:list={[glassPrimaryButton, 'flex-1 sm:flex-none']} data-new-tour-open>
 					<Plus size={15} stroke-width={2} aria-hidden="true" />
 					Nueva excursión
 				</button>
 			)}
 		</ManagePageHeader>
 
-		<div class="mt-3 mb-2 grid animate-fade-up gap-2.5 sm:mt-5 sm:mb-3" style="animation-delay: 100ms">
+		<div class="mb-1 grid animate-fade-up gap-2.5 sm:mt-5 sm:mb-3" style="animation-delay: 100ms">
 			<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
 				<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
 					{statusTabs.map((tab) => (
@@ -96,7 +96,7 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 				<div
 					role="group"
 					aria-label="Destino"
-					class="-mx-4 mt-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:mt-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+					class="-mx-4 mt-1 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:mt-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
 					data-destination-filters
 				>
 					<button type="button" class:list={[glassOption, 'group/filter h-8 shrink-0 sm:px-3.5']} aria-pressed="true" data-destination-filter="">
