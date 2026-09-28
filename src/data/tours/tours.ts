@@ -239,18 +239,6 @@ export function tourFacts(details: TourDetails): TourFact[] {
 
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
-function accessibilityAnswer(details: TourDetails) {
-	if (details.pregnancy === 'not-allowed') {
-		return details.wheelchair
-			? 'No es apta para embarazadas, pero sí es accesible en silla de ruedas.'
-			: 'No es apta para embarazadas ni accesible en silla de ruedas.';
-	}
-
-	const pregnancy =
-		details.pregnancy === 'allowed' ? 'Sí, es apta para embarazadas' : `Admite embarazadas hasta los ${details.pregnancyMaxMonths} meses`;
-	return details.wheelchair ? `${pregnancy} y es accesible en silla de ruedas.` : `${pregnancy}, pero no es accesible en silla de ruedas.`;
-}
-
 function pickupAnswer(details: TourDetails) {
 	if (pickupIncluded(details)) {
 		return `Sí, desde hoteles de ${includedPickupZoneName} sin cargo extra. Desde otras zonas se suma hasta ${formatPrice(highestPickupFee(details))} por persona. Te recogemos ${lowerFirst(pickupWindowLabel(details))}.`;
@@ -272,8 +260,6 @@ export function tourFaqs(details: TourDetails): QuestionAndAnswer[] {
 			answer: `Desde ${priceLabel(details)}.${child ? ` Los niños de ${child.fromAge} a ${child.toAge} años pagan ${formatPrice(child.amount)}.` : ''} Reservas online con un depósito de ${depositLabel(details)} y el resto lo pagas el día de la excursión.`,
 		},
 		{ question: '¿Incluye la recogida en el hotel?', answer: pickupAnswer(details) },
-		{ question: '¿Pueden ir embarazadas o personas en silla de ruedas?', answer: accessibilityAnswer(details) },
-		weatherFaq,
 	];
 }
 
