@@ -30,6 +30,9 @@ const defaultStatus: TourStatus = list.counts.active === 0 && list.counts.draft 
 const activeTab = statusTabs.find((tab) => tab.id === requestedStatus) ?? statusTabs.find((tab) => tab.id === defaultStatus) ?? statusTabs[0];
 const groups = list.groups(activeTab.id);
 
+const activeTabCount = list.counts[activeTab.id];
+const destinationFilters = groups.map((group) => ({ id: group.destination.id, name: group.destination.name, count: group.tours.length }));
+
 const destinationCount = list.activeDestinationCount;
 const headerDescription =
 	list.counts.active === 0
@@ -58,44 +61,66 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 			)}
 		</ManagePageHeader>
 
-		<div class="mt-2 flex animate-fade-up flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3" style="animation-delay: 100ms">
-			<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
-				{statusTabs.map((tab) => (
-					<a
-						href={`/manage/tours?status=${tab.id}`}
-						class:list={[glassOption, 'group/tab flex-1 sm:flex-none']}
-						aria-current={tab.id === activeTab.id ? 'page' : undefined}
-					>
-						{tab.label}
-						<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{list.counts[tab.id]}</span>
-					</a>
-				))}
-			</nav>
-			<div role="search" class="w-full sm:w-72">
-				<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
-					<span class="sr-only">Buscar excursiones</span>
-					<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-					<input
-						type="search"
-						maxlength="80"
-						placeholder="Buscar una excursión"
-						autocomplete="off"
-						class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 text-base font-normal outline-none placeholder:text-muted sm:text-[13px] disabled:opacity-50"
-						data-tour-search
-					/>
-				</label>
+		<div class="mt-1 grid animate-fade-up gap-2.5" style="animation-delay: 100ms">
+			<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+				<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
+					{statusTabs.map((tab) => (
+						<a
+							href={`/manage/tours?status=${tab.id}`}
+							class:list={[glassOption, 'group/tab flex-1 sm:flex-none']}
+							aria-current={tab.id === activeTab.id ? 'page' : undefined}
+						>
+							{tab.label}
+							<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{list.counts[tab.id]}</span>
+						</a>
+					))}
+				</nav>
+				<div role="search" class="w-full sm:w-72">
+					<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
+						<span class="sr-only">Buscar excursiones</span>
+						<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+						<input
+							type="search"
+							maxlength="80"
+							placeholder="Buscar una excursión"
+							autocomplete="off"
+							class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 text-base font-normal outline-none placeholder:text-muted sm:text-[13px] disabled:opacity-50"
+							data-tour-search
+						/>
+					</label>
+				</div>
 			</div>
-		</div>
 
-		<p class="animate-fade-up px-1 text-sm text-secondary" style="animation-delay: 120ms">
-			<span data-tour-summary>{activeTab.summary}</span>
-			<span data-tour-results hidden>
-				<span data-tour-results-text></span>{' '}
-				<button type="button" class="cursor-pointer font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary" data-tour-search-clear>
-					Quitar búsqueda
-				</button>
-			</span>
-		</p>
+			{destinationFilters.length > 1 && (
+				<div
+					role="group"
+					aria-label="Destino"
+					class="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+					data-destination-filters
+				>
+					<button type="button" class:list={[glassOption, 'group/filter shrink-0']} aria-pressed="true" data-destination-filter="">
+						Todos
+						<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{activeTabCount}</span>
+					</button>
+					{destinationFilters.map((filter) => (
+						<button type="button" class:list={[glassOption, 'group/filter shrink-0']} aria-pressed="false" data-destination-filter={filter.id}>
+							{filter.name}
+							<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{filter.count}</span>
+						</button>
+					))}
+				</div>
+			)}
+
+			<p class="px-1 text-sm text-secondary">
+				<span data-tour-summary>{activeTab.summary}</span>
+				<span data-tour-results hidden>
+					<span data-tour-results-text></span>{' '}
+					<button type="button" class="cursor-pointer font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary" data-tour-search-clear>
+						Quitar búsqueda
+					</button>
+				</span>
+			</p>
+		</div>
 
 		{groups.length === 0 ? (
 			<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 160ms">

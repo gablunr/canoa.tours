@@ -1,8 +1,8 @@
 ---
-import { ArrowUpDown, ExternalLink } from '@lucide/astro';
+import { ArrowUpDown, ChevronLeft, ChevronRight, ExternalLink } from '@lucide/astro';
 import TourListRow from './TourListRow.astro';
 import type { TourListGroup } from './tour-list-data';
-import { glassChipButton, glassChipPrimaryButton, glassCircle, glassPanel } from '../glass-classes';
+import { glassChipButton, glassChipPrimaryButton, glassCircle, glassGroup, glassPanel } from '../glass-classes';
 
 interface Props {
 	groups: TourListGroup[];
@@ -12,62 +12,73 @@ interface Props {
 const { groups, canReorder } = Astro.props;
 
 const tourCountLabel = (count: number) => `${count} ${count === 1 ? 'excursión' : 'excursiones'}`;
+const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-40`;
 ---
 
-<div class="grid gap-3 sm:gap-4" data-tour-groups>
-	{groups.map((group, index) => (
+<div class:list={[glassPanel, 'grid animate-fade-up gap-1.5 p-1.5 sm:p-2']} style="animation-delay: 160ms" data-tour-groups>
+	{groups.map((group) => (
 		<section
-			class:list={[glassPanel, 'group/panel animate-fade-up p-2.5 sm:p-3']}
-			style={`animation-delay: ${140 + Math.min(index, 6) * 40}ms`}
+			class="group/panel rounded-[1.5rem] transition-colors duration-300 ease-smooth data-[sorting]:bg-ink-200/40"
 			aria-labelledby={`destino-${group.destination.id}`}
 			data-tour-group
 			data-destination-id={group.destination.id}
 		>
-			<header class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2 pt-1.5 pb-3 sm:px-2.5">
-				<div class="flex min-w-0 items-center gap-2.5">
-					<div class="min-w-0">
-						<h2 id={`destino-${group.destination.id}`} class="text-lg leading-tight font-semibold tracking-[-0.03em] text-primary">
+			<header class="flex items-center justify-between gap-3 px-2.5 pt-2.5 pb-1.5 sm:px-3">
+				<div class="flex min-w-0 items-baseline gap-x-2.5 gap-y-0.5 max-sm:flex-col">
+					<h2 id={`destino-${group.destination.id}`} class="truncate text-[15px] leading-tight font-semibold tracking-[-0.02em] text-primary">
+						<a
+							href={group.href}
+							target="_blank"
+							rel="noopener"
+							class="inline-flex items-center gap-1.5 rounded-md outline-none hover:underline hover:decoration-border-strong hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-accent"
+							title="Ver la página del destino"
+						>
 							{group.destination.name}
-						</h2>
-						<p class="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted">
-							{group.fromPriceLabel && <span>{group.fromPriceLabel}</span>}
-							<span>{tourCountLabel(group.tours.length)}</span>
-						</p>
-					</div>
-					<a
-						href={group.href}
-						target="_blank"
-						rel="noopener"
-						class:list={[glassCircle, 'shrink-0']}
-						aria-label={`Ver la página de ${group.destination.name}`}
-						title="Ver la página"
-					>
-						<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
-					</a>
+							<ExternalLink size={13} stroke-width={1.75} class="text-muted" aria-hidden="true" />
+							<span class="sr-only">(abre la página del destino)</span>
+						</a>
+					</h2>
+					<p class="flex shrink-0 gap-x-2.5 text-xs text-muted tabular-nums">
+						<span>{tourCountLabel(group.tours.length)}</span>
+						{group.fromPriceLabel && <span>{group.fromPriceLabel}</span>}
+					</p>
 				</div>
 
 				{canReorder && group.tours.length > 1 && (
-					<div class="flex items-center gap-2">
+					<div class="flex shrink-0 items-center gap-1.5">
 						<span class="group-data-[sorting]/panel:hidden">
-							<button type="button" class={glassChipButton} data-sort-start>
+							<button type="button" class={glassChipButton} data-sort-start aria-label={`Ordenar las excursiones de ${group.destination.name}`}>
 								<ArrowUpDown size={14} stroke-width={1.75} aria-hidden="true" />
-								Ordenar
+								<span class="max-sm:hidden">Ordenar</span>
 							</button>
 						</span>
-						<span class="hidden items-center gap-2 group-data-[sorting]/panel:flex">
+						<span class="hidden items-center gap-1.5 group-data-[sorting]/panel:flex">
 							<button type="button" class={glassChipButton} data-sort-cancel>Cancelar</button>
-							<button type="button" class={glassChipPrimaryButton} data-sort-save>Guardar orden</button>
+							<button type="button" class={glassChipPrimaryButton} data-sort-save>Guardar</button>
 						</span>
 					</div>
 				)}
 			</header>
 
-			<p class="px-2 pb-2 text-sm text-error sm:px-2.5" role="alert" data-sort-error hidden></p>
+			<p class="px-3 pb-2 text-sm text-error" role="alert" data-sort-error hidden></p>
 			<p class="sr-only" aria-live="polite" data-sort-status></p>
 
-			<ol class="grid gap-2 sm:gap-0.5" aria-label={`Excursiones de ${group.destination.name}`} data-tour-rows>
+			<ol class="grid gap-1 pb-1" aria-label={`Excursiones de ${group.destination.name}`} data-tour-rows>
 				{group.tours.map((tour) => <TourListRow tour={tour} />)}
 			</ol>
 		</section>
 	))}
+</div>
+
+<div class="flex animate-fade-up flex-col items-center gap-3 sm:flex-row sm:justify-between" style="animation-delay: 200ms" data-tour-pager-bar>
+	<p class="px-2 text-xs text-muted tabular-nums" aria-live="polite" data-tour-pager-summary></p>
+	<nav class:list={[glassGroup, 'flex items-center gap-0.5 p-1.5 sm:gap-1']} aria-label="Páginas de excursiones" data-tour-pager hidden>
+		<button type="button" class={pageArrow} aria-label="Página anterior" data-tour-page-previous>
+			<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+		<span class="flex items-center gap-0.5 sm:gap-1" data-tour-page-numbers></span>
+		<button type="button" class={pageArrow} aria-label="Página siguiente" data-tour-page-next>
+			<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+		</button>
+	</nav>
 </div>
