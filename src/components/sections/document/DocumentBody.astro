@@ -4,17 +4,23 @@ import { documentHref, type DocumentEntry } from '../../../data/pages/documents'
 import type { NavLink } from '../../../data/site/navigation';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
 
+interface DocumentSection {
+	slug: string;
+	text: string;
+}
+
 interface Props {
 	entry: DocumentEntry;
 	relatedTitle: string;
 	relatedLinks: NavLink[];
+	extraSections?: DocumentSection[];
 }
 
-const { entry, relatedTitle, relatedLinks } = Astro.props;
+const { entry, relatedTitle, relatedLinks, extraSections = [] } = Astro.props;
 const { summary } = entry.data;
 const { Content, headings } = await render(entry);
 
-const sections = headings.filter((heading) => heading.depth === 2);
+const sections: DocumentSection[] = [...headings.filter((heading) => heading.depth === 2), ...extraSections];
 const otherLinks = relatedLinks.filter((link) => link.href !== documentHref(entry));
 const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 ---

@@ -6,8 +6,41 @@ import WhatsAppClosing from '../components/sections/document/WhatsAppClosing.ast
 import { documentHref } from '../data/pages/documents';
 import { getHelpDocument } from '../data/pages/help';
 import { helpLinks } from '../data/site/navigation';
+import { destinations } from '../data/tours/destinations';
+import { destinationTourDetails, tourDetails, type TourDetails } from '../data/tours/tours';
+import { publishedPickupZones, type PublishedPickupZone } from '../lib/tours/published-tours';
 
 const helpDocument = await getHelpDocument('zonas-de-recogida');
+
+const listFormat = new Intl.ListFormat('es', { type: 'conjunction' });
+
+const shortNames = (tours: TourDetails[]) => listFormat.format(tours.map((details) => details.shortName));
+
+const lowestFee = (details: TourDetails) => Math.min(...Object.values(details.pickupFees));
+
+function extraChargeText(zone: PublishedPickupZone) {
+	const served = tourDetails.filter((details) => details.pickupFees[zone.slug] !== undefined);
+	const charged = served.filter((details) => details.pickupFees[zone.slug] > lowestFee(details));
+	const free = served.filter((details) => !charged.includes(details));
+
+	if (served.length === 0) return 'No hay recogida en ninguna excursión';
+	if (charged.length === 0) return 'No, en ninguna excursión';
+	if (free.length === 0) return 'Sí, en todas las excursiones';
+	return free.length <= charged.length ? `Sí, salvo en ${shortNames(free)}` : `Solo en ${shortNames(charged)}`;
+}
+
+const paidEverywhere = destinations.filter((destination) => {
+	const tours = destinationTourDetails(destination);
+	return tours.length > 0 && tours.every((details) => Object.values(details.pickupFees).every((fee) => fee > 0));
+});
+
+const paidEverywhereSentence =
+	paidEverywhere.length > 0
+		? ` En ${listFormat.format(paidEverywhere.map((destination) => destination.name))} el transporte se cobra aparte en todas las zonas, porque hay clientes que se hospedan cerca del embarque y no lo necesitan.`
+		: '';
+
+const zones = publishedPickupZones.map((zone) => ({ zone, extraCharge: extraChargeText(zone) }));
+const zoneSections = publishedPickupZones.map((zone) => ({ slug: zone.slug, text: zone.name }));
 ---
 
 <Layout
@@ -18,7 +51,46 @@ const helpDocument = await getHelpDocument('zonas-de-recogida');
 >
 	<article data-document>
 		<DocumentHeader entry={helpDocument} />
-		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks}>
+		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks} extraSections={zoneSections}>
+			<div class="document-content">
+				<table>
+					<thead>
+						<tr>
+							<th>Zona</th>
+							<th>¿Hay cargo extra?</th>
+						</tr>
+					</thead>
+					<tbody>
+						{zones.map(({ zone, extraCharge }) => (
+							<tr>
+								<td>{zone.name}</td>
+								<td>{extraCharge}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+				<p>El precio exacto de la recogida desde tu zona está en la ficha de cada tour.{paidEverywhereSentence}</p>
+
+				{publishedPickupZones.map((zone) => (
+					<>
+						<h2 id={zone.slug}>{zone.name}</h2>
+						{zone.description && <p>{zone.description}</p>}
+						{zone.hotels.length === 1 && <p>El único hotel de la zona es el {zone.hotels[0].name}.</p>}
+						{zone.hotels.length > 1 && (
+							<>
+								<p>Hoteles de la zona:</p>
+								<div class="hotel-list">
+									<ul>
+										{zone.hotels.map((hotel) => (
+											<li>{hotel.name}</li>
+										))}
+									</ul>
+								</div>
+							</>
+						)}
+					</>
+				))}
+			</div>
 			<WhatsAppClosing
 				title="¿No encuentras tu hotel?"
 				text="Si te hospedas en un apartamento, una casa vacacional o un hotel que no está en la lista, escríbenos con la dirección. Te confirmamos la zona y el precio de la recogida antes de que reserves."

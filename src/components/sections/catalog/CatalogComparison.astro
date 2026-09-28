@@ -30,9 +30,11 @@ const weekdayLetters: Record<Weekday, { letter: string; name: string }> = {
 };
 
 const [defaultZone] = pickupZones;
-const pickupText = (fee: number) => (fee === 0 ? 'Incluida' : `+${formatPrice(fee)} por persona`);
+const pickupText = (fee: number | undefined) =>
+	fee === undefined ? 'Sin recogida' : fee === 0 ? 'Incluida' : `+${formatPrice(fee)} por persona`;
+const zoneFee = (details: TourDetails, zoneId: string | undefined) => (zoneId === undefined ? undefined : details.pickupFees[zoneId]);
 const pickupByZone = (details: TourDetails) =>
-	JSON.stringify(Object.fromEntries(pickupZones.map((zone) => [zone.id, pickupText(details.pickupFees[zone.id])])));
+	JSON.stringify(Object.fromEntries(pickupZones.map((zone) => [zone.id, pickupText(zoneFee(details, zone.id))])));
 
 const suitability = (details: TourDetails) => [
 	...(details.pregnancy === 'allowed' ? ['Embarazadas'] : []),
@@ -129,7 +131,7 @@ const mobileHidden = 'max-lg:hidden';
 						</th>
 						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>Días de salida</th>
 						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>
-							Recogida desde <span data-comparison-zone-name>{defaultZone.name}</span>
+							Recogida desde <span data-comparison-zone-name>{defaultZone?.name}</span>
 						</th>
 						<th scope="col" class:list={[mobileHidden, 'pr-4 pb-3 pl-4 text-left text-xs font-medium whitespace-nowrap text-muted']}>Apta para</th>
 					</tr>
@@ -185,7 +187,7 @@ const mobileHidden = 'max-lg:hidden';
 									<span class="sr-only">{scheduleLabel(details.days)}</span>
 								</td>
 								<td class:list={[cell, 'max-lg:whitespace-normal lg:whitespace-nowrap']} data-label="Recogida" data-comparison-pickup>
-									{pickupText(details.pickupFees[defaultZone.id])}
+									{pickupText(zoneFee(details, defaultZone?.id))}
 								</td>
 								<td class={cell} data-label="Apta para">
 									{suitable.length > 0 ? (

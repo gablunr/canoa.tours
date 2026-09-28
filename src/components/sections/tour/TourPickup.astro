@@ -15,6 +15,7 @@ const intro = pickupIncluded(details)
 	? 'La recogida está incluida desde Bávaro y Arena Gorda. Desde otras zonas se suma un cargo por persona, porque quedan lejos de la ruta.'
 	: `El transporte se paga aparte porque hay quien se hospeda cerca de ${place} y no lo necesita. Esto cuesta por persona según tu zona.`;
 const pickupWindow = pickupWindowLabel(details);
+const servedZones = pickupZones.filter((zone) => details.pickupFees[zone.id] !== undefined);
 ---
 
 <TourSection id="tour-pickup-title" title="Recogida en el hotel" intro={intro}>
@@ -28,7 +29,7 @@ const pickupWindow = pickupWindowLabel(details);
 				</tr>
 			</thead>
 			<tbody>
-				{pickupZones.map((zone) => (
+				{servedZones.map((zone) => (
 					<tr class="border-t border-border/60">
 						<th scope="row" class="py-3.5 pr-4 align-top font-medium text-primary">{zone.name}</th>
 						<td class="py-3.5 align-top text-secondary tabular-nums">{pickupFeeLabel(details.pickupFees[zone.id])}</td>
