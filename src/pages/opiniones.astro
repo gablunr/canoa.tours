@@ -11,7 +11,10 @@ export const prerender = false;
 
 const request = readReviewPageRequest(Astro.url.searchParams);
 const reviewPage = await loadReviewPage(request.filters, request.page ?? 1);
-if (request.page !== null && request.page !== reviewPage.page) return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page), 301);
+if (request.page !== null && request.page !== reviewPage.page) {
+	const pageMayExistLater = request.page > reviewPage.page;
+	return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page), pageMayExistLater ? 302 : 301);
+}
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
 
