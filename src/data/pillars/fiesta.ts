@@ -37,7 +37,7 @@ const sameNightFaq: Faq[] =
 		: [];
 
 export const pillar: PillarContent = {
-	seoTitle: 'Fiesta en Punta Cana: Coco Bongo, Imagine y party boat',
+	seoTitle: 'Fiesta en Punta Cana: Coco Bongo, Imagine y más',
 	description: `Fiesta en Punta Cana desde ${fromPriceOf('fiesta')}: Coco Bongo, Imagine y party boat con traslado desde tu hotel. Qué noche sale cada uno y qué ponerte.`,
 	heading: 'Fiesta en Punta Cana',
 	imageAlt: 'Público bailando en una discoteca con luces moradas y bolas de espejos',

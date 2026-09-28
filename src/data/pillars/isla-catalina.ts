@@ -4,7 +4,7 @@ import { departureDaysOf, departurePorts, fromPriceOf, pillarPath } from './kit'
 const port = departurePorts.catalina.port;
 
 export const pillar: PillarContent = {
-	seoTitle: 'Excursión a Isla Catalina desde Punta Cana: snorkel y buceo',
+	seoTitle: 'Excursión a Isla Catalina desde Punta Cana: precios',
 	description: `Excursión a Isla Catalina desde Punta Cana: snorkel desde ${fromPriceOf('isla-catalina')} o buceo con instructor, con salida de ${port} ${departureDaysOf('isla-catalina')}.`,
 	imageAlt: 'Persona haciendo snorkel bajo el agua azul',
 	comparisonTitle: 'Snorkel o buceo en Isla Catalina',

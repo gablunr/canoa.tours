@@ -11,7 +11,7 @@ const parkEntry = allInclude(/entrada al parque/i)
 	: 'En nuestras excursiones, el barco ya va incluido';
 
 export const pillar: PillarContent = {
-	seoTitle: 'Excursión a Isla Saona desde Punta Cana: precios y opciones',
+	seoTitle: 'Excursión a Isla Saona desde Punta Cana: precios',
 	description: `Excursión a Isla Saona desde ${fromPriceOf('isla-saona')} en catamarán, VIP 4 Playas, First Class o lancha privada. Salen de ${port} ${departureDaysOf('isla-saona')}.`,
 	imageAlt: 'Agua clara y poco profunda junto a una playa de arena blanca con palmeras inclinadas',
 	comparisonTitle: 'Qué excursión a Isla Saona elegir',

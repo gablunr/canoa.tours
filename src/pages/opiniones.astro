@@ -19,8 +19,8 @@ if (request.page !== null && request.page !== reviewPage.page) {
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
 
 const filtered = hasActiveReviewFilters(reviewPage.filters);
-const baseTitle = 'Opiniones de clientes sobre nuestras excursiones';
-const title = reviewPage.page > 1 ? `${baseTitle}, página ${reviewPage.page}` : baseTitle;
+const title =
+	reviewPage.page > 1 ? `Opiniones sobre nuestras excursiones, página ${reviewPage.page}` : 'Opiniones de clientes sobre nuestras excursiones';
 const intro = reviewsIntroFor(reviewPage.totalCount > 0);
 const canonicalPath = filtered ? undefined : reviewPageHref(reviewPage.filters, reviewPage.page);
 ---

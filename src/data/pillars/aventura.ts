@@ -12,7 +12,7 @@ const whereRows = toursOf('aventura').map((details) => [
 ]);
 
 export const pillar: PillarContent = {
-	seoTitle: 'Excursiones de aventura en Punta Cana: buggies, safari y más',
+	seoTitle: 'Excursiones de aventura en Punta Cana: precios',
 	description: `Excursiones de aventura en Punta Cana desde ${fromPriceOf('aventura')}: buggies en Macao, safari, parasailing, speed boat y Seaquarium. Cuál elegir y qué llevar.`,
 	heading: 'Excursiones de aventura en Punta Cana',
 	imageAlt: 'Buggy levantando barro en un camino de tierra',

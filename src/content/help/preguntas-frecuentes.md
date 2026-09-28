@@ -1,5 +1,5 @@
 ---
-title: Preguntas frecuentes sobre excursiones en Punta Cana
+title: 'Preguntas frecuentes: excursiones en Punta Cana'
 description: Respuestas sobre pagos, recogida en el hotel, mal tiempo y cancelaciones. También qué excursiones pueden hacer embarazadas o personas en silla de ruedas.
 updatedAt: 2026-09-27
 ---

@@ -47,6 +47,10 @@ export const siteHost = new URL(import.meta.env.SITE).host;
 
 export const pageTitle = (title: string) => `${title} | ${company.brandName}`;
 
+export const pageTitleMaxLength = 65;
+
+export const fitsPageTitle = (title: string) => pageTitle(title).length <= pageTitleMaxLength;
+
 export async function socialImage({ src, alt }: SeoImage): Promise<SocialImage> {
 	const width =
 		typeof src === 'string'

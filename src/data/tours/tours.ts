@@ -2,6 +2,7 @@ import { formatPrice } from '../../lib/format';
 import type { SiteImage } from '../../lib/images';
 import { publishedPickupZones, publishedTourRows } from '../../lib/tours/published-tours';
 import { tourRowToDetails, type TourRow } from '../../lib/tours/tour-rows';
+import { fitsPageTitle } from '../../lib/seo/seo';
 import type { OfferOptions, QuestionAndAnswer } from '../../lib/seo/structured-data';
 import { cancellationInsurancePriceLabel, cancellationNoticeLabel } from '../booking/booking-policy';
 import { departurePorts } from './departure-ports';
@@ -189,7 +190,12 @@ export const tourHeading = (details: TourDetails) => {
 	return needsPlace ? `${details.title} en Punta Cana` : details.title;
 };
 
-export const tourSeoTitle = (details: TourDetails) => `${tourHeading(details)}: precio y qué incluye`;
+const tourSeoTitleEndings = [': precio y qué incluye', ': precio y reserva', ': precio'];
+
+export const tourSeoTitle = (details: TourDetails) => {
+	const heading = tourHeading(details);
+	return tourSeoTitleEndings.map((ending) => `${heading}${ending}`).find(fitsPageTitle) ?? heading;
+};
 
 const descriptionMaxLength = 160;
 

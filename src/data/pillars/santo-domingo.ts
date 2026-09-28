@@ -18,7 +18,7 @@ const driveTime = hoursLabel(stepMinutes('Los Tres Ojos') - stepMinutes('Recogid
 const cityTime = hoursLabel(stepMinutes('Regreso a Punta Cana') - stepMinutes('Los Tres Ojos'));
 
 export const pillar: PillarContent = {
-	seoTitle: 'Excursión a Santo Domingo desde Punta Cana: Clásica o VIP',
+	seoTitle: 'Excursión a Santo Domingo desde Punta Cana: precios',
 	description: `Excursión a Santo Domingo desde Punta Cana: la Zona Colonial y Los Tres Ojos en un día, desde ${fromPriceOf('santo-domingo')}. Compara la Clásica y la VIP.`,
 	imageAlt: 'Fachada del Alcázar de Colón frente a una plaza empedrada en la Zona Colonial',
 	comparisonTitle: 'Clásica o VIP: qué cambia',
