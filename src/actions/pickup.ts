@@ -141,13 +141,25 @@ export const pickup = {
 		input: z.object({
 			zoneId: z.uuid(),
 			fees: z.array(z.object({ productId: z.uuid(), fee })).max(500),
+			listedProductIds: z.array(z.uuid()).max(500),
 		}),
-		handler: async ({ zoneId, fees }, context) => {
+		handler: async ({ zoneId, fees, listedProductIds }, context) => {
 			const { userId } = requireStaff(context, zoneEditors);
+
+			const { data: currentFees, error: currentError } = await supabaseAdmin
+				.from('product_pickup_zones')
+				.select('product_id, fee_per_person')
+				.eq('zone_id', zoneId);
+			if (currentError) failWithDbError(currentError, 'No se pudieron guardar las tarifas.');
+
+			const listed = new Set([...listedProductIds, ...fees.map((entry) => entry.productId)]);
+			const unlistedFees = currentFees
+				.filter((row) => !listed.has(row.product_id))
+				.map((row) => ({ product_id: row.product_id, fee: Number(row.fee_per_person) }));
 
 			const { error } = await supabaseAdmin.rpc('admin_save_zone_fees', {
 				p_zone_id: zoneId,
-				p_fees: fees.map((entry) => ({ product_id: entry.productId, fee: entry.fee })),
+				p_fees: [...fees.map((entry) => ({ product_id: entry.productId, fee: entry.fee })), ...unlistedFees],
 			});
 			if (error) failWithDbError(error, 'No se pudieron guardar las tarifas.');
 

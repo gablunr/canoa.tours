@@ -257,7 +257,8 @@ function initFees(root: HTMLElement) {
 		}
 
 		setBusy(submitButton, true, 'Guardando…');
-		const { error } = await actions.pickup.saveZoneFees({ zoneId, fees });
+		const listedProductIds = rows.flatMap((row) => (row.dataset.productId ? [row.dataset.productId] : []));
+		const { error } = await actions.pickup.saveZoneFees({ zoneId, fees, listedProductIds });
 		setBusy(submitButton, false, '');
 		if (error) {
 			showMessage(formError, actionErrorMessage(error));
