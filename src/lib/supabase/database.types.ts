@@ -12,6 +12,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_link_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: number
+          ip: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: never
+          ip?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: never
+          ip?: string | null
+        }
+        Relationships: []
+      }
+      booking_email_claims: {
+        Row: {
+          booking_id: string
+          claimed_at: string
+          kind: string
+        }
+        Insert: {
+          booking_id: string
+          claimed_at?: string
+          kind: string
+        }
+        Update: {
+          booking_id?: string
+          claimed_at?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_email_claims_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_events: {
         Row: {
           actor_user_id: string | null
@@ -1274,6 +1321,15 @@ export type Database = {
           p_status: Database["public"]["Enums"]["payment_status"]
         }
         Returns: string
+      }
+      register_auth_link_request: {
+        Args: {
+          p_email: string
+          p_ip: string
+          p_max_per_email: number
+          p_max_per_ip: number
+        }
+        Returns: boolean
       }
       set_booking_outcome: {
         Args: {
