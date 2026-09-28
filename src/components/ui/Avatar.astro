@@ -1,0 +1,23 @@
+---
+import { UserRound } from '@lucide/astro';
+
+interface Props {
+	src?: string | null;
+	initials?: string | null;
+	iconSize?: number;
+	class?: string;
+}
+
+const { src = null, initials = null, iconSize = 18, class: className } = Astro.props;
+---
+
+<span
+	class:list={['relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 font-semibold tracking-[-0.02em] text-white', className]}
+	data-avatar
+>
+	<span class="flex" data-avatar-icon hidden={Boolean(initials)}>
+		<UserRound size={iconSize} stroke-width={1.75} aria-hidden="true" />
+	</span>
+	<span data-avatar-initials hidden={!initials} aria-hidden="true">{initials}</span>
+	<img src={src ?? undefined} alt="" class="absolute inset-0 size-full object-cover" data-avatar-image hidden={!src} />
+</span>

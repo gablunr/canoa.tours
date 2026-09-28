@@ -69,6 +69,7 @@
 
   --color-success: #0b7643;
   --color-error: #b3261e;
+  --color-error-on-dark: #f2b8b5;
 
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-zoom: cubic-bezier(0.7, 0, 0.84, 0);

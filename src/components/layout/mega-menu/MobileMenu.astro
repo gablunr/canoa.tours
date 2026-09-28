@@ -17,6 +17,7 @@ import {
 } from '../../../data/site/navigation';
 import { formatPrice } from '../../../lib/format';
 import { imageSource } from '../../../lib/images';
+import Avatar from '../../ui/Avatar.astro';
 
 interface Props {
 	currentPath: string;
@@ -208,11 +209,16 @@ const photo = 'absolute inset-0 -z-10 size-full object-cover saturate-150 contra
 					<ArrowUpRight size={18} class={viewAllIcon} aria-hidden="true" />
 				</a>
 				<div class="bento-glass flex flex-col rounded-2xl p-4 [grid-area:1/1] inert:invisible" data-account-member inert>
-					<span class="text-[15px] leading-tight font-semibold tracking-[-0.02em]" data-account-greeting>Hola</span>
-					<a href="/account" class="mt-1 text-xs text-muted-on-dark underline-offset-4 hover:text-white hover:underline" data-account-next hidden>
-						Próxima: <span data-account-next-name></span>, <span data-account-next-date></span>
-					</a>
-					<span class="mt-1 text-xs text-muted-on-dark" data-account-no-next hidden>No tienes excursiones próximas.</span>
+					<div class="flex items-center gap-3">
+						<Avatar class="size-10 text-sm" iconSize={16} />
+						<div class="flex min-w-0 flex-col">
+							<span class="text-[15px] leading-tight font-semibold tracking-[-0.02em]" data-account-greeting>Hola</span>
+							<a href="/account" class="mt-1 text-xs text-muted-on-dark underline-offset-4 hover:text-white hover:underline" data-account-next hidden>
+								Próxima: <span data-account-next-name></span>, <span data-account-next-date></span>
+							</a>
+							<span class="mt-1 text-xs text-muted-on-dark" data-account-no-next hidden>No tienes excursiones próximas.</span>
+						</div>
+					</div>
 					<div class="mt-3 flex flex-wrap gap-2">
 						<a href="/account" class="inline-flex h-9 items-center rounded-full bg-white px-4 text-sm font-medium text-primary">Mis reservas</a>
 						<a href="/account/profile" class="inline-flex h-9 items-center rounded-full bg-white/10 px-4 text-sm font-medium">Perfil</a>

@@ -1,6 +1,8 @@
 import { ActionError, defineAction } from 'astro:actions';
 import { TEAM_EMAIL } from 'astro:env/server';
 import { z } from 'astro/zod';
+import sharp from 'sharp';
+import { avatarFolder } from '../lib/account/avatar';
 import { customerIdForUser, findOwnedBooking, isBookingOwner } from '../lib/account/bookings';
 import { loadBookingDetails, type BookingDetails } from '../lib/booking/booking-details';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
@@ -12,6 +14,7 @@ import { sendEmail } from '../lib/email/send';
 import { requireCustomerUser } from '../lib/manage/guards';
 import { siteOrigin } from '../lib/site-origin';
 import { supabaseAdmin } from '../lib/supabase/admin';
+import { publicMediaUrl } from '../lib/supabase/media';
 
 const bookingCode = z.string().trim().toUpperCase().min(4).max(20);
 const maxReviewPhotos = 5;
@@ -35,12 +38,48 @@ const reviewPhotos = z
 	.transform((files) => files.filter((file) => file.size > 0))
 	.pipe(z.array(reviewPhoto).max(maxReviewPhotos, `Puedes subir hasta ${maxReviewPhotos} fotos.`));
 
+const maxAvatarBytes = 4 * 1024 * 1024;
+const avatarEdge = 320;
+
+const avatarPhoto = z
+	.instanceof(File)
+	.refine((file) => file.size > 0, 'Elige una foto.')
+	.refine((file) => file.type in photoExtensions, 'Solo se aceptan fotos JPG, PNG, WebP, AVIF o HEIC.')
+	.refine((file) => file.size <= maxAvatarBytes, 'La foto puede pesar como máximo 4 MB.');
+
 const roundMoney = (amount: number) => Math.round(amount * 100) / 100;
 
 function failWithDbError(error: unknown): never {
 	const code = dbErrorCode(error);
 	if (!code) console.error('account action failed', error);
 	throw new ActionError({ code: 'BAD_REQUEST', message: code ? bookingErrorMessage(code) : 'No se pudo completar la operación.' });
+}
+
+const noCustomerProfile = () => new ActionError({ code: 'NOT_FOUND', message: 'Todavía no tienes un perfil de cliente.' });
+
+async function customerAvatar(userId: string) {
+	const { data, error } = await supabaseAdmin.from('customers').select('id, avatar_path').eq('auth_user_id', userId).maybeSingle();
+	if (error) failWithDbError(error);
+	if (!data) throw noCustomerProfile();
+	return data;
+}
+
+async function squareAvatar(photo: File): Promise<Buffer | null> {
+	try {
+		return await sharp(Buffer.from(await photo.arrayBuffer()), { limitInputPixels: 60_000_000 })
+			.rotate()
+			.resize(avatarEdge, avatarEdge, { fit: 'cover', position: 'attention' })
+			.webp({ quality: 80 })
+			.toBuffer();
+	} catch {
+		return null;
+	}
+}
+
+async function removeAvatarFile(customerId: string, path: string | null) {
+	if (!path?.startsWith(avatarFolder(customerId))) return;
+	const { error } = await supabaseAdmin.storage.from('media').remove([path]);
+	if (error) console.error('avatar removal failed', error);
 }
 
 const bookingNotFound = () => new ActionError({ code: 'NOT_FOUND', message: 'No encontramos esa reserva en tu cuenta.' });
@@ -147,8 +186,36 @@ export const account = {
 				.eq('auth_user_id', userId)
 				.select('id, full_name, phone, country');
 			if (error) failWithDbError(error);
-			if (!data?.length) throw new ActionError({ code: 'NOT_FOUND', message: 'Todavía no tienes un perfil de cliente.' });
+			if (!data?.length) throw noCustomerProfile();
 			return data[0];
+		},
+	}),
+
+	updateAvatar: defineAction({
+		accept: 'form',
+		input: z.object({ photo: avatarPhoto }),
+		handler: async ({ photo }, context) => {
+			const { userId } = requireCustomerUser(context);
+			const customer = await customerAvatar(userId);
+
+			const avatar = await squareAvatar(photo);
+			if (!avatar) throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos leer la foto. Prueba con una JPG o PNG.' });
+
+			const path = `${avatarFolder(customer.id)}${Date.now()}.webp`;
+			const { error: uploadError } = await supabaseAdmin.storage.from('media').upload(path, avatar, { contentType: 'image/webp', upsert: false });
+			if (uploadError) {
+				console.error('avatar upload failed', uploadError);
+				throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos subir la foto. Prueba de nuevo.' });
+			}
+
+			const { error } = await supabaseAdmin.from('customers').update({ avatar_path: path }).eq('id', customer.id);
+			if (error) {
+				await removeAvatarFile(customer.id, path);
+				failWithDbError(error);
+			}
+
+			await removeAvatarFile(customer.id, customer.avatar_path);
+			return { avatarUrl: publicMediaUrl(path) };
 		},
 	}),
 

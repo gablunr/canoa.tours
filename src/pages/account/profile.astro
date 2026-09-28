@@ -1,9 +1,12 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { Camera } from '@lucide/astro';
 import AccountHeader from '../../components/sections/account/AccountHeader.astro';
+import Avatar from '../../components/ui/Avatar.astro';
 import Button from '../../components/ui/Button.astro';
 import SelectField from '../../components/ui/form/SelectField.astro';
 import TextField from '../../components/ui/form/TextField.astro';
+import { customerInitials } from '../../lib/account/avatar';
 import { loadCustomerBookings, loadCustomerProfile } from '../../lib/account/bookings';
 import { countryOptions } from '../../lib/account/countries';
 
@@ -29,6 +32,8 @@ const facts = customer
 			{ label: 'Reservas', value: String(bookingCount), field: null },
 		]
 	: [];
+
+const avatarTypes = 'image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif';
 ---
 
 <Layout title="Tu perfil" description="Tus datos de contacto en Canoa Tours." noindex>
@@ -37,7 +42,36 @@ const facts = customer
 	<div class="px-4 pt-10 sm:px-6 md:pt-12">
 		<div class="mx-auto grid max-w-5xl animate-fade-up gap-4 lg:grid-cols-5" style="animation-delay: 240ms" data-profile>
 			<section aria-labelledby="tus-datos" class="relative isolate flex flex-col overflow-hidden rounded-[2rem] bg-primary p-6 text-white sm:p-8 lg:col-span-2">
-				<h2 id="tus-datos" class="text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance" data-profile-value="fullName">
+				<div data-avatar-picker>
+					{customer ? (
+						<>
+							<button
+								type="button"
+								class="group/avatar relative flex w-fit cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent-on-dark focus-visible:ring-offset-4 focus-visible:ring-offset-primary disabled:cursor-default"
+								aria-label={customer.avatarUrl ? 'Cambiar foto de perfil' : 'Añadir foto de perfil'}
+								data-avatar-choose
+							>
+								<Avatar
+									src={customer.avatarUrl}
+									initials={customerInitials(customer.fullName)}
+									class="size-20 text-2xl transition-[filter] duration-300 ease-smooth group-hover/avatar:brightness-75 data-busy:animate-pulse"
+								/>
+								<span
+									class="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full bg-white text-primary ring-3 ring-primary transition-transform duration-300 ease-smooth group-hover/avatar:scale-110"
+									aria-hidden="true"
+								>
+									<Camera size={14} stroke-width={2} />
+								</span>
+							</button>
+							<input type="file" accept={avatarTypes} class="sr-only" tabindex="-1" aria-hidden="true" data-avatar-input />
+						</>
+					) : (
+						<Avatar iconSize={28} class="size-20" />
+					)}
+					<p class="mt-3 text-sm text-error-on-dark" role="alert" data-avatar-error hidden></p>
+				</div>
+
+				<h2 id="tus-datos" class="mt-6 text-2xl leading-tight font-semibold tracking-[-0.03em] text-balance" data-profile-value="fullName">
 					{customer?.fullName ?? 'Tus datos'}
 				</h2>
 				<p class="mt-1 truncate text-sm text-muted-on-dark">{user.email}</p>
@@ -110,7 +144,9 @@ const facts = customer
 </Layout>
 
 <script>
+	import { initAvatarPicker } from '../../scripts/account/avatar-picker';
 	import { initProfileForm } from '../../scripts/account/profile';
 
+	document.querySelectorAll<HTMLElement>('[data-avatar-picker]').forEach(initAvatarPicker);
 	document.querySelectorAll<HTMLElement>('[data-profile]').forEach(initProfileForm);
 </script>

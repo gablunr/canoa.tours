@@ -3,6 +3,7 @@ import { ArrowUpRight, CalendarClock, LogOut, MessageCircle, Star, Ticket, UserR
 import { bookingPolicy } from '../../../data/booking/booking-policy';
 import { company } from '../../../data/site/company';
 import { contactLink } from '../../../data/site/navigation';
+import Avatar from '../../ui/Avatar.astro';
 
 const tile =
 	'group relative flex flex-col bento-glass rounded-2xl p-5 outline-none transition-colors duration-300 ease-smooth hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent-on-dark';
@@ -34,8 +35,13 @@ const whatsapp = company.whatsapp;
 		</div>
 
 		<div class={variant} data-account-member inert>
-			<span class:list={[tileTitle, 'text-xl']} data-account-greeting>Hola</span>
-			<span class={tileText} data-account-email></span>
+			<div class="flex items-center gap-3">
+				<Avatar class="size-11 text-sm" />
+				<div class="flex min-w-0 flex-col">
+					<span class:list={[tileTitle, 'text-xl']} data-account-greeting>Hola</span>
+					<span class:list={[tileText, 'truncate']} data-account-email></span>
+				</div>
+			</div>
 
 			<a
 				href="/account"

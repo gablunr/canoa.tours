@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { customerInitials } from '../../../lib/account/avatar';
 import { formatBookingDate, isUpcoming, loadCustomerBookings, loadCustomerProfile } from '../../../lib/account/bookings';
 import { firstName } from '../../../lib/email/templates/layout';
 
@@ -20,6 +21,8 @@ export const GET: APIRoute = async ({ locals }) => {
 	return privateJson({
 		signedIn: true,
 		firstName: customer ? firstName(customer.fullName) : null,
+		initials: customer ? customerInitials(customer.fullName) : null,
+		avatarUrl: customer?.avatarUrl ?? null,
 		email: user.email ?? null,
 		upcomingCount: upcoming.length,
 		nextBooking: next

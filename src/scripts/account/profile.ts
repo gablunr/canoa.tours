@@ -1,4 +1,6 @@
 import { actions } from 'astro:actions';
+import { customerInitials } from '../../lib/account/avatar';
+import { setAvatarInitials } from '../ui/avatar';
 import { clearErrorOnInput, validateFields } from '../ui/form-validation';
 
 const notSet = 'Sin indicar';
@@ -29,6 +31,7 @@ export function initProfileForm(root: HTMLElement) {
 
 	const refreshSummary = (saved: { full_name: string; phone: string | null; country: string | null }) => {
 		showValue('fullName', saved.full_name);
+		root.querySelectorAll<HTMLElement>('[data-avatar]').forEach((avatar) => setAvatarInitials(avatar, customerInitials(saved.full_name)));
 		showValue('phone', saved.phone ?? notSet);
 		showValue('country', saved.country ? (countrySelect.selectedOptions[0]?.textContent ?? saved.country) : notSet);
 	};

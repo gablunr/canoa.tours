@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { tourDetails, tourPhoto, type TourDetails } from '../../data/tours/tours';
 import type { SiteImage } from '../images';
 import { loadBookingDetails, shortTime, spanishTranslation, tourPathFor, type BookingDetails } from '../booking/booking-details';
+import { publicMediaUrl } from '../supabase/media';
 import { supabaseAdmin } from '../supabase/admin';
 import type { BookingStatus, Database } from '../supabase/types';
 
@@ -72,17 +73,26 @@ export interface CustomerProfile {
 	fullName: string;
 	phone: string | null;
 	country: string | null;
+	avatarUrl: string | null;
 	createdAt: string;
 }
 
 export async function loadCustomerProfile(supabase: SupabaseClient<Database>, userId: string): Promise<CustomerProfile | null> {
 	const { data, error } = await supabase
 		.from('customers')
-		.select('id, full_name, phone, country, created_at')
+		.select('id, full_name, phone, country, avatar_path, created_at')
 		.eq('auth_user_id', userId)
 		.maybeSingle();
 	if (error) throw error;
-	return data ? { id: data.id, fullName: data.full_name, phone: data.phone, country: data.country, createdAt: data.created_at } : null;
+	if (!data) return null;
+	return {
+		id: data.id,
+		fullName: data.full_name,
+		phone: data.phone,
+		country: data.country,
+		avatarUrl: data.avatar_path ? publicMediaUrl(data.avatar_path) : null,
+		createdAt: data.created_at,
+	};
 }
 
 export async function loadCustomerBookings(supabase: SupabaseClient<Database>, customerId: string): Promise<CustomerBooking[]> {

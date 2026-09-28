@@ -1,8 +1,12 @@
+import { setAvatar } from './avatar';
+
 type AccountSummary =
 	| { signedIn: false }
 	| {
 			signedIn: true;
 			firstName: string | null;
+			initials: string | null;
+			avatarUrl: string | null;
 			email: string | null;
 			upcomingCount: number;
 			nextBooking: { productName: string; date: string; href: string } | null;
@@ -45,6 +49,9 @@ function applySummary(root: HTMLElement, summary: AccountSummary) {
 
 	setText(root, '[data-account-greeting]', summary.firstName ? `Hola, ${summary.firstName}` : 'Hola');
 	setText(root, '[data-account-email]', summary.email ?? '');
+	root.querySelectorAll<HTMLElement>('[data-account-member] [data-avatar]').forEach((avatar) => {
+		setAvatar(avatar, { src: summary.avatarUrl, initials: summary.initials });
+	});
 	setHidden(root, '[data-account-no-next]', summary.nextBooking !== null);
 	setHidden(root, '[data-account-next]', summary.nextBooking === null);
 
