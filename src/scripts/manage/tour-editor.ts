@@ -162,7 +162,8 @@ export function initTourEditor(root: HTMLElement) {
 		form.querySelectorAll<HTMLElement>('[data-group-only]').forEach((element) => (element.hidden = !perGroup));
 		form.querySelectorAll<HTMLElement>('[data-person-only]').forEach((element) => (element.hidden = perGroup));
 		const baseLabel = form.querySelector<HTMLLabelElement>('label[for="field-basePrice"]');
-		if (baseLabel?.firstChild) baseLabel.firstChild.textContent = perGroup ? 'Precio del grupo' : 'Precio del adulto';
+		const baseLabelText = Array.from(baseLabel?.childNodes ?? []).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
+		if (baseLabelText) baseLabelText.textContent = perGroup ? 'Precio del grupo' : 'Precio del adulto';
 		const childFields = form.querySelector<HTMLElement>('[data-child-fields]');
 		if (childFields) childFields.hidden = !childToggle?.checked;
 	};
