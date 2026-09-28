@@ -5,7 +5,7 @@ import PhotoHero from '../page/PhotoHero.astro';
 import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
 import { destinationHref } from '../../../data/tours/destinations';
 import { routes } from '../../../data/site/routes';
-import { durationLabel, pickupLabel, scheduleLabel, tourPhoto, type TourDetails } from '../../../data/tours/tours';
+import { durationLabel, pickupLabel, scheduleLabel, tourHeading, tourPhoto, type TourDetails } from '../../../data/tours/tours';
 import { formatPrice } from '../../../lib/format';
 
 interface Props {
@@ -23,7 +23,7 @@ const facts = [
 ];
 ---
 
-<PhotoHero data-tour-photo title={details.title} image={photo} imageAlt={details.imageAlt} introClass="max-w-3xl" compact dim>
+<PhotoHero data-tour-photo title={tourHeading(details)} image={photo} imageAlt={details.imageAlt} introClass="max-w-3xl" compact dim>
 	<HeroBreadcrumb
 		slot="badge"
 		items={[

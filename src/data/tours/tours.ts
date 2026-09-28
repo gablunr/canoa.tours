@@ -184,10 +184,12 @@ export const wheelchairLabel = (details: TourDetails) => (details.wheelchair ? '
 
 const placeNames = ['Punta Cana', 'Bávaro', 'Bayahibe'];
 
-export const tourSeoTitle = (details: TourDetails) => {
+export const tourHeading = (details: TourDetails) => {
 	const needsPlace = details.destination.kind !== 'place' && !placeNames.some((place) => details.title.includes(place));
-	return `${details.title}${needsPlace ? ' en Punta Cana' : ''}: precio y qué incluye`;
+	return needsPlace ? `${details.title} en Punta Cana` : details.title;
 };
+
+export const tourSeoTitle = (details: TourDetails) => `${tourHeading(details)}: precio y qué incluye`;
 
 const descriptionMaxLength = 160;
 
