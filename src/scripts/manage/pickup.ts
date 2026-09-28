@@ -12,6 +12,22 @@ interface KnownHotel {
 
 const savedFeedbackMs = 2500;
 
+const unsavedForms = new Set<HTMLFormElement>();
+
+function trackUnsaved(form: HTMLFormElement) {
+	form.addEventListener('input', () => unsavedForms.add(form));
+}
+
+function reloadPage() {
+	unsavedForms.clear();
+	location.reload();
+}
+
+function goTo(href: string) {
+	unsavedForms.clear();
+	location.href = href;
+}
+
 const normalizeHotelName = (name: string) => name.replace(/\s+/g, ' ').trim();
 const hotelNameKey = (name: string) => normalizeHotelName(name).toLocaleLowerCase('es');
 
@@ -106,7 +122,7 @@ function initNewZone(root: HTMLElement) {
 			setBusy(submitButton, false, '');
 			return;
 		}
-		location.href = zoneHref(result.slug);
+		goTo(zoneHref(result.slug));
 	});
 }
 
@@ -161,7 +177,7 @@ function initReorder(root: HTMLElement) {
 			setBusy(submitButton, false, '');
 			return;
 		}
-		location.reload();
+		reloadPage();
 	});
 }
 
@@ -175,6 +191,7 @@ function initZoneForm(root: HTMLElement, askToConfirm: AskToConfirm) {
 	const nameInput = form.querySelector<HTMLInputElement>('[name="zoneName"]');
 	const savedName = nameInput?.value.trim() ?? '';
 	clearErrorOnInput(form);
+	trackUnsaved(form);
 
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
@@ -193,8 +210,9 @@ function initZoneForm(root: HTMLElement, askToConfirm: AskToConfirm) {
 			showActionError(form, error, { name: 'zoneName', description: 'zoneDescription' }, formError);
 			return;
 		}
+		unsavedForms.delete(form);
 		if (nameInput && nameInput.value.trim() !== savedName) {
-			location.reload();
+			reloadPage();
 			return;
 		}
 		flashStatus(status, 'Guardado');
@@ -205,7 +223,7 @@ function initZoneForm(root: HTMLElement, askToConfirm: AskToConfirm) {
 		askToConfirm('remove-zone', 'Borrando…', async () => {
 			const { error } = await actions.pickup.removeZone({ id: zoneId });
 			if (error) return actionErrorMessage(error);
-			location.href = zoneHref(undefined);
+			goTo(zoneHref(undefined));
 			return null;
 		});
 	});
@@ -220,6 +238,7 @@ function initFees(root: HTMLElement) {
 	const status = form.querySelector<HTMLElement>('[data-fees-status]');
 	const rows = Array.from(form.querySelectorAll<HTMLElement>('[data-fee-row]'));
 	if (!submitButton) return;
+	trackUnsaved(form);
 
 	rows.forEach((row) => {
 		const served = row.querySelector<HTMLInputElement>('[data-fee-served]');
@@ -264,6 +283,7 @@ function initFees(root: HTMLElement) {
 			showMessage(formError, actionErrorMessage(error));
 			return;
 		}
+		unsavedForms.delete(form);
 		flashStatus(status, 'Guardado');
 		requestSiteStatusRefresh();
 	});
@@ -338,7 +358,7 @@ function initAddHotels(root: HTMLElement, knownHotels: KnownHotel[]) {
 			setBusy(submitButton, false, '');
 			return;
 		}
-		location.reload();
+		reloadPage();
 	});
 }
 
@@ -389,7 +409,7 @@ function initEditHotel(root: HTMLElement, askToConfirm: AskToConfirm) {
 		askToConfirm('remove-hotel', 'Borrando…', async () => {
 			const { error } = await actions.pickup.removeHotel({ id });
 			if (error) return actionErrorMessage(error);
-			location.reload();
+			reloadPage();
 			return null;
 		});
 	});
@@ -406,12 +426,15 @@ function initEditHotel(root: HTMLElement, askToConfirm: AskToConfirm) {
 			setBusy(submitButton, false, '');
 			return;
 		}
-		location.reload();
+		reloadPage();
 	});
 }
 
 export function initPickupPage(root: HTMLElement) {
 	const askToConfirm = initConfirmDialogs(root);
+	window.addEventListener('beforeunload', (event) => {
+		if (unsavedForms.size > 0) event.preventDefault();
+	});
 	initHotelSearch(root);
 	initNewZone(root);
 	initReorder(root);
