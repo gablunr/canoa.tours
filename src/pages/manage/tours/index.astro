@@ -61,7 +61,7 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 			)}
 		</ManagePageHeader>
 
-		<div class="mt-1 grid animate-fade-up gap-2.5" style="animation-delay: 100ms">
+		<div class="mt-1 grid animate-fade-up gap-2" style="animation-delay: 100ms">
 			<div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
 				<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
 					{statusTabs.map((tab) => (
@@ -69,6 +69,7 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 							href={`/manage/tours?status=${tab.id}`}
 							class:list={[glassOption, 'group/tab flex-1 sm:flex-none']}
 							aria-current={tab.id === activeTab.id ? 'page' : undefined}
+							title={tab.summary}
 						>
 							{tab.label}
 							<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{list.counts[tab.id]}</span>
@@ -98,12 +99,12 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 					class="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
 					data-destination-filters
 				>
-					<button type="button" class:list={[glassOption, 'group/filter shrink-0']} aria-pressed="true" data-destination-filter="">
+					<button type="button" class:list={[glassOption, 'group/filter h-8 shrink-0 sm:px-3.5']} aria-pressed="true" data-destination-filter="">
 						Todos
 						<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{activeTabCount}</span>
 					</button>
 					{destinationFilters.map((filter) => (
-						<button type="button" class:list={[glassOption, 'group/filter shrink-0']} aria-pressed="false" data-destination-filter={filter.id}>
+						<button type="button" class:list={[glassOption, 'group/filter h-8 shrink-0 sm:px-3.5']} aria-pressed="false" data-destination-filter={filter.id}>
 							{filter.name}
 							<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/65">{filter.count}</span>
 						</button>
@@ -111,14 +112,11 @@ const pathPrefixes = Object.fromEntries(destinations.map((destination) => [desti
 				</div>
 			)}
 
-			<p class="px-1 text-sm text-secondary">
-				<span data-tour-summary>{activeTab.summary}</span>
-				<span data-tour-results hidden>
-					<span data-tour-results-text></span>{' '}
-					<button type="button" class="cursor-pointer font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary" data-tour-search-clear>
-						Quitar búsqueda
-					</button>
-				</span>
+			<p class="px-1 text-sm text-secondary" data-tour-results hidden>
+				<span data-tour-results-text></span>{' '}
+				<button type="button" class="cursor-pointer font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary" data-tour-search-clear>
+					Quitar búsqueda
+				</button>
 			</p>
 		</div>
 

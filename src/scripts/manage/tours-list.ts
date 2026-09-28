@@ -13,7 +13,7 @@ interface ListView {
 	stopSorting: () => void;
 }
 
-const toursPerPage = 8;
+const toursPerPage = 10;
 
 const takenByTourMessage = 'Esa dirección ya la usa otra excursión. Elige otra.';
 const takenByGuideMessage = 'Esa dirección ya la usa una guía publicada. Elige otra.';
@@ -55,7 +55,6 @@ function pageGap() {
 
 function initListView(root: HTMLElement): ListView {
 	const input = root.querySelector<HTMLInputElement>('[data-tour-search]');
-	const summary = root.querySelector<HTMLElement>('[data-tour-summary]');
 	const results = root.querySelector<HTMLElement>('[data-tour-results]');
 	const resultsText = root.querySelector<HTMLElement>('[data-tour-results-text]');
 	const emptyPanel = root.querySelector<HTMLElement>('[data-tour-search-empty]');
@@ -134,7 +133,6 @@ function initListView(root: HTMLElement): ListView {
 		});
 
 		if (listPanel) listPanel.hidden = shown.size === 0;
-		if (summary) summary.hidden = Boolean(term);
 		if (results) results.hidden = !term;
 		if (resultsText) resultsText.textContent = `${matching.length} ${matching.length === 1 ? 'resultado' : 'resultados'} para «${typed}».`;
 		if (emptyText) emptyText.textContent = `Ninguna excursión coincide con «${typed}».`;
