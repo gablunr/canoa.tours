@@ -15,10 +15,10 @@ const tourCountLabel = (count: number) => `${count} ${count === 1 ? 'excursión'
 const pageArrow = `${glassCircle} disabled:pointer-events-none disabled:opacity-40`;
 ---
 
-<div class:list={[glassPanel, 'grid animate-fade-up gap-1 p-1.5']} style="animation-delay: 160ms" data-tour-groups>
+<div class="grid animate-fade-up gap-3" style="animation-delay: 160ms" data-tour-groups>
 	{groups.map((group) => (
 		<section
-			class="group/panel rounded-[1.5rem] transition-colors duration-300 ease-smooth data-[sorting]:bg-ink-200/40"
+			class:list={[glassPanel, 'group/panel p-1.5 data-[sorting]:bg-ink-200/70']}
 			aria-labelledby={`destino-${group.destination.id}`}
 			data-tour-group
 			data-destination-id={group.destination.id}
