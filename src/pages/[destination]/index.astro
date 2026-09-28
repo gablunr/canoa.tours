@@ -6,7 +6,7 @@ import { getLegalDocuments } from '../../data/pages/legal';
 import { routes } from '../../data/site/routes';
 
 export const getStaticPaths = (async () => {
-	const reservedPaths = ['404', 'llms.txt', 'robots.txt', 'site.webmanifest', 'fonts', 'images', '_astro'];
+	const reservedPaths = ['404', 'llms.txt', 'robots.txt', 'site.webmanifest', 'fonts', 'images', 'og', '_astro'];
 	const legalIds = (await getLegalDocuments()).map((document) => document.id);
 	const reserved = new Set([...Object.values(routes).map((path) => path.slice(1)), ...legalIds, ...reservedPaths]);
 	for (const destination of destinations) {

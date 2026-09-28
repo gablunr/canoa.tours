@@ -53,9 +53,16 @@ const {
 	canonicalPath,
 } = Astro.props;
 
+async function shareCardImageFor(pageUrl: string) {
+	const { findShareCard, shareCardImage } = await import('../../lib/seo/share-cards');
+	const card = await findShareCard(new URL(pageUrl).pathname);
+	return card && shareCardImage(card);
+}
+
 const url = canonicalUrl(canonicalPath ?? Astro.url.pathname);
-const shareImage = await socialImage(image);
-const organizationImage = image === defaultSocialImage ? shareImage : await socialImage(defaultSocialImage);
+const pageImage = await socialImage(image);
+const organizationImage = image === defaultSocialImage ? pageImage : await socialImage(defaultSocialImage);
+const shareImage = (!noindex && (await shareCardImageFor(url))) || pageImage;
 const logoImage = await getImage({ src: logo, format: 'png' });
 const trail = breadcrumbs.length > 0 ? [{ name: 'Inicio', path: '/' }, ...breadcrumbs] : [];
 const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
@@ -76,7 +83,7 @@ const structuredData = {
 			datePublished: article?.publishedAt,
 			dateModified: modifiedAt,
 		}),
-		primaryImageSchema(url, shareImage),
+		primaryImageSchema(url, pageImage),
 		...(trail.length > 0 ? [breadcrumbSchema(url, trail)] : []),
 		...graph,
 	],
