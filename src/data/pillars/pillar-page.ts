@@ -12,6 +12,7 @@ import {
 	destinationToursTitle,
 	durationCategoryLabels,
 	durationLabel,
+	includedPickupZoneName,
 	minAgeLabel,
 	pickupIncluded,
 	priceLabel,
@@ -112,7 +113,6 @@ const feeRange = (fees: number[]) => {
 const sameFees = (tours: TourDetails[]) =>
 	tours.every((details) => pickupZones.every((zone) => details.pickupFees[zone.id] === tours[0].pickupFees[zone.id]));
 
-const firstZone = pickupZones[0]?.name ?? '';
 
 const answerDurations: Record<DurationCategory, string> = {
 	'full-day': 'de día completo',
@@ -128,14 +128,14 @@ function pickupSentences(tours: TourDetails[]): string[] {
 		return [`La recogida se paga aparte, desde ${formatPrice(lowest)} por persona.`];
 	}
 	if (included.length < tours.length) {
-		return [`La recogida es gratis desde ${firstZone} en ${titles(included)}; en las demás se paga aparte.`];
+		return [`La recogida es gratis desde ${includedPickupZoneName} en ${titles(included)}; en las demás se paga aparte.`];
 	}
 
 	const verb = tours.length === 1 ? 'Incluye' : 'Incluyen';
-	const short = `${verb} la recogida desde ${firstZone}.`;
+	const short = `${verb} la recogida desde ${includedPickupZoneName}.`;
 	const full = sameFees(tours)
-		? `${verb} la recogida desde ${firstZone}; desde otras zonas cuesta ${feeRange(extraFees(tours))}.`
-		: `La recogida es gratis desde ${firstZone}, y desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))}.`;
+		? `${verb} la recogida desde ${includedPickupZoneName}; desde otras zonas cuesta ${feeRange(extraFees(tours))}.`
+		: `La recogida es gratis desde ${includedPickupZoneName}, y desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))}.`;
 	return [full, short];
 }
 
@@ -169,7 +169,7 @@ function keyFacts(destination: Destination, tours: TourDetails[]): PillarKeyFact
 		included.length === 0
 			? { label: 'Recogida', value: `Aparte, desde ${formatPrice(lowestOf(extraFees(tours)))}`, note: 'por persona' }
 			: included.length === tours.length
-				? { label: 'Recogida', value: `Incluida desde ${firstZone}` }
+				? { label: 'Recogida', value: `Incluida desde ${includedPickupZoneName}` }
 				: { label: 'Recogida', value: `Incluida en ${included.length} de ${tours.length}` };
 
 	return [
@@ -278,10 +278,10 @@ function pickupAnswer(tours: TourDetails[]) {
 	const included = tours.filter(pickupIncluded);
 
 	if (included.length === tours.length && !sameFees(tours)) {
-		return `Sí, sin cargo desde ${firstZone} en todas. Desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))} por persona según la excursión; en cada ficha está el precio para tu zona.`;
+		return `Sí, sin cargo desde ${includedPickupZoneName} en todas. Desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))} por persona según la excursión; en cada ficha está el precio para tu zona.`;
 	}
 	if (included.length > 0 && included.length < tours.length) {
-		return `${titles(included)} la ${included.length === 1 ? 'incluye' : 'incluyen'} sin cargo desde ${firstZone}. En las demás se paga aparte; en cada ficha está el precio para tu zona.`;
+		return `${titles(included)} la ${included.length === 1 ? 'incluye' : 'incluyen'} sin cargo desde ${includedPickupZoneName}. En las demás se paga aparte; en cada ficha está el precio para tu zona.`;
 	}
 
 	const groups = feesByZone(tours);
@@ -291,7 +291,7 @@ function pickupAnswer(tours: TourDetails[]) {
 	}
 
 	const [free, ...paid] = groups;
-	if (!free) return `Sí, sin cargo desde ${firstZone}.`;
+	if (!free) return `Sí, sin cargo desde ${includedPickupZoneName}.`;
 	const parts = paid.map(({ fee, zones }, index) =>
 		index === 0 ? `desde ${zones} se suman ${formatPrice(fee)} por persona` : `desde ${zones}, ${formatPrice(fee)}`,
 	);

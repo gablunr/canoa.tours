@@ -3,7 +3,7 @@ import TourSection from './TourSection.astro';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
 import { departurePorts } from '../../../data/tours/departure-ports';
 import { routes } from '../../../data/site/routes';
-import { pickupFeeLabel, pickupIncluded, pickupWindowLabel, pickupZones, type TourDetails } from '../../../data/tours/tours';
+import { includedPickupZoneName, pickupFeeLabel, pickupIncluded, pickupWindowLabel, pickupZones, type TourDetails } from '../../../data/tours/tours';
 
 interface Props {
 	details: TourDetails;
@@ -12,7 +12,7 @@ interface Props {
 const { details } = Astro.props;
 const place = details.port ? departurePorts[details.port].port : details.destination.name;
 const intro = pickupIncluded(details)
-	? 'La recogida está incluida desde Bávaro y Arena Gorda. Desde otras zonas se suma un cargo por persona, porque quedan lejos de la ruta.'
+	? `La recogida está incluida desde ${includedPickupZoneName}. Desde otras zonas se suma un cargo por persona, porque quedan lejos de la ruta.`
 	: `El transporte se paga aparte porque hay quien se hospeda cerca de ${place} y no lo necesita. Esto cuesta por persona según tu zona.`;
 const pickupWindow = pickupWindowLabel(details);
 const servedZones = pickupZones.filter((zone) => details.pickupFees[zone.id] !== undefined);

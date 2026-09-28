@@ -35,6 +35,10 @@ export interface PickupZone {
 
 export const pickupZones: PickupZone[] = publishedPickupZones.map((zone) => ({ id: zone.slug, name: zone.name }));
 
+export const includedPickupZone: PickupZone | undefined = pickupZones.find((zone) => zone.id === 'bavaro');
+
+export const includedPickupZoneName = includedPickupZone?.name ?? '';
+
 export type PickupFees = Record<PickupZoneId, number>;
 
 export type PricePer = 'person' | 'group';
@@ -128,7 +132,7 @@ export const toursByDuration = Object.fromEntries(
 	durationCategories.map((category) => [category, tourDetails.filter((details) => details.durationCategory === category)]),
 ) as Record<DurationCategory, TourDetails[]>;
 
-export const pickupIncluded = (details: TourDetails) => details.pickupFees.bavaro === 0;
+export const pickupIncluded = (details: TourDetails) => details.pickupFees[includedPickupZone?.id ?? ''] === 0;
 
 const paidPickupFees = (details: TourDetails) => Object.values(details.pickupFees).filter((fee) => fee > 0);
 
@@ -145,7 +149,7 @@ const highestPickupFee = (details: TourDetails) => {
 export const pickupFeeLabel = (fee: number) => (fee === 0 ? 'Sin cargo' : `${formatPrice(fee)} por persona`);
 
 export const pickupLabel = (details: TourDetails) =>
-	pickupIncluded(details) ? 'Incluida desde Bávaro y Arena Gorda' : `Aparte, desde ${formatPrice(lowestPickupFee(details))} por persona`;
+	pickupIncluded(details) ? `Incluida desde ${includedPickupZoneName}` : `Aparte, desde ${formatPrice(lowestPickupFee(details))} por persona`;
 
 export const tourDeparture = (details: TourDetails) => (details.port ? `Embarque en ${departurePorts[details.port].port}` : 'Recogida en tu hotel');
 
@@ -218,7 +222,7 @@ const durationPhrases: Record<DurationCategory, string> = {
 export function tourAnswer(details: TourDetails) {
 	const port = details.port && ` desde el puerto de ${departurePorts[details.port].port}`;
 	const pickup = pickupIncluded(details)
-		? 'Incluye la recogida en hoteles de Bávaro y Arena Gorda, y desde otras zonas se suma un cargo extra.'
+		? `Incluye la recogida en hoteles de ${includedPickupZoneName}, y desde otras zonas se suma un cargo extra.`
 		: `La recogida en el hotel se paga aparte, desde ${formatPrice(lowestPickupFee(details))} por persona según tu zona.`;
 
 	return `${details.title} cuesta desde ${priceLabel(details)}. ${durationPhrases[details.durationCategory]} ${details.durationHours} horas, y ${scheduleSentence(details.days)}${port ?? ''}. ${pickup}`;
@@ -264,7 +268,7 @@ function accessibilityAnswer(details: TourDetails) {
 
 function pickupAnswer(details: TourDetails) {
 	if (pickupIncluded(details)) {
-		return `Sí, desde hoteles de Bávaro y Arena Gorda sin cargo extra. Desde otras zonas se suma hasta ${formatPrice(highestPickupFee(details))} por persona. Te recogemos ${lowerFirst(pickupWindowLabel(details))}.`;
+		return `Sí, desde hoteles de ${includedPickupZoneName} sin cargo extra. Desde otras zonas se suma hasta ${formatPrice(highestPickupFee(details))} por persona. Te recogemos ${lowerFirst(pickupWindowLabel(details))}.`;
 	}
 
 	const reason = details.port
