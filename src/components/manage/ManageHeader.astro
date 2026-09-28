@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { ArrowUpRight, BookOpenText, CalendarDays, CalendarRange, ChartNoAxesColumn, ChevronDown, ListChecks, LogOut, MessageSquareText, TicketPercent, UsersRound } from '@lucide/astro';
+import { ArrowUpRight, BookOpenText, CalendarDays, CalendarRange, ChartNoAxesColumn, ChevronDown, ListChecks, LogOut, MapPinned, MessageSquareText, Sailboat, TicketPercent, UsersRound } from '@lucide/astro';
 import logo from '../../assets/images/brand/logo-dark.svg';
 import { company } from '../../data/site/company';
 import { manageSections, menuForRole, panelHomeHref, type ManageSectionId } from '../../data/manage/sections';
@@ -19,6 +19,8 @@ const sectionIcons: Record<ManageSectionId, typeof ListChecks> = {
 	bookings: ListChecks,
 	departures: CalendarDays,
 	capacity: CalendarRange,
+	tours: Sailboat,
+	pickup: MapPinned,
 	reviews: MessageSquareText,
 	guides: BookOpenText,
 	coupons: TicketPercent,
