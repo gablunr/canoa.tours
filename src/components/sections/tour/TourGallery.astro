@@ -1,0 +1,124 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageOutputFormat } from 'astro';
+import { ChevronLeft, ChevronRight, Images, X } from '@lucide/astro';
+import TourSection from './TourSection.astro';
+import Button from '../../ui/Button.astro';
+import Dialog from '../../ui/dialog/Dialog.astro';
+import { imageSource, type SiteImage } from '../../../lib/images';
+
+interface Props {
+	title: string;
+	photos: { image: SiteImage; alt: string }[];
+}
+
+const { title, photos } = Astro.props;
+const count = photos.length;
+const mosaicCount = Math.min(count, 5);
+const formats: ImageOutputFormat[] = ['avif', 'webp'];
+
+const isLarge = (index: number) => index === 0 || mosaicCount === 2;
+const isWide = (index: number) => !isLarge(index) && (mosaicCount === 3 || (mosaicCount === 4 && index === 1));
+
+const tileClass = (index: number) => {
+	if (index >= mosaicCount) return 'md:hidden';
+	if (isLarge(index)) return 'md:col-span-2 md:row-span-2';
+	if (isWide(index)) return 'md:col-span-2';
+	return '';
+};
+
+const tileSizes = (index: number) => (isLarge(index) || isWide(index) ? '(min-width: 768px) 24rem, (min-width: 640px) 60vw, 85vw' : '(min-width: 768px) 12rem, (min-width: 640px) 60vw, 85vw');
+
+const roundButton =
+	'liquid-glass flex size-11 shrink-0 cursor-pointer items-center justify-center bg-white/70 text-primary transition-colors duration-300 ease-smooth outline-none [--glass-drop-shadow:0_0_#0000] hover:bg-white focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-40';
+---
+
+{
+	count >= 2 && (
+		<div data-tour-gallery>
+			<TourSection id="tour-gallery-title" title="Fotos de la excursión">
+				<ul class="-mx-4 -my-1 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:my-0 md:grid md:aspect-[2/1] md:snap-none md:grid-cols-4 md:grid-rows-2 md:overflow-visible md:px-0 md:py-0 [&::-webkit-scrollbar]:hidden">
+					{photos.map((photo, index) => (
+						<li class:list={['aspect-[4/3] w-[85%] shrink-0 snap-start sm:w-[60%] md:aspect-auto md:w-auto', tileClass(index)]}>
+							<button
+								type="button"
+								data-gallery-open={index}
+								class="group relative block size-full cursor-zoom-in overflow-hidden rounded-[1.5rem] bg-surface outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+							>
+								<span class="sr-only">Ampliar la foto {index + 1} de {count}: </span>
+								<Picture
+									{...imageSource(photo.image)}
+									alt={photo.alt}
+									formats={formats}
+									widths={[320, 480, 720, 960, 1280]}
+									sizes={tileSizes(index)}
+									pictureAttributes={{ class: 'absolute inset-0' }}
+									class="size-full object-cover transition-transform duration-700 ease-smooth motion-safe:group-hover:scale-105"
+								/>
+							</button>
+						</li>
+					))}
+				</ul>
+				<div class="mt-5 flex max-lg:justify-center">
+					<Button variant="outline" size="sm" class="gap-2" data-gallery-open="0" aria-haspopup="dialog">
+						<Images size={16} stroke-width={1.75} aria-hidden="true" />
+						Ver las {count} fotos
+					</Button>
+				</div>
+			</TourSection>
+
+			<Dialog size="gallery" aria-labelledby="tour-gallery-dialog-title" data-gallery-dialog>
+				<div class="flex items-center justify-between gap-4 pb-3 pl-2 sm:pl-3">
+					<h2 id="tour-gallery-dialog-title" class="truncate text-base font-medium tracking-[-0.01em] text-primary">
+						{title}
+					</h2>
+					<form method="dialog">
+						<button type="submit" class={roundButton} aria-label="Cerrar la galería">
+							<X size={18} stroke-width={2} aria-hidden="true" />
+						</button>
+					</form>
+				</div>
+				<div
+					data-gallery-track
+					class="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+				>
+					{photos.map((photo) => (
+						<figure data-gallery-slide class="flex w-full shrink-0 snap-center snap-always flex-col gap-3">
+							<div class="relative min-h-0 flex-1">
+								<Picture
+									{...imageSource(photo.image)}
+									alt={photo.alt}
+									formats={formats}
+									widths={[640, 960, 1280, 1600, 2048]}
+									sizes="(min-width: 64rem) 62rem, 100vw"
+									pictureAttributes={{ class: 'absolute inset-0' }}
+									class="size-full object-contain"
+								/>
+							</div>
+							<figcaption aria-hidden="true" class="line-clamp-2 px-4 text-center text-sm leading-relaxed text-pretty text-secondary">
+								{photo.alt}
+							</figcaption>
+						</figure>
+					))}
+				</div>
+				<div class="flex items-center justify-center gap-4 pt-3">
+					<button type="button" class={roundButton} aria-label="Foto anterior" data-gallery-previous>
+						<ChevronLeft size={18} stroke-width={2} aria-hidden="true" />
+					</button>
+					<p data-gallery-counter aria-live="polite" class="min-w-16 text-center text-sm font-medium text-secondary tabular-nums">
+						1 de {count}
+					</p>
+					<button type="button" class={roundButton} aria-label="Foto siguiente" data-gallery-next>
+						<ChevronRight size={18} stroke-width={2} aria-hidden="true" />
+					</button>
+				</div>
+			</Dialog>
+		</div>
+	)
+}
+
+<script>
+	import { initTourGallery } from '../../../scripts/tour/tour-gallery';
+
+	document.querySelectorAll<HTMLElement>('[data-tour-gallery]').forEach(initTourGallery);
+</script>
