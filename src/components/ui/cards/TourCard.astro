@@ -1,9 +1,10 @@
 ---
 import { Picture } from 'astro:assets';
-import type { ImageMetadata, ImageOutputFormat } from 'astro';
+import type { ImageOutputFormat } from 'astro';
 import { CalendarDays, MapPin } from '@lucide/astro';
 import ArrowCircle from '../ArrowCircle.astro';
 import GlassBadge from '../GlassBadge.astro';
+import { imageSource, type SiteImage } from '../../../lib/images';
 
 interface Props {
 	href: string;
@@ -13,7 +14,7 @@ interface Props {
 	priceUnit: string;
 	schedule: string;
 	departure: string;
-	image?: ImageMetadata;
+	image?: SiteImage;
 	sizes?: string;
 	glowClass?: string;
 	frameClass?: string;
@@ -49,7 +50,7 @@ const hoverZoom = 'transition-transform duration-700 ease-smooth motion-safe:gro
 <article class:list={['relative isolate', className]}>
 	{image && (
 		<Picture
-			src={image}
+			{...imageSource(image)}
 			{...photoOptions}
 			pictureAttributes={{ class: `absolute inset-x-8 top-1/2 -bottom-6 -z-10 opacity-50 blur-2xl ${glowClass ?? ''}`, 'aria-hidden': 'true' }}
 		/>
@@ -61,9 +62,9 @@ const hoverZoom = 'transition-transform duration-700 ease-smooth motion-safe:gro
 			frameClass,
 		]}
 	>
-		{image && <Picture src={image} {...photoOptions} pictureAttributes={{ class: `absolute inset-0 -z-10 brightness-90 ${hoverZoom}` }} />}
+		{image && <Picture {...imageSource(image)} {...photoOptions} pictureAttributes={{ class: `absolute inset-0 -z-10 brightness-90 ${hoverZoom}` }} />}
 		<div class="progressive-blur -z-10" aria-hidden="true">
-			{image ? <Picture src={image} {...photoOptions} class={`${photoOptions.class} ${hoverZoom}`} /> : <div></div>}
+			{image ? <Picture {...imageSource(image)} {...photoOptions} class={`${photoOptions.class} ${hoverZoom}`} /> : <div></div>}
 			<div></div>
 			<div></div>
 			<div></div>

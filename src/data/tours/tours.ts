@@ -1,10 +1,11 @@
-import type { ImageMetadata } from 'astro';
 import { formatPrice } from '../../lib/format';
 import type { SiteImage } from '../../lib/images';
+import { publishedPickupZones, publishedTourRows } from '../../lib/tours/published-tours';
+import { tourRowToDetails, type TourRow } from '../../lib/tours/tour-rows';
 import type { OfferOptions, QuestionAndAnswer } from '../../lib/seo/structured-data';
 import { bookingPolicy, cancellationInsurancePriceLabel, cancellationNoticeLabel } from '../booking/booking-policy';
 import { departurePorts, distanceLabel } from './departure-ports';
-import { destinationImage, destinations, tourHref, tourImage, type Destination, type DestinationId, type Tour } from './destinations';
+import { destinationImage, destinations, tourHref, type Destination, type DestinationId, type Tour } from './destinations';
 
 export type DurationCategory = 'full-day' | 'half-day' | 'night';
 
@@ -26,20 +27,14 @@ export const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday',
 
 export type Weekday = (typeof weekdays)[number];
 
-export type PickupZoneId = 'bavaro' | 'cabeza-de-toro' | 'cap-cana' | 'macao' | 'uvero-alto';
+export type PickupZoneId = string;
 
 export interface PickupZone {
 	id: PickupZoneId;
 	name: string;
 }
 
-export const pickupZones: PickupZone[] = [
-	{ id: 'bavaro', name: 'Bávaro y Arena Gorda' },
-	{ id: 'cabeza-de-toro', name: 'Cabeza de Toro' },
-	{ id: 'cap-cana', name: 'Cap Cana' },
-	{ id: 'macao', name: 'Macao' },
-	{ id: 'uvero-alto', name: 'Uvero Alto' },
-];
+export const pickupZones: PickupZone[] = publishedPickupZones.map((zone) => ({ id: zone.slug, name: zone.name }));
 
 export type PickupFees = Record<PickupZoneId, number>;
 
@@ -1228,37 +1223,18 @@ const entries: TourEntry[] = [
 	},
 ];
 
-const provisionalUpdatedAt = new Date('2026-09-26');
-
-function entryFor(destination: Destination, tour: Tour) {
-	const entry = entries.find((candidate) => candidate.destinationId === destination.id && candidate.tourSlug === tour.slug);
-	if (!entry) throw new Error(`Faltan los datos de la excursión ${destination.id}/${tour.slug}`);
-	return entry;
+function detailsFromRow(row: TourRow): TourDetails[] {
+	try {
+		return [tourRowToDetails(row, { destinations })];
+	} catch (error) {
+		console.warn(`La excursión ${row.key} no sale en la web: ${error instanceof Error ? error.message : String(error)}`);
+		return [];
+	}
 }
 
 export const tourDetails: TourDetails[] = destinations.flatMap((destination) =>
-	destination.tours.map((tour) => {
-		const { destinationId: _destinationId, tourSlug: _tourSlug, ...details } = entryFor(destination, tour);
-		return {
-			destination,
-			tour,
-			productKey: `${destination.id}/${tour.slug}`,
-			shortName: tour.name,
-			images: [],
-			bestFor: '',
-			includesSummary: '',
-			...details,
-			updatedAt: provisionalUpdatedAt,
-		};
-	}),
+	publishedTourRows.filter((row) => row.destination_slug === destination.slug).flatMap(detailsFromRow),
 );
-
-for (const destination of destinations) {
-	const lowest = Math.min(
-		...tourDetails.filter((details) => details.destination.id === destination.id && details.pricePer === 'person').map((details) => details.price),
-	);
-	if (lowest !== destination.fromPrice) throw new Error(`El precio desde de ${destination.name} no coincide con su excursión más barata`);
-}
 
 export function findTourDetails(destinationId: DestinationId, tourSlug: string) {
 	const details = tourDetails.find((candidate) => candidate.destination.id === destinationId && candidate.tour.slug === tourSlug);
@@ -1274,8 +1250,7 @@ export const tourDetailsHref = (details: TourDetails) => tourHref(details.destin
 
 export const tourProductKey = (details: TourDetails) => `${details.destination.id}/${details.tour.slug}`;
 
-export const tourPhoto = (details: TourDetails): ImageMetadata | undefined =>
-	tourImage(details.destination, details.tour) ?? destinationImage(details.destination);
+export const tourPhoto = (details: TourDetails): SiteImage | undefined => details.images[0]?.image ?? destinationImage(details.destination);
 
 export const tourCountText = (count: number) => `${count} ${count === 1 ? 'excursión' : 'excursiones'}`;
 
@@ -1285,9 +1260,17 @@ export const toursByDuration = Object.fromEntries(
 
 export const pickupIncluded = (details: TourDetails) => details.pickupFees.bavaro === 0;
 
-export const lowestPickupFee = (details: TourDetails) => Math.min(...Object.values(details.pickupFees).filter((fee) => fee > 0));
+const paidPickupFees = (details: TourDetails) => Object.values(details.pickupFees).filter((fee) => fee > 0);
 
-const highestPickupFee = (details: TourDetails) => Math.max(...Object.values(details.pickupFees));
+export const lowestPickupFee = (details: TourDetails) => {
+	const fees = paidPickupFees(details);
+	return fees.length > 0 ? Math.min(...fees) : 0;
+};
+
+const highestPickupFee = (details: TourDetails) => {
+	const fees = paidPickupFees(details);
+	return fees.length > 0 ? Math.max(...fees) : 0;
+};
 
 export const pickupFeeLabel = (fee: number) => (fee === 0 ? 'Sin cargo' : `${formatPrice(fee)} por persona`);
 

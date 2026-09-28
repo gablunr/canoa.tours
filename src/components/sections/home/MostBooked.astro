@@ -2,7 +2,6 @@
 import { Picture } from 'astro:assets';
 import TourCard from '../../ui/cards/TourCard.astro';
 import LiquidWarpFilter from '../../ui/LiquidWarpFilter.astro';
-import { tourImage } from '../../../data/tours/destinations';
 import { formatPrice } from '../../../lib/format';
 import { mostBookedHref, mostBookedTours } from '../../../data/tours/most-booked';
 import seaTurtle from '../../../assets/images/home/sea-turtle.png';
@@ -13,45 +12,49 @@ const turtleSides = [
 ];
 ---
 
-<section aria-labelledby="most-booked-title" class="relative isolate overflow-x-clip px-4 pt-24 sm:px-6 lg:pt-32">
-	<LiquidWarpFilter />
-	<div class="mx-auto max-w-6xl">
-		<h2
-			id="most-booked-title"
-			data-reveal
-			class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
-		>
-			Las excursiones más reservadas en Punta Cana
-		</h2>
+{
+	mostBookedTours.length > 0 && (
+		<section aria-labelledby="most-booked-title" class="relative isolate overflow-x-clip px-4 pt-24 sm:px-6 lg:pt-32">
+			<LiquidWarpFilter />
+			<div class="mx-auto max-w-6xl">
+				<h2
+					id="most-booked-title"
+					data-reveal
+					class="mx-auto max-w-3xl bg-linear-to-b from-primary to-muted bg-clip-text text-center text-4xl leading-[1.05] text-transparent font-semibold tracking-[-0.03em] text-balance md:text-5xl"
+				>
+					Las excursiones más reservadas en Punta Cana
+				</h2>
 
-		<div class="relative mt-10 lg:mt-14">
-			{turtleSides.map((side) => (
-				<Picture
-					src={seaTurtle}
-					alt=""
-					formats={['avif', 'webp']}
-					widths={[256, 384, 512, 768, 964]}
-					sizes="(min-width: 1536px) 24rem, 16rem"
-					class:list={['pointer-events-none absolute top-1/2 -z-10 w-64 -translate-y-1/2 mask-b-from-55% max-xl:hidden 2xl:w-96', side]}
-				/>
-			))}
-
-			<ul class="grid gap-5 max-sm:px-5 sm:grid-cols-2 lg:grid-cols-4">
-				{mostBookedTours.map((item) => (
-					<li data-reveal>
-						<TourCard
-							href={mostBookedHref(item)}
-							title={item.title}
-							badge={item.destination.name}
-							price={formatPrice(item.price)}
-							priceUnit={item.priceUnit}
-							schedule={item.schedule}
-							departure={item.departure}
-							image={tourImage(item.destination, item.tour)}
+				<div class="relative mt-10 lg:mt-14">
+					{turtleSides.map((side) => (
+						<Picture
+							src={seaTurtle}
+							alt=""
+							formats={['avif', 'webp']}
+							widths={[256, 384, 512, 768, 964]}
+							sizes="(min-width: 1536px) 24rem, 16rem"
+							class:list={['pointer-events-none absolute top-1/2 -z-10 w-64 -translate-y-1/2 mask-b-from-55% max-xl:hidden 2xl:w-96', side]}
 						/>
-					</li>
-				))}
-			</ul>
-		</div>
-	</div>
-</section>
+					))}
+
+					<ul class="grid gap-5 max-sm:px-5 sm:grid-cols-2 lg:grid-cols-4">
+						{mostBookedTours.map((item) => (
+							<li data-reveal>
+								<TourCard
+									href={mostBookedHref(item)}
+									title={item.title}
+									badge={item.destination.name}
+									price={formatPrice(item.price)}
+									priceUnit={item.priceUnit}
+									schedule={item.schedule}
+									departure={item.departure}
+									image={item.photo}
+								/>
+							</li>
+						))}
+					</ul>
+				</div>
+			</div>
+		</section>
+	)
+}

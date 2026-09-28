@@ -1,4 +1,6 @@
 import type { ImageMetadata } from 'astro';
+import { publishedTourRows } from '../../lib/tours/published-tours';
+import { resolveTourPrices, spanishTranslation, type TourRow } from '../../lib/tours/tour-rows';
 
 export type DestinationId = 'isla-saona' | 'samana' | 'santo-domingo' | 'isla-catalina' | 'aventura' | 'fiesta';
 
@@ -20,88 +22,74 @@ export interface Destination {
 	tours: Tour[];
 }
 
-export const destinations: Destination[] = [
+type DestinationDefinition = Omit<Destination, 'fromPrice' | 'tours'>;
+
+const destinationDefinitions: DestinationDefinition[] = [
 	{
 		id: 'isla-saona',
 		kind: 'place',
 		name: 'Isla Saona',
 		slug: 'isla-saona',
-		fromPrice: 55,
 		details: 'Día completo con embarque en el puerto de Bayahibe.',
-		tours: [
-			{ name: 'Catamarán', slug: 'catamaran' },
-			{ name: 'VIP 4 Playas', slug: 'vip-4-playas' },
-			{ name: 'First Class', slug: 'first-class' },
-			{ name: 'Privada', slug: 'privada' },
-		],
 	},
 	{
 		id: 'samana',
 		kind: 'place',
 		name: 'Samaná',
 		slug: 'samana',
-		fromPrice: 99,
 		details: 'Cascada El Limón e Isla Bacardí, salidas jueves y sábados.',
-		tours: [
-			{ name: '3 Maravillas', slug: '3-maravillas' },
-			{ name: 'Cayo Levantado y El Limón', slug: 'cayo-levantado-el-limon' },
-		],
 	},
 	{
 		id: 'santo-domingo',
 		kind: 'place',
 		name: 'Santo Domingo',
 		slug: 'santo-domingo',
-		fromPrice: 69,
 		details: 'La Zona Colonial en un día, en versión clásica o VIP.',
-		tours: [
-			{ name: 'Clásica', slug: 'clasica' },
-			{ name: 'VIP', slug: 'vip' },
-		],
 	},
 	{
 		id: 'isla-catalina',
 		kind: 'place',
 		name: 'Isla Catalina',
 		slug: 'isla-catalina',
-		fromPrice: 65,
 		details: 'Snorkel desde US$65 y buceo desde US$120. Embarque en La Romana.',
-		tours: [
-			{ name: 'Snorkel', slug: 'snorkel' },
-			{ name: 'Buceo', slug: 'buceo' },
-		],
 	},
 	{
 		id: 'aventura',
 		kind: 'activity',
 		name: 'Aventura',
 		slug: 'aventura-punta-cana',
-		fromPrice: 40,
 		details: 'Buggies, safari, parasailing, speed boat y Seaquarium.',
-		tours: [
-			{ name: 'Buggies 4x4', slug: 'buggies' },
-			{ name: 'Buggies Predator', slug: 'buggies-predator' },
-			{ name: 'Safari', slug: 'safari' },
-			{ name: 'Parasailing', slug: 'parasailing' },
-			{ name: 'Speed boat', slug: 'speed-boat' },
-			{ name: 'Seaquarium', slug: 'seaquarium' },
-			{ name: 'Buggies en Bayahibe', slug: 'buggies-bayahibe' },
-		],
 	},
 	{
 		id: 'fiesta',
 		kind: 'activity',
 		name: 'Fiesta',
 		slug: 'fiesta-punta-cana',
-		fromPrice: 40,
 		details: 'Coco Bongo, Imagine Cave y party boat.',
-		tours: [
-			{ name: 'Coco Bongo', slug: 'coco-bongo' },
-			{ name: 'Imagine Cave', slug: 'imagine-cave' },
-			{ name: 'Party boat', slug: 'party-boat' },
-		],
 	},
 ];
+
+const tourRowsOf = (definition: DestinationDefinition) => publishedTourRows.filter((row) => row.destination_slug === definition.slug);
+
+function tourFromRow(row: TourRow): Tour {
+	const translation = spanishTranslation(row);
+	return { name: translation.short_name?.trim() || translation.name, slug: translation.slug };
+}
+
+function lowestPrice(rows: TourRow[]) {
+	const basePrices = rows.flatMap((row) => {
+		const { base } = resolveTourPrices(row.prices, row.pricing_mode);
+		return base === null ? [] : [{ perPerson: row.pricing_mode === 'per_person', base }];
+	});
+	const personPrices = basePrices.filter((price) => price.perPerson);
+	const candidates = personPrices.length > 0 ? personPrices : basePrices;
+	return candidates.length > 0 ? Math.min(...candidates.map((price) => price.base)) : 0;
+}
+
+export const destinations: Destination[] = destinationDefinitions.map((definition) => {
+	const rows = tourRowsOf(definition);
+	return { ...definition, fromPrice: lowestPrice(rows), tours: rows.map(tourFromRow) };
+});
 
 const placeholderImages = import.meta.glob<{ default: ImageMetadata }>(
 	'../../assets/images/placeholders/destinations/*.{jpg,jpeg,png,webp}',
@@ -138,7 +126,9 @@ export const destinationHref = (destination: Destination) => `/${destination.slu
 
 export const tourHref = (destination: Destination, tour: Tour) => `${destinationHref(destination)}/${tour.slug}`;
 
-export const lowestFromPrice = Math.min(...destinations.map((destination) => destination.fromPrice));
+const pricedDestinations = destinations.filter((destination) => destination.tours.length > 0);
+
+export const lowestFromPrice = pricedDestinations.length > 0 ? Math.min(...pricedDestinations.map((destination) => destination.fromPrice)) : 0;
 
 export const tourCountLabel = (destination: Destination) =>
 	`${destination.tours.length} ${destination.tours.length === 1 ? 'excursión' : 'excursiones'}`;

@@ -17,6 +17,7 @@ import TourBookingBar from './TourBookingBar.astro';
 import { destinationHref } from '../../../data/tours/destinations';
 import { routes } from '../../../data/site/routes';
 import { tourDetailsHref, tourFaqs, tourPhoto, tourSeoDescription, tourSeoTitle, type TourDetails } from '../../../data/tours/tours';
+import { seoImageSource } from '../../../lib/images';
 import { canonicalUrl } from '../../../lib/seo/seo';
 import { tripNode } from '../../../lib/seo/pillar-schema';
 import { faqSchema, pageNodeIds, reference, tripItinerarySchema } from '../../../lib/seo/structured-data';
@@ -37,7 +38,7 @@ const trip = { ...(await tripNode(details)), mainEntityOfPage: reference(pageNod
 <Layout
 	title={tourSeoTitle(details)}
 	description={tourSeoDescription(details)}
-	image={photo && { src: photo, alt: details.imageAlt }}
+	image={photo && { src: seoImageSource(photo), alt: details.imageAlt }}
 	pageType="FAQPage"
 	mainEntity={faqSchema(faqs)}
 	graph={[trip]}

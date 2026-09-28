@@ -4,11 +4,11 @@ import UnderlineLink from '../../ui/UnderlineLink.astro';
 import TourCard from '../../ui/cards/TourCard.astro';
 import WhatsAppClosing from '../document/WhatsAppClosing.astro';
 import GuideBlocks from './GuideBlocks.astro';
-import { destinationHref, findDestination, tourImage } from '../../../data/tours/destinations';
+import { destinationHref, findDestination } from '../../../data/tours/destinations';
 import type { GuideContent } from '../../../data/guides/guide-content';
 import type { Guide } from '../../../data/guides/guides';
-import { destinationToursTitle } from '../../../data/tours/tours';
-import { mostBookedHref, mostBookedTours } from '../../../data/tours/most-booked';
+import { destinationToursTitle, tourDetails } from '../../../data/tours/tours';
+import { mostBookedHref, tourCardSummary } from '../../../data/tours/most-booked';
 import { formatPrice } from '../../../lib/format';
 
 interface Props {
@@ -33,7 +33,8 @@ const sectionNumber = (index: number) => String(index + 1).padStart(2, '0');
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
 const guideTour = content.tour;
-const tour = guideTour && mostBookedTours.find((item) => item.destination.id === guideTour.destinationId && item.tour.slug === guideTour.tourSlug);
+const guideTourDetails = guideTour && tourDetails.find((details) => details.destination.id === guideTour.destinationId && details.tour.slug === guideTour.tourSlug);
+const tour = guideTourDetails && tourCardSummary(guideTourDetails);
 const tourDestination = guideTour && findDestination(guideTour.destinationId);
 ---
 
@@ -102,7 +103,7 @@ const tourDestination = guideTour && findDestination(guideTour.destinationId);
 							priceUnit={tour.priceUnit}
 							schedule={tour.schedule}
 							departure={tour.departure}
-							image={tourImage(tour.destination, tour.tour)}
+							image={tour.photo}
 							sizes="(min-width: 640px) 17rem, 90vw"
 						/>
 					)}

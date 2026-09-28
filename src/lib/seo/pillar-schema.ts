@@ -1,6 +1,7 @@
 import type { PillarPage } from '../../data/pillars/pillar-page';
 import { containedInPlaceMention, mentionedAttractions, pillarPlaces } from '../../data/pillars/places';
 import { tourDetailsHref, tourOffers, tourPhoto, type TourDetails } from '../../data/tours/tours';
+import { seoImageSource } from '../images';
 import { canonicalUrl, socialImage } from './seo';
 import {
 	faqSchema,
@@ -16,7 +17,7 @@ import {
 export async function tripNode(details: TourDetails): Promise<SchemaNode> {
 	const url = canonicalUrl(tourDetailsHref(details));
 	const photo = tourPhoto(details);
-	const image = photo && (await socialImage({ src: photo, alt: details.imageAlt }));
+	const image = photo && (await socialImage({ src: seoImageSource(photo), alt: details.imageAlt }));
 
 	return touristTripSchema({
 		url,

@@ -59,13 +59,15 @@ export const catalogGroups: CatalogGroup[] = destinations.map((destination) => (
 
 const personTours = tourDetails.filter((details) => details.pricePer === 'person');
 
-const lowestPersonPrice = Math.min(...personTours.map((details) => details.price));
+const lowestPersonPrice = personTours.length > 0 ? Math.min(...personTours.map((details) => details.price)) : 0;
 
 const cheapestTours = personTours.filter((details) => details.price === lowestPersonPrice);
 
 const cheapestFullDay = toursByDuration['full-day']
 	.filter((details) => details.pricePer === 'person')
-	.reduce((cheapest, details) => (details.price < cheapest.price ? details : cheapest));
+	.reduce<TourDetails | undefined>((cheapest, details) => (cheapest === undefined || details.price < cheapest.price ? details : cheapest), undefined);
+
+const cheapestFullDaySentence = cheapestFullDay ? ` El día completo más barato es ${cheapestFullDay.title}, desde ${priceLabel(cheapestFullDay)}.` : '';
 
 const pregnancyAllowed = tourDetails.filter((details) => details.pregnancy === 'allowed');
 
@@ -81,7 +83,7 @@ const dailyTours = tourDetails.filter((details) => new Set(details.days).size ==
 export const catalogFaqs: Faq[] = [
 	{
 		question: '¿Cuál es la excursión más barata en Punta Cana?',
-		answer: `Las más baratas cuestan ${formatPrice(lowestPersonPrice)} por persona: ${titles(cheapestTours)}. El día completo más barato es ${cheapestFullDay.title}, desde ${priceLabel(cheapestFullDay)}.`,
+		answer: `Las más baratas cuestan ${formatPrice(lowestPersonPrice)} por persona: ${titles(cheapestTours)}.${cheapestFullDaySentence}`,
 	},
 	{
 		question: '¿Qué excursiones son de medio día?',

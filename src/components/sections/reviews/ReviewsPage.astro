@@ -15,6 +15,7 @@ import { routes } from '../../../data/site/routes';
 import { reviewStats, reviews } from '../../../data/reviews/reviews';
 import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
 import { tourDetails, tourPhoto, tourProductKey } from '../../../data/tours/tours';
+import { seoImageSource } from '../../../lib/images';
 
 const { whatsapp } = company;
 const questionMessage = 'Hola, estoy pensando en reservar la excursión [nombre] para el [fecha] y tengo una pregunta';
@@ -26,7 +27,7 @@ const tourThumbnails = Object.fromEntries(
 		tourDetails.flatMap((details) => {
 			const photo = tourPhoto(details);
 			if (!photo) return [];
-			return [getImage({ src: photo, width: 160, height: 160, fit: 'cover', format: 'webp' }).then((image) => [tourProductKey(details), image.src])];
+			return [getImage({ src: seoImageSource(photo), width: 160, height: 160, fit: 'cover', format: 'webp' }).then((image) => [tourProductKey(details), image.src])];
 		}),
 	),
 );

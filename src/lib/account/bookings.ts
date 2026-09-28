@@ -1,7 +1,7 @@
-import type { ImageMetadata } from 'astro';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { findTourDetails, tourPhoto, type TourDetails } from '../../data/tours/tours';
 import type { DestinationId } from '../../data/tours/destinations';
+import type { SiteImage } from '../images';
 import { loadBookingDetails, shortTime, spanishTranslation, tourPathFor, type BookingDetails } from '../booking/booking-details';
 import { supabaseAdmin } from '../supabase/admin';
 import type { BookingStatus, Database } from '../supabase/types';
@@ -67,7 +67,7 @@ export function bookingTourDetails(productKey: string): TourDetails | undefined 
 	}
 }
 
-export function bookingPhoto(productKey: string): ImageMetadata | undefined {
+export function bookingPhoto(productKey: string): SiteImage | undefined {
 	const tour = bookingTourDetails(productKey);
 	return tour ? tourPhoto(tour) : undefined;
 }

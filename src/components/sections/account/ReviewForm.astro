@@ -1,5 +1,6 @@
 ---
 import { Picture } from 'astro:assets';
+import { imageSource } from '../../../lib/images';
 import { ArrowLeft, Check, Clock } from '@lucide/astro';
 import Button from '../../ui/Button.astro';
 import GlassBadge from '../../ui/GlassBadge.astro';
@@ -51,7 +52,7 @@ const statusText = 'mx-auto mt-3 max-w-sm text-secondary';
 			>
 				{photo && (
 					<Picture
-						src={photo}
+						{...imageSource(photo)}
 						alt=""
 						formats={['avif', 'webp']}
 						widths={[640, 960, 1280]}
