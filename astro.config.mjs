@@ -20,6 +20,8 @@ const watchContentTokenSources = {
   },
 };
 
+const buildStartedAt = new Date().toISOString();
+
 const builtPage = builtPageReader(
   new URL('./dist/client/', import.meta.url),
   new URL('./.vercel/output/static/', import.meta.url),
@@ -69,6 +71,9 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      __BUILD_STARTED_AT__: JSON.stringify(buildStartedAt),
+    },
     optimizeDeps: {
       include: ['@stripe/stripe-js'],
     },

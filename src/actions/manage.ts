@@ -449,7 +449,7 @@ export const manage = {
 			reply: z.string().trim().max(2000).optional(),
 		}),
 		handler: async ({ reviewId, status, reply }, context) => {
-			requireStaff(context);
+			const { userId } = requireStaff(context);
 
 			const { data: review, error: reviewError } = await supabaseAdmin.from('reviews').select('id, status, published_at').eq('id', reviewId).maybeSingle();
 			if (reviewError) failWithDbError(reviewError);
@@ -464,7 +464,7 @@ export const manage = {
 				.eq('id', reviewId);
 			if (error) failWithDbError(error);
 
-			if (status === 'published' || review.status === 'published') await triggerRebuild();
+			if (status === 'published' || review.status === 'published') await triggerRebuild('Opinión moderada', userId);
 			return { reviewId, status };
 		},
 	}),
@@ -474,7 +474,7 @@ export const manage = {
 			reviewIds: z.array(z.uuid()).min(1).max(100),
 		}),
 		handler: async ({ reviewIds }, context) => {
-			requireStaff(context);
+			const { userId } = requireStaff(context);
 
 			const { data, error } = await supabaseAdmin
 				.from('reviews')
@@ -485,7 +485,7 @@ export const manage = {
 			if (error) failWithDbError(error);
 
 			const published = data?.length ?? 0;
-			if (published > 0) await triggerRebuild();
+			if (published > 0) await triggerRebuild('Opiniones publicadas', userId);
 			return { published };
 		},
 	}),
@@ -500,7 +500,7 @@ export const manage = {
 			publish: z.boolean(),
 		}),
 		handler: async (input, context) => {
-			requireStaff(context);
+			const { userId } = requireStaff(context);
 			const productId = await productIdByKey(input.productKey);
 			const now = new Date().toISOString();
 
@@ -520,7 +520,7 @@ export const manage = {
 				.single();
 			if (error) failWithDbError(error);
 
-			if (input.publish) await triggerRebuild();
+			if (input.publish) await triggerRebuild('Opinión añadida a mano', userId);
 			return { reviewId: data.id };
 		},
 	}),

@@ -173,7 +173,7 @@ export const guides = {
 	save: defineAction({
 		input: guideFields.extend({ id: z.uuid() }),
 		handler: async ({ id, ...fields }, context) => {
-			requireStaff(context, guideEditors);
+			const { userId } = requireStaff(context, guideEditors);
 			assertRouteIsFree(fields.silo, fields.slug);
 			assertKnownTokens(fields);
 			const current = await loadGuide(id);
@@ -202,7 +202,7 @@ export const guides = {
 			if (error) failWithDbError(error);
 			if (fields.featured) await clearOtherFeatured(id);
 
-			if (current.status === 'published') await triggerRebuild();
+			if (current.status === 'published') await triggerRebuild('Guía editada', userId);
 			return { guideId: id, readingMinutes: changes.reading_minutes };
 		},
 	}),
@@ -219,7 +219,7 @@ export const guides = {
 			imageAlt: text(5, 200),
 		}),
 		handler: async ({ id, image, imageAlt }, context) => {
-			requireStaff(context, guideEditors);
+			const { userId } = requireStaff(context, guideEditors);
 			const current = await loadGuide(id);
 
 			const storagePath = `guides/${id}/${Date.now()}.${imageExtensions[image.type]}`;
@@ -236,7 +236,7 @@ export const guides = {
 			}
 
 			await removeImage(current.image_path);
-			if (current.status === 'published') await triggerRebuild();
+			if (current.status === 'published') await triggerRebuild('Imagen de guía cambiada', userId);
 			return { guideId: id, imagePath: storagePath };
 		},
 	}),
@@ -244,7 +244,7 @@ export const guides = {
 	publish: defineAction({
 		input: z.object({ id: z.uuid() }),
 		handler: async ({ id }, context) => {
-			requireStaff(context, guideEditors);
+			const { userId } = requireStaff(context, guideEditors);
 			const current = await loadGuide(id);
 			assertPublishable(current);
 
@@ -254,7 +254,7 @@ export const guides = {
 				.eq('id', id);
 			if (error) failWithDbError(error);
 
-			await triggerRebuild();
+			await triggerRebuild('Guía publicada', userId);
 			return { guideId: id };
 		},
 	}),
@@ -262,14 +262,14 @@ export const guides = {
 	unpublish: defineAction({
 		input: z.object({ id: z.uuid() }),
 		handler: async ({ id }, context) => {
-			requireStaff(context, guideEditors);
+			const { userId } = requireStaff(context, guideEditors);
 			const current = await loadGuide(id);
 			if (current.status !== 'published') return { guideId: id };
 
 			const { error } = await supabaseAdmin.from('guides').update({ status: 'draft' }).eq('id', id);
 			if (error) failWithDbError(error);
 
-			await triggerRebuild();
+			await triggerRebuild('Guía retirada', userId);
 			return { guideId: id };
 		},
 	}),
@@ -277,14 +277,14 @@ export const guides = {
 	remove: defineAction({
 		input: z.object({ id: z.uuid() }),
 		handler: async ({ id }, context) => {
-			requireStaff(context, guideEditors);
+			const { userId } = requireStaff(context, guideEditors);
 			const current = await loadGuide(id);
 
 			const { error } = await supabaseAdmin.from('guides').delete().eq('id', id);
 			if (error) failWithDbError(error, 'No se pudo borrar la guía.');
 
 			await removeImage(current.image_path);
-			if (current.status === 'published') await triggerRebuild();
+			if (current.status === 'published') await triggerRebuild('Guía borrada', userId);
 			return { guideId: id };
 		},
 	}),

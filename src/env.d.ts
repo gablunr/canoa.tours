@@ -1,3 +1,5 @@
+declare const __BUILD_STARTED_AT__: string;
+
 declare namespace App {
 	interface Locals {
 		supabase: import('@supabase/supabase-js').SupabaseClient<import('./lib/supabase/database.types').Database>;

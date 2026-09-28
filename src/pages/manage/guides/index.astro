@@ -2,6 +2,7 @@
 import { BookOpenText, Plus, Search } from '@lucide/astro';
 import ManageLayout from '../../../layouts/ManageLayout.astro';
 import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
+import SiteStatus from '../../../components/manage/SiteStatus.astro';
 import GuideList from '../../../components/manage/guides/GuideList.astro';
 import NewGuideDialog from '../../../components/manage/guides/NewGuideDialog.astro';
 import ReviewsPagination from '../../../components/manage/reviews/ReviewsPagination.astro';
@@ -48,6 +49,7 @@ const resultLabel = `${resultCount} ${resultCount === 1 ? 'resultado' : 'resulta
 <ManageLayout title="Guías" section="guides">
 	<div class="grid gap-4" data-guides-page data-path-prefixes={JSON.stringify(guidePathPrefixes)} data-tour-slugs={JSON.stringify(tourSlugsBySilo)}>
 		<ManagePageHeader title="Guías" description="Lo que publicas aquí sale en Guías de viaje.">
+			<SiteStatus />
 			<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-new-guide-open>
 				<Plus size={15} stroke-width={2} aria-hidden="true" />
 				Nueva guía
