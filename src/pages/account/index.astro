@@ -1,10 +1,12 @@
 ---
-import { Ticket } from '@lucide/astro';
+import { ChevronLeft, ChevronRight, Ticket } from '@lucide/astro';
 import Layout from '../../layouts/Layout.astro';
 import AccountHeader from '../../components/sections/account/AccountHeader.astro';
 import BookingCard from '../../components/sections/account/BookingCard.astro';
 import Button from '../../components/ui/Button.astro';
 import { isUpcoming, loadCustomerBookings, loadCustomerProfile, localToday, type CustomerBooking } from '../../lib/account/bookings';
+import { paginationItems } from '../../lib/account/pagination';
+import { slicePage } from '../../lib/manage/list-page';
 import { firstName } from '../../lib/email/templates/layout';
 
 export const prerender = false;
@@ -15,40 +17,57 @@ if (!user) return Astro.redirect('/account/sign-in?next=/account');
 const customer = await loadCustomerProfile(supabase, user.id);
 const bookings = customer ? await loadCustomerBookings(supabase, customer.id) : [];
 
-type BookingGroup = 'upcoming' | 'done' | 'cancelled';
+type BookingGroup = 'upcoming' | 'past' | 'cancelled';
+type BookingFilter = BookingGroup | 'all';
 
 const today = localToday();
 const groupOf = (booking: CustomerBooking): BookingGroup => {
 	if (booking.status === 'cancelled') return 'cancelled';
-	return isUpcoming(booking, today) ? 'upcoming' : 'done';
+	return isUpcoming(booking, today) ? 'upcoming' : 'past';
 };
 
 const upcoming = bookings.filter((booking) => groupOf(booking) === 'upcoming');
 const others = bookings.filter((booking) => groupOf(booking) !== 'upcoming').reverse();
 const ordered = [...upcoming, ...others].map((booking) => ({ booking, group: groupOf(booking) }));
 
-const filters = [
+const filterOptions: { id: BookingFilter; label: string }[] = [
 	{ id: 'upcoming', label: 'Próximas' },
-	{ id: 'done', label: 'Realizadas' },
+	{ id: 'past', label: 'Realizadas' },
 	{ id: 'cancelled', label: 'Canceladas' },
 	{ id: 'all', label: 'Todas' },
-]
-	.map((filter) => ({
-		...filter,
-		count: filter.id === 'all' ? ordered.length : ordered.filter((item) => item.group === filter.id).length,
-	}))
+];
+const matchesFilter = (filter: BookingFilter, group: BookingGroup) => filter === 'all' || filter === group;
+const filters = filterOptions
+	.map((filter) => ({ ...filter, count: ordered.filter((item) => matchesFilter(filter.id, item.group)).length }))
 	.filter((filter) => filter.count > 0);
 
-const activeFilter = upcoming.length > 0 ? 'upcoming' : 'all';
-const pageSize = 6;
-const matchesActiveFilter = (group: BookingGroup) => activeFilter === 'all' || activeFilter === group;
-const visibleIndexes = new Set(
-	ordered
-		.map((item, index) => ({ item, index }))
-		.filter(({ item }) => matchesActiveFilter(item.group))
-		.slice(0, pageSize)
-		.map(({ index }) => index),
+const defaultFilter: BookingFilter = upcoming.length > 0 ? 'upcoming' : 'all';
+const requestedFilter = Astro.url.searchParams.get('filter');
+const activeFilter = filters.find((filter) => filter.id === requestedFilter)?.id ?? defaultFilter;
+
+const bookingsPageSize = 6;
+const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+const bookingsPage = slicePage(
+	ordered.filter((item) => matchesFilter(activeFilter, item.group)),
+	requestedPage,
+	bookingsPageSize,
 );
+
+const accountHref = (filter: BookingFilter, page: number, fragment = '') => {
+	const params = new URLSearchParams();
+	if (filter !== defaultFilter) params.set('filter', filter);
+	if (page > 1) params.set('page', String(page));
+	const search = params.toString();
+	return `/account${search ? `?${search}` : ''}${fragment}`;
+};
+const pageHref = (page: number) => accountHref(activeFilter, page, '#reservas');
+
+if (requestedPage > bookingsPage.totalPages) return Astro.redirect(accountHref(activeFilter, bookingsPage.totalPages));
+
+const pageLinkClass =
+	'flex size-9 items-center justify-center rounded-full text-[13px] font-medium tabular-nums text-secondary outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent aria-[current=page]:bg-primary aria-[current=page]:text-white aria-[current=page]:shadow-lg aria-[current=page]:shadow-primary/25 aria-[current=page]:hover:text-white';
+const disabledArrowClass = 'flex size-9 items-center justify-center rounded-full text-secondary opacity-35';
+
 const greeting = customer ? `Hola, ${firstName(customer.fullName)}` : 'Hola';
 const intro =
 	upcoming.length === 1
@@ -64,37 +83,73 @@ const intro =
 	<div class="px-4 pt-10 sm:px-6 md:pt-12">
 		<div class="mx-auto max-w-5xl">
 			{ordered.length > 0 ? (
-				<section aria-label="Tus reservas" class="scroll-mt-24 animate-fade-up" style="animation-delay: 240ms" data-booking-filters data-page-size={pageSize} data-mobile-page-size={3} data-active-filter={activeFilter}>
+				<section id="reservas" aria-label="Tus reservas" class="scroll-mt-24 animate-fade-up" style="animation-delay: 240ms">
 					<div class="max-lg:text-center">
 						<div class="liquid-glass flex w-full overflow-x-auto bg-ink-200/55 p-1.5 backdrop-blur-xl backdrop-saturate-150 [scrollbar-width:none] sm:inline-flex sm:w-auto sm:max-w-full">
-							<div role="group" aria-label="Filtrar reservas" class="flex w-full gap-1 sm:w-auto">
+							<nav aria-label="Filtrar reservas" class="flex w-full gap-1 sm:w-auto">
 								{filters.map((filter) => (
-									<button
-										type="button"
-										data-filter={filter.id}
-										aria-pressed={filter.id === activeFilter ? 'true' : 'false'}
-										class="group/filter flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium sm:flex-none sm:gap-2 sm:px-4 sm:text-[13px] whitespace-nowrap text-secondary outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent aria-pressed:bg-primary aria-pressed:text-white aria-pressed:shadow-lg aria-pressed:shadow-primary/25"
+									<a
+										href={accountHref(filter.id, 1)}
+										aria-current={filter.id === activeFilter ? 'page' : undefined}
+										class="group/filter flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium sm:flex-none sm:gap-2 sm:px-4 sm:text-[13px] whitespace-nowrap text-secondary outline-none transition-colors duration-300 ease-smooth hover:text-primary focus-visible:ring-2 focus-visible:ring-accent aria-[current=page]:bg-primary aria-[current=page]:text-white aria-[current=page]:shadow-lg aria-[current=page]:shadow-primary/25"
 									>
 										{filter.label}
-										<span class="text-xs font-normal text-muted tabular-nums group-aria-pressed/filter:text-white/60">{filter.count}</span>
-									</button>
+										<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/filter:text-white/60">{filter.count}</span>
+									</a>
 								))}
-							</div>
+							</nav>
 						</div>
 					</div>
 
 					<ul class="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-						{ordered.map(({ booking, group }, index) => (
-							<li data-booking-group={group} hidden={!visibleIndexes.has(index)}>
+						{bookingsPage.items.map(({ booking, group }) => (
+							<li>
 								<BookingCard booking={booking} upcoming={group === 'upcoming'} />
 							</li>
 						))}
 					</ul>
 
-					<nav class="mt-8 flex flex-col items-center gap-3" aria-label="Páginas de reservas" data-pagination hidden>
-						<div class="liquid-glass flex items-center gap-1 bg-ink-200/55 p-1.5 backdrop-blur-xl backdrop-saturate-150" data-pagination-pages></div>
-						<p class="text-xs text-muted" aria-live="polite" data-pagination-status></p>
-					</nav>
+					{bookingsPage.totalPages > 1 && (
+						<nav class="mt-8 flex flex-col items-center gap-3" aria-label="Páginas de reservas">
+							<div class="liquid-glass flex items-center gap-1 bg-ink-200/55 p-1.5 backdrop-blur-xl backdrop-saturate-150">
+								{bookingsPage.page > 1 ? (
+									<a href={pageHref(bookingsPage.page - 1)} class={pageLinkClass} aria-label="Página anterior">
+										<ChevronLeft size={16} stroke-width={2} aria-hidden="true" />
+									</a>
+								) : (
+									<span class={disabledArrowClass} aria-hidden="true">
+										<ChevronLeft size={16} stroke-width={2} />
+									</span>
+								)}
+								{paginationItems(bookingsPage.page, bookingsPage.totalPages, 7).map((item) =>
+									item.kind === 'gap' ? (
+										<span class="flex size-9 items-center justify-center text-[13px] text-muted" aria-hidden="true">…</span>
+									) : (
+										<a
+											href={pageHref(item.page)}
+											class={pageLinkClass}
+											aria-current={item.page === bookingsPage.page ? 'page' : undefined}
+											aria-label={`Página ${item.page}`}
+										>
+											{item.page}
+										</a>
+									),
+								)}
+								{bookingsPage.page < bookingsPage.totalPages ? (
+									<a href={pageHref(bookingsPage.page + 1)} class={pageLinkClass} aria-label="Página siguiente">
+										<ChevronRight size={16} stroke-width={2} aria-hidden="true" />
+									</a>
+								) : (
+									<span class={disabledArrowClass} aria-hidden="true">
+										<ChevronRight size={16} stroke-width={2} />
+									</span>
+								)}
+							</div>
+							<p class="text-xs text-muted tabular-nums">
+								{bookingsPage.firstShown} a {bookingsPage.lastShown} de {bookingsPage.matchCount}
+							</p>
+						</nav>
+					)}
 				</section>
 			) : (
 				<section
@@ -112,9 +167,3 @@ const intro =
 		</div>
 	</div>
 </Layout>
-
-<script>
-	import { initBookingFilters } from '../../scripts/account/booking-filters';
-
-	document.querySelectorAll<HTMLElement>('[data-booking-filters]').forEach(initBookingFilters);
-</script>
