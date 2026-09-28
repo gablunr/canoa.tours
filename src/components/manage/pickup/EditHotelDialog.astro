@@ -3,7 +3,6 @@ import Dialog from '../../ui/dialog/Dialog.astro';
 import DialogButton from '../../ui/dialog/DialogButton.astro';
 import SelectField from '../../ui/form/SelectField.astro';
 import TextField from '../../ui/form/TextField.astro';
-import { glassChipButton } from '../glass-classes';
 import type { PickupZone } from './pickup-data';
 
 interface Props {
@@ -30,8 +29,8 @@ const zoneOptions = zones.map((zone) => ({ value: zone.id, label: zone.name }));
 			</span>
 		</label>
 
-		<div class="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-			<button type="button" class={glassChipButton} data-edit-hotel-remove>Borrar hotel</button>
+		<div class="grid gap-3 border-t border-border pt-4">
+			<DialogButton variant="danger" data-edit-hotel-remove>Borrar hotel</DialogButton>
 			<p class="text-xs text-muted" data-edit-hotel-remove-note hidden>Tiene reservas, así que no se borra. Ocúltalo si ya no recogemos allí.</p>
 		</div>
 
