@@ -1,4 +1,5 @@
 import { dialCodes } from '../../data/site/dial-codes';
+import { countryOptions } from '../../lib/account/countries';
 
 export interface PhoneFieldHandle {
 	value(): string;
@@ -6,9 +7,16 @@ export interface PhoneFieldHandle {
 	setCountry(iso2: string): void;
 	setNumber(number: string): void;
 	number(): string;
+	fillPrefixOptions(): void;
 }
 
 const fallbackCountry = 'US';
+
+const prefixChoices = countryOptions
+	.filter((option) => dialCodes[option.value])
+	.map((option) => ({ value: option.value, label: `${option.label} (+${dialCodes[option.value]})` }));
+
+const prefixChoiceFor = (code: string) => prefixChoices.find((choice) => choice.value === code);
 
 function part<T extends Element>(root: HTMLElement, selector: string): T {
 	const element = root.querySelector<T>(selector);
@@ -52,10 +60,20 @@ export function initPhoneField(root: HTMLElement, options: { countrySelect?: HTM
 		valueInput.value = value();
 	}
 
+	let prefixOptionsFilled = false;
+
+	function fillPrefixOptions() {
+		if (prefixOptionsFilled) return;
+		prefixOptionsFilled = true;
+		const selected = prefixSelect.value;
+		prefixSelect.replaceChildren(...prefixChoices.map((choice) => new Option(choice.label, choice.value, false, choice.value === selected)));
+	}
+
 	function setCountry(iso2: string) {
-		const code = iso2.trim().toUpperCase();
-		if (!dialCodes[code] || !hasOption(prefixSelect, code)) return;
-		prefixSelect.value = code;
+		const choice = prefixChoiceFor(iso2.trim().toUpperCase());
+		if (!choice) return;
+		if (!prefixOptionsFilled) prefixSelect.replaceChildren(new Option(choice.label, choice.value, true, true));
+		prefixSelect.value = choice.value;
 		sync();
 	}
 
@@ -86,5 +104,6 @@ export function initPhoneField(root: HTMLElement, options: { countrySelect?: HTM
 		setCountry,
 		setNumber,
 		number,
+		fillPrefixOptions,
 	};
 }

@@ -18,7 +18,6 @@ import {
 import { company, whatsappMessageHref } from '../../../data/site/company';
 import { cancellationsLink, howToBookLink, legalLinks, privacyPolicyHref } from '../../../data/site/navigation';
 import { childPriceLabel, scheduleLabel, type TourDetails } from '../../../data/tours/tours';
-import { countryOptions } from '../../../lib/account/countries';
 import { quoteBooking } from '../../../lib/booking/pricing';
 import { formatPrice } from '../../../lib/format';
 
@@ -190,7 +189,7 @@ const glassControl =
 				invalidMessage="Revisa el email."
 			/>
 			<PhoneField requiredMessage="Escribe un teléfono de contacto." invalidMessage="Revisa el teléfono." />
-			<SelectField name="country" label="País" options={countryOptions} placeholder="Elige tu país" autocomplete="country" />
+			<SelectField name="country" label="País" options={[]} placeholder="Elige tu país" autocomplete="country" />
 
 			<Checkbox name="insurance">
 				Seguro de cancelación, {cancellationInsurancePriceLabel} por persona

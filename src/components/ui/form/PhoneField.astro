@@ -26,9 +26,8 @@ const hintId = `${inputId}-hint`;
 const errorId = `${inputId}-error`;
 const describedBy = hint ? `${hintId} ${errorId}` : errorId;
 
-const prefixOptions = countryOptions
-	.filter((option) => dialCodes[option.value])
-	.map((option) => ({ value: option.value, label: `${option.label} (+${dialCodes[option.value]})` }));
+const defaultCountryName = countryOptions.find((option) => option.value === defaultCountry)?.label ?? defaultCountry;
+const defaultPrefixLabel = `${defaultCountryName} (+${dialCodes[defaultCountry]})`;
 ---
 
 <div data-field data-phone-field data-required-message={requiredMessage} data-invalid-message={invalidMessage}>
@@ -46,9 +45,7 @@ const prefixOptions = countryOptions
 				autocomplete="tel-country-code"
 				class="absolute inset-0 cursor-pointer appearance-none opacity-0"
 			>
-				{prefixOptions.map((option) => (
-					<option value={option.value} selected={option.value === defaultCountry}>{option.label}</option>
-				))}
+				<option value={defaultCountry} selected>{defaultPrefixLabel}</option>
 			</select>
 		</div>
 		<input

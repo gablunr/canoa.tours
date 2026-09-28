@@ -1,4 +1,5 @@
 import { actions, isInputError, type ActionError } from 'astro:actions';
+import { countryOptions } from '../../lib/account/countries';
 import { bookingErrorMessage } from '../../lib/booking/errors';
 import { quoteBooking, type PaymentOption, type Quote } from '../../lib/booking/pricing';
 import { localToday, monthBounds, monthOf, shiftMonth } from '../../lib/calendar';
@@ -87,6 +88,11 @@ export function initTourBooking(form: HTMLFormElement) {
 	const emailInput = control('email');
 	const couponInput = control('couponCode');
 	const countrySelect = form.elements.namedItem('country') as HTMLSelectElement | null;
+
+	function fillCountryOptions() {
+		if (!countrySelect || countrySelect.options.length > 1) return;
+		countrySelect.append(...countryOptions.map((option) => new Option(option.label, option.value)));
+	}
 
 	const fieldOf = (element: Element | null) => element?.closest<HTMLElement>('[data-field]') ?? null;
 	const hotelField = () => fieldOf(hotelRoot.querySelector('[name="hotelQuery"]')) ?? hotelRoot;
@@ -357,6 +363,8 @@ export function initTourBooking(form: HTMLFormElement) {
 		stepThree!.hidden = next !== 3;
 		if (next !== 3) teardownPayment();
 		if (next === 2) {
+			phoneField.fillPrefixOptions();
+			fillCountryOptions();
 			renderSelectionLine();
 			void loadStripeClient();
 		}
