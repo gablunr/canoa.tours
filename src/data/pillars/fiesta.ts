@@ -13,9 +13,9 @@ import {
 	weekdayRows,
 } from './kit';
 
-const cocoBongo = tourOf('fiesta', 'coco-bongo');
-const imagine = tourOf('fiesta', 'imagine-cave');
-const partyBoat = tourOf('fiesta', 'party-boat');
+const cocoBongo = tourOf('fiesta/coco-bongo');
+const imagine = tourOf('fiesta/imagine-cave');
+const partyBoat = tourOf('fiesta/party-boat');
 
 const lower = (label: string) => label.toLowerCase();
 const lowerFirst = (label: string) => `${label.charAt(0).toLowerCase()}${label.slice(1)}`;
@@ -42,11 +42,6 @@ export const pillar: PillarContent = {
 	heading: 'Fiesta en Punta Cana',
 	imageAlt: 'Público bailando en una discoteca con luces moradas y bolas de espejos',
 	comparisonTitle: 'Coco Bongo, Imagine o party boat',
-	tours: {
-		'coco-bongo': { bestFor: 'Quien quiere espectáculo además de baile', includesSummary: 'Entrada general, espectáculo y barra libre nacional' },
-		'imagine-cave': { bestFor: 'Grupos de amigos que buscan discoteca', includesSummary: 'Entrada a la cueva y a sus salas' },
-		'party-boat': { bestFor: 'Quien quiere fiesta sin trasnochar', includesSummary: 'Barco con barra libre y baño en la piscina natural de Bávaro' },
-	},
 	overviewTitle: 'Qué esperar de una noche de fiesta en Punta Cana',
 	sections: [
 		{

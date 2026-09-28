@@ -6,10 +6,12 @@ import {
 	destinationTourDetails,
 	pickupIncluded,
 	priceLabel,
+	scheduleLabel,
 	tourCountText,
 	tourDetails,
 	toursByDuration,
 	weekdays,
+	type DurationCategory,
 	type TourDetails,
 } from './tours';
 
@@ -34,14 +36,42 @@ export const catalogIntro = `De Isla Saona a Coco Bongo, las ${tourCountText(tou
 
 export const catalogDescription = `${tourCountText(tourDetails.length)} desde Punta Cana a Isla Saona, Samaná, Santo Domingo y más, desde ${formatPrice(lowestFromPrice)}. Compara precios, duración y días de salida.`;
 
-const groupIntros: Partial<Record<string, string>> = {
+const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+const sharedDurationSentences: Record<DurationCategory, string> = {
+	'full-day': 'Todas duran el día entero.',
+	'half-day': 'Todas duran medio día.',
+	night: 'Todas son de noche.',
+};
+
+function departureDaysSentence(tours: TourDetails[]) {
+	const days = weekdays.filter((day) => tours.some((details) => details.days.includes(day)));
+	return days.length > 0 ? `Salen ${lowerFirst(scheduleLabel(days))}.` : '';
+}
+
+function sharedDurationSentence(tours: TourDetails[]) {
+	const [first] = tours;
+	return first && tours.every((details) => details.durationCategory === first.durationCategory) ? sharedDurationSentences[first.durationCategory] : '';
+}
+
+const withSentence = (text: string, sentence: string) => (sentence ? `${text} ${sentence}` : text);
+
+type GroupIntro = string | ((tours: TourDetails[]) => string);
+
+const groupIntros: Partial<Record<string, GroupIntro>> = {
 	'isla-saona': 'Día entero saliendo de Bayahibe, en catamarán, lancha VIP o lancha privada.',
-	samana: 'Cascada El Limón y Cayo Levantado en un día. Salen jueves y sábados.',
+	samana: (tours) => withSentence('Cascada El Limón y Cayo Levantado en un día.', departureDaysSentence(tours)),
 	'santo-domingo': 'La Zona Colonial y Los Tres Ojos, a dos horas y media por autopista.',
 	'isla-catalina': 'Snorkel o buceo en el arrecife, saliendo de La Romana.',
-	'aventura-punta-cana': 'Buggies, safari, parasailing o speed boat. Todas duran medio día.',
+	'aventura-punta-cana': (tours) => withSentence('Buggies, safari, parasailing o speed boat.', sharedDurationSentence(tours)),
 	'fiesta-punta-cana': 'Coco Bongo, el Imagine (una discoteca dentro de una cueva) y el party boat.',
 };
+
+function groupIntro(destination: Destination, tours: TourDetails[]) {
+	const intro = groupIntros[destination.slug];
+	if (intro === undefined) return destination.details;
+	return typeof intro === 'string' ? intro : intro(tours);
+}
 
 export interface CatalogGroup {
 	destination: Destination;
@@ -50,12 +80,10 @@ export interface CatalogGroup {
 	tours: TourDetails[];
 }
 
-export const catalogGroups: CatalogGroup[] = destinations.map((destination) => ({
-	destination,
-	anchor: destination.slug,
-	intro: groupIntros[destination.slug] ?? destination.details,
-	tours: destinationTourDetails(destination),
-}));
+export const catalogGroups: CatalogGroup[] = destinations.map((destination) => {
+	const tours = destinationTourDetails(destination);
+	return { destination, anchor: destination.slug, intro: groupIntro(destination, tours), tours };
+});
 
 const personTours = tourDetails.filter((details) => details.pricePer === 'person');
 

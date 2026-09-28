@@ -2,11 +2,6 @@ import type { Faq } from '../booking/faq';
 import type { GuideSection } from '../guides/guide-content';
 import type { TourFact } from '../tours/tours';
 
-export interface PillarTourCopy {
-	bestFor: string;
-	includesSummary: string;
-}
-
 export interface PillarCta {
 	title: string;
 	text: string;
@@ -20,7 +15,6 @@ export interface PillarContent {
 	imageAlt: string;
 	comparisonTitle: string;
 	comparisonIntro?: string;
-	tours: Record<string, PillarTourCopy>;
 	overviewTitle: string;
 	sections: GuideSection[];
 	facts?: TourFact[];

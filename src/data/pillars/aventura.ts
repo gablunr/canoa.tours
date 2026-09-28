@@ -1,10 +1,10 @@
 import type { PillarContent } from './types';
 import { clockLabel, departurePorts, distanceLabel, formatPrice, fromPriceOf, guidePath, link, pillarPath, tourOf, toursOf } from './kit';
 
-const buggies = tourOf('aventura', 'buggies');
-const predator = tourOf('aventura', 'buggies-predator');
-const speedBoat = tourOf('aventura', 'speed-boat');
-const partyBoat = tourOf('fiesta', 'party-boat');
+const buggies = tourOf('aventura/buggies');
+const predator = tourOf('aventura/buggies-predator');
+const speedBoat = tourOf('aventura/speed-boat');
+const partyBoat = tourOf('fiesta/party-boat');
 
 const whereRows = toursOf('aventura').map((details) => [
 	details.title,
@@ -17,15 +17,6 @@ export const pillar: PillarContent = {
 	heading: 'Excursiones de aventura en Punta Cana',
 	imageAlt: 'Buggy levantando barro en un camino de tierra',
 	comparisonTitle: 'Qué excursión de aventura elegir',
-	tours: {
-		buggies: { bestFor: 'Primera vez en buggy', includesSummary: 'Buggy doble, cueva de agua dulce y playa Macao' },
-		'buggies-predator': { bestFor: 'Quien quiere más motor en el barro', includesSummary: 'Buggy Predator, cueva de agua dulce y playa Macao' },
-		safari: { bestFor: 'Familias con niños y quien no quiere conducir', includesSummary: 'Camión safari, cacao y café, casa típica y playa' },
-		parasailing: { bestFor: 'Quien quiere vistas y algo corto', includesSummary: 'Vuelo sobre Bávaro con lancha, arnés y chaleco' },
-		'speed-boat': { bestFor: 'Parejas y amigos que prefieren el mar al barro', includesSummary: 'Lancha que conduces tú y snorkel en el arrecife' },
-		seaquarium: { bestFor: 'Quien quiere ver el fondo sin saber bucear', includesSummary: 'Caminata bajo el mar con casco y snorkel' },
-		'buggies-bayahibe': { bestFor: 'Quien se hospeda en Bayahibe o Dominicus', includesSummary: 'Buggy doble entre cañaverales y casa típica' },
-	},
 	overviewTitle: 'Qué esperar de las excursiones de aventura en Punta Cana',
 	sections: [
 		{

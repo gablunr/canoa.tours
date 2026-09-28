@@ -1,6 +1,8 @@
 import type { ImageMetadata } from 'astro';
+import { formatPrice } from '../../lib/format';
 import { publishedTourRows } from '../../lib/tours/published-tours';
-import { resolveTourPrices, spanishTranslation, type TourRow } from '../../lib/tours/tour-rows';
+import { activeSchedule, resolveTourPrices, spanishTranslation, type TourRow } from '../../lib/tours/tour-rows';
+import { scheduleLabel, weekdaysFromIso } from './schedule-text';
 
 export type DestinationId = 'isla-saona' | 'samana' | 'santo-domingo' | 'isla-catalina' | 'aventura' | 'fiesta';
 
@@ -22,7 +24,31 @@ export interface Destination {
 	tours: Tour[];
 }
 
-type DestinationDefinition = Omit<Destination, 'fromPrice' | 'tours'>;
+interface DestinationTourFacts {
+	name: string;
+	basePrice: number | null;
+	isoWeekdays: readonly number[];
+}
+
+type DestinationDefinition = Omit<Destination, 'fromPrice' | 'tours' | 'details'> & {
+	details: string | ((tours: DestinationTourFacts[]) => string);
+};
+
+const listFormat = new Intl.ListFormat('es', { type: 'conjunction' });
+
+const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
+function departureDaysText(tours: DestinationTourFacts[]) {
+	const days = weekdaysFromIso(tours.flatMap((tour) => tour.isoWeekdays));
+	return days.length > 0 ? lowerFirst(scheduleLabel(days)) : undefined;
+}
+
+function pricesFromText(tours: DestinationTourFacts[]) {
+	const prices = tours.flatMap((tour) => (tour.basePrice === null ? [] : [`${lowerFirst(tour.name)} desde ${formatPrice(tour.basePrice)}`]));
+	return prices.length > 0 ? upperFirst(listFormat.format(prices)) : undefined;
+}
 
 const destinationDefinitions: DestinationDefinition[] = [
 	{
@@ -37,7 +63,10 @@ const destinationDefinitions: DestinationDefinition[] = [
 		kind: 'place',
 		name: 'Samaná',
 		slug: 'samana',
-		details: 'Cascada El Limón e Isla Bacardí, salidas jueves y sábados.',
+		details: (tours) => {
+			const days = departureDaysText(tours);
+			return days ? `Cascada El Limón e Isla Bacardí, salidas ${days}.` : 'Cascada El Limón e Isla Bacardí.';
+		},
 	},
 	{
 		id: 'santo-domingo',
@@ -51,7 +80,10 @@ const destinationDefinitions: DestinationDefinition[] = [
 		kind: 'place',
 		name: 'Isla Catalina',
 		slug: 'isla-catalina',
-		details: 'Snorkel desde US$65 y buceo desde US$120. Embarque en La Romana.',
+		details: (tours) => {
+			const prices = pricesFromText(tours);
+			return prices ? `${prices}. Embarque en La Romana.` : 'Embarque en La Romana.';
+		},
 	},
 	{
 		id: 'aventura',
@@ -76,6 +108,12 @@ function tourFromRow(row: TourRow): Tour {
 	return { name: translation.short_name?.trim() || translation.name, slug: translation.slug };
 }
 
+const tourFacts = (row: TourRow): DestinationTourFacts => ({
+	name: tourFromRow(row).name,
+	basePrice: resolveTourPrices(row.prices, row.pricing_mode).base,
+	isoWeekdays: activeSchedule(row)?.weekdays ?? [],
+});
+
 function lowestPrice(rows: TourRow[]) {
 	const basePrices = rows.flatMap((row) => {
 		const { base } = resolveTourPrices(row.prices, row.pricing_mode);
@@ -88,7 +126,8 @@ function lowestPrice(rows: TourRow[]) {
 
 export const destinations: Destination[] = destinationDefinitions.map((definition) => {
 	const rows = tourRowsOf(definition);
-	return { ...definition, fromPrice: lowestPrice(rows), tours: rows.map(tourFromRow) };
+	const details = typeof definition.details === 'string' ? definition.details : definition.details(rows.map(tourFacts));
+	return { ...definition, details, fromPrice: lowestPrice(rows), tours: rows.map(tourFromRow) };
 });
 
 const placeholderImages = import.meta.glob<{ default: ImageMetadata }>(

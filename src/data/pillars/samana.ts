@@ -6,10 +6,6 @@ export const pillar: PillarContent = {
 	description: `Excursión a Samaná desde Punta Cana a partir de ${fromPriceOf('samana')}: la cascada El Limón y Cayo Levantado en un día. Salen ${departureDaysOf('samana')}.`,
 	imageAlt: 'Palmeras inclinadas sobre la playa y barcas en la bahía, con montañas al fondo',
 	comparisonTitle: 'Qué excursión a Samaná elegir',
-	tours: {
-		'3-maravillas': { bestFor: 'Quien prefiere cruzar la bahía en lancha', includesSummary: `Lancha desde ${departurePorts.samana.port}, Cayo Levantado y almuerzo` },
-		'cayo-levantado-el-limon': { bestFor: 'Quien quiere ver la cascada El Limón', includesSummary: 'Cascada El Limón a caballo, Cayo Levantado y almuerzo' },
-	},
 	overviewTitle: 'Cómo es la excursión a Samaná desde Punta Cana',
 	sections: [
 		{

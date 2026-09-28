@@ -80,33 +80,39 @@ export const orderedTours = (destination: Destination) =>
 
 const departureDays = (tours: TourDetails[]) => weekdays.filter((day) => tours.some((details) => details.days.includes(day)));
 
-const sharedCategory = (tours: TourDetails[]): DurationCategory | undefined =>
-	tours.every((details) => details.durationCategory === tours[0].durationCategory) ? tours[0].durationCategory : undefined;
+function sharedCategory(tours: TourDetails[]): DurationCategory | undefined {
+	const [first] = tours;
+	return first && tours.every((details) => details.durationCategory === first.durationCategory) ? first.durationCategory : undefined;
+}
+
+const lowestOf = (values: number[]) => (values.length > 0 ? Math.min(...values) : 0);
+
+const highestOf = (values: number[]) => (values.length > 0 ? Math.max(...values) : 0);
 
 function hoursSpan(tours: TourDetails[]) {
 	const hours = tours.map((details) => details.durationHours);
-	const min = Math.min(...hours);
-	const max = Math.max(...hours);
+	const min = lowestOf(hours);
+	const max = highestOf(hours);
 	return min === max ? `${min}` : `de ${min} a ${max}`;
 }
 
 function sharedPort(tours: TourDetails[]) {
-	const port = tours[0].port;
+	const port = tours[0]?.port;
 	return port && tours.every((details) => details.port === port) ? departurePorts[port].port : undefined;
 }
 
 const extraFees = (tours: TourDetails[]) => tours.flatMap((details) => Object.values(details.pickupFees)).filter((fee) => fee > 0);
 
 const feeRange = (fees: number[]) => {
-	const min = Math.min(...fees);
-	const max = Math.max(...fees);
+	const min = lowestOf(fees);
+	const max = highestOf(fees);
 	return min === max ? formatPrice(min) : `de ${formatPrice(min)} a ${formatPrice(max)}`;
 };
 
 const sameFees = (tours: TourDetails[]) =>
 	tours.every((details) => pickupZones.every((zone) => details.pickupFees[zone.id] === tours[0].pickupFees[zone.id]));
 
-const firstZone = pickupZones[0].name;
+const firstZone = pickupZones[0]?.name ?? '';
 
 const answerDurations: Record<DurationCategory, string> = {
 	'full-day': 'de día completo',
@@ -118,7 +124,7 @@ function pickupSentences(tours: TourDetails[]): string[] {
 	const included = tours.filter(pickupIncluded);
 
 	if (included.length === 0) {
-		const lowest = Math.min(...extraFees(tours));
+		const lowest = lowestOf(extraFees(tours));
 		return [`La recogida se paga aparte, desde ${formatPrice(lowest)} por persona.`];
 	}
 	if (included.length < tours.length) {
@@ -129,7 +135,7 @@ function pickupSentences(tours: TourDetails[]): string[] {
 	const short = `${verb} la recogida desde ${firstZone}.`;
 	const full = sameFees(tours)
 		? `${verb} la recogida desde ${firstZone}; desde otras zonas cuesta ${feeRange(extraFees(tours))}.`
-		: `La recogida es gratis desde ${firstZone}, y desde otras zonas puede costar hasta ${formatPrice(Math.max(...extraFees(tours)))}.`;
+		: `La recogida es gratis desde ${firstZone}, y desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))}.`;
 	return [full, short];
 }
 
@@ -143,11 +149,13 @@ export function destinationAnswer(destination: Destination) {
 	const duration = category ? answerDurations[category] : `${hoursSpan(tours)} horas`;
 	const first = `${subject} desde ${formatPrice(destination.fromPrice)}, ${duration} y con salida ${scheduleWhen(departureDays(tours))}${port ? ` desde ${port}` : ''}.`;
 
-	const answer = pickupSentences(tours)
-		.map((pickup) => `${first} ${pickup}`)
-		.find((candidate) => candidate.length <= answerMaxLength);
-	if (!answer) throw new Error(`La respuesta directa de ${destination.name} pasa de ${answerMaxLength} caracteres: ${first}`);
-	return answer;
+	const candidates = pickupSentences(tours).map((pickup) => `${first} ${pickup}`);
+	const answer = candidates.find((candidate) => candidate.length <= answerMaxLength);
+	if (answer) return answer;
+
+	const shortest = candidates.reduce((best, candidate) => (candidate.length < best.length ? candidate : best));
+	console.warn(`La respuesta directa de ${destination.name} pasa de ${answerMaxLength} caracteres (${shortest.length}): ${shortest}`);
+	return shortest;
 }
 
 function keyFacts(destination: Destination, tours: TourDetails[]): PillarKeyFact[] {
@@ -159,7 +167,7 @@ function keyFacts(destination: Destination, tours: TourDetails[]): PillarKeyFact
 
 	const pickup: PillarKeyFact =
 		included.length === 0
-			? { label: 'Recogida', value: `Aparte, desde ${formatPrice(Math.min(...extraFees(tours)))}`, note: 'por persona' }
+			? { label: 'Recogida', value: `Aparte, desde ${formatPrice(lowestOf(extraFees(tours)))}`, note: 'por persona' }
 			: included.length === tours.length
 				? { label: 'Recogida', value: `Incluida desde ${firstZone}` }
 				: { label: 'Recogida', value: `Incluida en ${included.length} de ${tours.length}` };
@@ -173,9 +181,7 @@ function keyFacts(destination: Destination, tours: TourDetails[]): PillarKeyFact
 	];
 }
 
-function comparisonRow(details: TourDetails, content: PillarContent): ComparisonRow {
-	const copy = content.tours[details.tour.slug];
-
+function comparisonRow(details: TourDetails): ComparisonRow {
 	return {
 		details,
 		href: tourDetailsHref(details),
@@ -185,8 +191,8 @@ function comparisonRow(details: TourDetails, content: PillarContent): Comparison
 		childPrice: childPriceLabel(details),
 		duration: durationLabel(details),
 		days: scheduleLabel(details.days),
-		includes: copy?.includesSummary ?? '',
-		bestFor: copy?.bestFor ?? '',
+		includes: details.includesSummary,
+		bestFor: details.bestFor,
 		notes: [...(details.minAge ? [minAgeLabel(details)] : []), ...tourNotes(details)],
 	};
 }
@@ -248,8 +254,8 @@ function priceAnswer(destination: Destination, tours: TourDetails[]) {
 	}
 	if (perPerson.length > 0) {
 		const deposits = perPerson.map((details) => details.deposit);
-		const min = Math.min(...deposits);
-		const max = Math.max(...deposits);
+		const min = lowestOf(deposits);
+		const max = highestOf(deposits);
 		const deposit = min === max ? formatPrice(min) : `${formatPrice(min)} a ${formatPrice(max)}`;
 		const subject = perGroup.length > 0 ? 'Las demás se reservan' : isPlace(destination) ? 'Se reserva' : 'Se reservan';
 		sentences.push(`${subject} online con un depósito de ${deposit} por persona, y el resto se paga el día de la excursión.`);
@@ -258,11 +264,11 @@ function priceAnswer(destination: Destination, tours: TourDetails[]) {
 }
 
 function feesByZone(tours: TourDetails[]) {
-	const fees = tours[0].pickupFees;
-	return [...Map.groupBy(pickupZones, (zone) => fees[zone.id])].map(([fee, zones]) => ({
-		fee,
-		zones: listFormat.format(zones.map((zone) => zone.name)),
-	}));
+	const fees = tours[0]?.pickupFees ?? {};
+	const servedZones = pickupZones.filter((zone) => fees[zone.id] !== undefined);
+	return [...Map.groupBy(servedZones, (zone) => fees[zone.id])]
+		.map(([fee, zones]) => ({ fee, zones: listFormat.format(zones.map((zone) => zone.name)) }))
+		.sort((first, second) => first.fee - second.fee);
 }
 
 const joinWithFinalComma = (parts: string[]) =>
@@ -272,7 +278,7 @@ function pickupAnswer(tours: TourDetails[]) {
 	const included = tours.filter(pickupIncluded);
 
 	if (included.length === tours.length && !sameFees(tours)) {
-		return `Sí, sin cargo desde ${firstZone} en todas. Desde otras zonas puede costar hasta ${formatPrice(Math.max(...extraFees(tours)))} por persona según la excursión; en cada ficha está el precio para tu zona.`;
+		return `Sí, sin cargo desde ${firstZone} en todas. Desde otras zonas puede costar hasta ${formatPrice(highestOf(extraFees(tours)))} por persona según la excursión; en cada ficha está el precio para tu zona.`;
 	}
 	if (included.length > 0 && included.length < tours.length) {
 		return `${titles(included)} la ${included.length === 1 ? 'incluye' : 'incluyen'} sin cargo desde ${firstZone}. En las demás se paga aparte; en cada ficha está el precio para tu zona.`;
@@ -285,6 +291,7 @@ function pickupAnswer(tours: TourDetails[]) {
 	}
 
 	const [free, ...paid] = groups;
+	if (!free) return `Sí, sin cargo desde ${firstZone}.`;
 	const parts = paid.map(({ fee, zones }, index) =>
 		index === 0 ? `desde ${zones} se suman ${formatPrice(fee)} por persona` : `desde ${zones}, ${formatPrice(fee)}`,
 	);
@@ -423,30 +430,26 @@ function linkErrors(destination: Destination, tours: TourDetails[], links: [stri
 	return errors;
 }
 
-export function validatePillar(destination: Destination, content: PillarContent): string[] {
+export interface PillarReview {
+	errors: string[];
+	warnings: string[];
+}
+
+export function validatePillar(destination: Destination, content: PillarContent): PillarReview {
 	const tours = destinationTourDetails(destination);
 	const errors: string[] = [];
+	const warnings: string[] = [];
 	const check = (ok: boolean, message: string) => {
 		if (!ok) errors.push(message);
 	};
-
-	const slugs = tours.map((details) => details.tour.slug);
-	const keys = Object.keys(content.tours);
-	for (const slug of slugs) check(keys.includes(slug), `tours: falta «${slug}»`);
-	for (const key of keys) check(slugs.includes(key), `tours: «${key}» no es una excursión de ${destination.name}`);
-	for (const [slug, copy] of Object.entries(content.tours)) {
-		check(copy.bestFor.length >= 1 && copy.bestFor.length <= 60, `tours.${slug}.bestFor: de 1 a 60 caracteres (${copy.bestFor.length})`);
-		check(
-			copy.includesSummary.length >= 1 && copy.includesSummary.length <= 70,
-			`tours.${slug}.includesSummary: de 1 a 70 caracteres (${copy.includesSummary.length})`,
-		);
-		check(!copy.bestFor.endsWith('.') && !copy.includesSummary.endsWith('.'), `tours.${slug}: sin punto final`);
-	}
+	const warn = (ok: boolean, message: string) => {
+		if (!ok) warnings.push(message);
+	};
 
 	const fromPrice = formatPrice(destination.fromPrice);
 	check(content.seoTitle.length <= 60, `seoTitle: máximo 60 caracteres (${content.seoTitle.length})`);
-	check(content.description.length <= 155, `description: máximo 155 caracteres (${content.description.length})`);
-	check(content.description.includes(fromPrice), `description: tiene que llevar el precio desde (${fromPrice})`);
+	warn(content.description.length <= 155, `description: máximo 155 caracteres (${content.description.length})`);
+	warn(content.description.includes(fromPrice), `description: tiene que llevar el precio desde (${fromPrice})`);
 	if (!isPlace(destination)) check(Boolean(content.heading?.includes('Punta Cana')), 'heading: obligatorio y con «Punta Cana»');
 	check((content.comparisonIntro ?? '').length <= 120, 'comparisonIntro: máximo 120 caracteres');
 	check(content.faqs.length <= 8, `faqs: máximo 8 (${content.faqs.length})`);
@@ -460,8 +463,8 @@ export function validatePillar(destination: Destination, content: PillarContent)
 
 	const links: [string, string][] = [];
 	for (const [path, text] of collectStrings(content, '', [])) {
-		check(!/[—–·]| - /.test(text), `${path}: raya, semirraya, punto medio o guion como separador`);
-		check(!/\b(TODO|REVISAR|PENDIENTE|XXX)\b|\{\{/.test(text) && !/lorem/i.test(text), `${path}: marca de hueco`);
+		warn(!/[—–·]| - /.test(text), `${path}: raya, semirraya, punto medio o guion como separador`);
+		warn(!/\b(TODO|REVISAR|PENDIENTE|XXX)\b|\{\{/.test(text) && !/lorem/i.test(text), `${path}: marca de hueco`);
 		check(!text.includes('[') || path === 'cta.whatsappMessage', `${path}: «[» solo en cta.whatsappMessage`);
 		if (path.endsWith('link.href')) links.push([path, text]);
 
@@ -483,13 +486,15 @@ export function validatePillar(destination: Destination, content: PillarContent)
 		check(!generated.includes(question), `faqs: «${faq.question}» ya es una pregunta generada`);
 		seen.add(question);
 	}
-	return errors;
+	return { errors, warnings };
 }
 
 export function pillarPage(destination: Destination): PillarPage {
 	const content = pillarContents[destination.id];
-	const errors = validatePillar(destination, content);
-	if (errors.length > 0) throw new Error(`La pilar de ${destination.name} no pasa la validación:\n${errors.map((error) => `  ${error}`).join('\n')}`);
+	const { errors, warnings } = validatePillar(destination, content);
+	const listed = (messages: string[]) => messages.map((message) => `  ${message}`).join('\n');
+	if (errors.length > 0) throw new Error(`La pilar de ${destination.name} no pasa la validación:\n${listed(errors)}`);
+	if (warnings.length > 0) console.warn(`La pilar de ${destination.name} tiene avisos por datos editados en el panel:\n${listed(warnings)}`);
 
 	const tours = orderedTours(destination);
 	const heading = content.heading ?? destinationToursTitle(destination);
@@ -516,7 +521,7 @@ export function pillarPage(destination: Destination): PillarPage {
 		answer: destinationAnswer(destination),
 		keyFacts: keyFacts(destination, tours),
 		tours,
-		rows: tours.map((details) => comparisonRow(details, content)),
+		rows: tours.map(comparisonRow),
 		tableNote: tableNote(tours),
 		toursTitle: toursTitle(destination),
 		guides,

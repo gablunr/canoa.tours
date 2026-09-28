@@ -1,8 +1,9 @@
 import { guideHref, guides } from '../guides/guides';
 import { destinationHref, findDestination, type DestinationId } from '../tours/destinations';
-import { findTourDetails, scheduleWhen, tourDetails, tourDetailsHref, weekdayLabel, weekdays, type TourDetails } from '../tours/tours';
+import { scheduleWhen, tourDetails, tourDetailsHref, weekdayLabel, weekdays, type TourDetails } from '../tours/tours';
 import { formatPrice } from '../../lib/format';
 import { routes } from '../site/routes';
+import type { PillarCitedTourKey } from './cited-tours';
 
 export { formatPrice } from '../../lib/format';
 export { routes } from '../site/routes';
@@ -25,7 +26,11 @@ export {
 	lowestPickupFee,
 } from '../tours/tours';
 
-export const tourOf = (destinationId: DestinationId, slug: string): TourDetails => findTourDetails(destinationId, slug);
+export function tourOf(productKey: PillarCitedTourKey): TourDetails {
+	const details = tourDetails.find((candidate) => candidate.productKey === productKey);
+	if (!details) throw new Error(`La excursión ${productKey} sale citada en una pilar y no está activa`);
+	return details;
+}
 
 export const toursOf = (destinationId: DestinationId): TourDetails[] =>
 	tourDetails.filter((details) => details.destination.id === destinationId);

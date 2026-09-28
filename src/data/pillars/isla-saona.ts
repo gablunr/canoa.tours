@@ -15,12 +15,6 @@ export const pillar: PillarContent = {
 	description: `Excursión a Isla Saona desde ${fromPriceOf('isla-saona')} en catamarán, VIP 4 Playas, First Class o lancha privada. Salen de ${port} ${departureDaysOf('isla-saona')}.`,
 	imageAlt: 'Agua clara y poco profunda junto a una playa de arena blanca con palmeras inclinadas',
 	comparisonTitle: 'Qué excursión a Isla Saona elegir',
-	tours: {
-		catamaran: { bestFor: 'Primera vez en Saona, familias y presupuesto ajustado', includesSummary: 'Catamarán y lancha, buffet en la playa y piscina natural' },
-		'vip-4-playas': { bestFor: 'Quien quiere más playa y menos barco', includesSummary: 'Lancha en grupo reducido y varias paradas, con la piscina natural' },
-		'first-class': { bestFor: 'Parejas y celebraciones que buscan comodidad', includesSummary: 'La opción en grupo con el servicio más cuidado' },
-		privada: { bestFor: 'Familias y grupos que quieren ir a su ritmo', includesSummary: 'Lancha solo para tu grupo y ruta a tu medida' },
-	},
 	overviewTitle: 'Cómo es la excursión a Isla Saona',
 	sections: [
 		{

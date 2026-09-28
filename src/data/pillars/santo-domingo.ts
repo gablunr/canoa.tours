@@ -1,8 +1,8 @@
 import type { PillarContent } from './types';
 import { fromPriceOf, guidePath, scheduleWhen, tourOf } from './kit';
 
-const clasica = tourOf('santo-domingo', 'clasica');
-const vip = tourOf('santo-domingo', 'vip');
+const clasica = tourOf('santo-domingo/clasica');
+const vip = tourOf('santo-domingo/vip');
 
 const minutesOf = (time: string) => {
 	const [hours = 0, minutes = 0] = time.split(':').map(Number);
@@ -22,10 +22,6 @@ export const pillar: PillarContent = {
 	description: `Excursión a Santo Domingo desde Punta Cana: la Zona Colonial y Los Tres Ojos en un día, desde ${fromPriceOf('santo-domingo')}. Compara la Clásica y la VIP.`,
 	imageAlt: 'Fachada del Alcázar de Colón frente a una plaza empedrada en la Zona Colonial',
 	comparisonTitle: 'Clásica o VIP: qué cambia',
-	tours: {
-		clasica: { bestFor: 'Primera visita a la capital y familias con niños', includesSummary: 'Los Tres Ojos, Zona Colonial a pie y almuerzo buffet' },
-		vip: { bestFor: 'Quien prefiere un grupo reducido al autobús grande', includesSummary: 'Minibús, Los Tres Ojos, Zona Colonial y almuerzo' },
-	},
 	overviewTitle: 'Cómo es la excursión a Santo Domingo desde Punta Cana',
 	sections: [
 		{

@@ -8,10 +8,6 @@ export const pillar: PillarContent = {
 	description: `Excursión a Isla Catalina desde Punta Cana: snorkel desde ${fromPriceOf('isla-catalina')} o buceo con instructor, con salida de ${port} ${departureDaysOf('isla-catalina')}.`,
 	imageAlt: 'Persona haciendo snorkel bajo el agua azul',
 	comparisonTitle: 'Snorkel o buceo en Isla Catalina',
-	tours: {
-		snorkel: { bestFor: 'Familias con niños y quien prefiere nadar en superficie', includesSummary: `Barco desde ${port}, equipo de snorkel y buffet` },
-		buceo: { bestFor: 'Principiantes con bautismo y buceadores certificados', includesSummary: 'Dos inmersiones con instructor, equipo y almuerzo' },
-	},
 	overviewTitle: 'Cómo es la excursión a Isla Catalina',
 	sections: [
 		{
