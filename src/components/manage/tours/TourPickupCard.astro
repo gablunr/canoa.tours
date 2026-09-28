@@ -53,7 +53,7 @@ const fees = new Map(operations.pickupFees.map((fee) => [fee.zoneId, fee.fee]));
 									inputmode="decimal"
 									step="0.01"
 									min="0"
-									max={tourLimits.maxMoney}
+									max={tourLimits.maxPickupFee}
 									value={fee}
 									disabled={fee === undefined}
 									aria-label={`Importe por persona en ${zone.name}`}

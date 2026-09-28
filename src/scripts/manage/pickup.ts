@@ -262,7 +262,7 @@ function initFees(root: HTMLElement) {
 			const amount = row.querySelector<HTMLInputElement>('[data-fee-amount]');
 			if (!served?.checked || !amount || !row.dataset.productId) continue;
 			const fee = amount.value.trim() === '' ? Number.NaN : Number(amount.value);
-			if (!Number.isFinite(fee) || fee < 0 || fee > 1000) {
+			if (!Number.isFinite(fee) || fee < 0 || fee > Number(amount.max)) {
 				amount.setAttribute('aria-invalid', 'true');
 				invalidInputs.push(amount);
 				continue;

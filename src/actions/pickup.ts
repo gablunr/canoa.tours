@@ -4,6 +4,7 @@ import { triggerRebuild } from '../lib/deploy-hook';
 import { requireStaff } from '../lib/manage/guards';
 import { supabaseAdmin } from '../lib/supabase/admin';
 import type { StaffRole } from '../lib/supabase/types';
+import { tourLimits } from '../lib/tours/tour-schema';
 import { slugify } from '../scripts/manage/form-helpers';
 
 const zoneEditors: StaffRole[] = ['admin'];
@@ -19,7 +20,7 @@ const roundMoney = (amount: number) => Math.round(amount * 100) / 100;
 
 const zoneName = z.string().trim().min(2, 'Escribe el nombre de la zona.').max(80, 'Usa como mucho 80 caracteres.');
 const zoneDescription = z.string().trim().max(400, 'Usa como mucho 400 caracteres.').default('');
-const fee = z.number().min(0, 'La tarifa no puede ser negativa.').max(1000, 'La tarifa no puede pasar de US$1.000.').transform(roundMoney);
+const fee = z.number().min(0, 'La tarifa no puede ser negativa.').max(tourLimits.maxPickupFee, 'La tarifa no puede pasar de US$1.000.').transform(roundMoney);
 const hotelName = z
 	.string()
 	.transform(normalizeHotelName)

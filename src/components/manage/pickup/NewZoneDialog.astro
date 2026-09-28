@@ -3,6 +3,7 @@ import Dialog from '../../ui/dialog/Dialog.astro';
 import DialogButton from '../../ui/dialog/DialogButton.astro';
 import TextAreaField from '../../ui/form/TextAreaField.astro';
 import TextField from '../../ui/form/TextField.astro';
+import { tourLimits } from '../../../lib/tours/tour-schema';
 import MoneyField from '../form/MoneyField.astro';
 ---
 
@@ -17,7 +18,7 @@ import MoneyField from '../form/MoneyField.astro';
 			label="Tarifa inicial por persona"
 			name="newZoneFee"
 			value={0}
-			max={1000}
+			max={tourLimits.maxPickupFee}
 			required
 			hint="Para todas las excursiones. Luego la ajustas en cada una."
 			requiredMessage="Escribe la tarifa, aunque sea 0."

@@ -32,6 +32,7 @@ export const tourLimits = {
 	dailyCapacity: 5000,
 	durationHours: 24,
 	maxMoney: 100000,
+	maxPickupFee: 1000,
 	pickupZones: 30,
 	images: 20,
 	imagePathLength: 300,
@@ -68,11 +69,14 @@ const isValidMoney = (value: number | null | undefined): value is number => type
 
 const isClockTime = (value: string | null): value is string => value !== null && timePattern.test(value);
 
-const money = z
-	.number({ error: 'Escribe un importe.' })
-	.min(0, 'El importe no puede ser negativo.')
-	.max(tourLimits.maxMoney, 'Ese importe es demasiado alto.')
-	.refine(hasCents, 'Usa como mucho dos decimales.');
+const moneyUpTo = (max: number, tooHighMessage: string) =>
+	z
+		.number({ error: 'Escribe un importe.' })
+		.min(0, 'El importe no puede ser negativo.')
+		.max(max, tooHighMessage)
+		.refine(hasCents, 'Usa como mucho dos decimales.');
+
+const money = moneyUpTo(tourLimits.maxMoney, 'Ese importe es demasiado alto.');
 
 const wholeNumber = (min: number, max: number) =>
 	z
@@ -144,7 +148,7 @@ const scheduleSchema = z.object({
 
 const pickupFeeSchema = z.object({
 	zoneId: z.uuid('Elige una zona.'),
-	fee: money,
+	fee: moneyUpTo(tourLimits.maxPickupFee, 'La tarifa no puede pasar de US$1.000.'),
 });
 
 const departurePortKeys = Object.keys(departurePorts) as [keyof typeof departurePorts, ...(keyof typeof departurePorts)[]];

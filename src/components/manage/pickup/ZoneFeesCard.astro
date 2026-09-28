@@ -1,5 +1,6 @@
 ---
 import { formatPrice } from '../../../lib/format';
+import { tourLimits } from '../../../lib/tours/tour-schema';
 import { glassButtonPrimary, surfacePanel } from '../glass-classes';
 import type { ZoneFeeGroup } from './pickup-data';
 
@@ -51,7 +52,7 @@ const feeInput =
 												type="number"
 												inputmode="decimal"
 												min="0"
-												max="1000"
+												max={tourLimits.maxPickupFee}
 												step="0.01"
 												value={tour.fee ?? 0}
 												disabled={!tour.served}
