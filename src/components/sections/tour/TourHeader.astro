@@ -5,7 +5,7 @@ import PhotoHero from '../page/PhotoHero.astro';
 import palmBeach from '../../../assets/images/home/caribbean-palm-beach.jpg';
 import { destinationHref } from '../../../data/tours/destinations';
 import { routes } from '../../../data/site/routes';
-import { durationLabel, pickupLabel, scheduleLabel, tourAnswer, tourPhoto, type TourDetails } from '../../../data/tours/tours';
+import { durationLabel, pickupLabel, scheduleLabel, tourPhoto, type TourDetails } from '../../../data/tours/tours';
 import { formatPrice } from '../../../lib/format';
 
 interface Props {
@@ -32,6 +32,6 @@ const facts = [
 			{ label: tour.name },
 		]}
 	/>
-	{tourAnswer(details)}
+	{details.summary}
 	<FactGrid slot="actions" facts={facts} overPhoto class="mt-10 w-full animate-fade-up" style="animation-delay: 790ms" />
 </PhotoHero>

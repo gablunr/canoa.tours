@@ -213,21 +213,6 @@ export function tourNotes(details: TourDetails): string[] {
 	];
 }
 
-const durationPhrases: Record<DurationCategory, string> = {
-	'full-day': 'Es un día completo, de unas',
-	'half-day': 'Es de medio día, unas',
-	night: 'Es un plan de noche, de unas',
-};
-
-export function tourAnswer(details: TourDetails) {
-	const port = details.port && ` desde el puerto de ${departurePorts[details.port].port}`;
-	const pickup = pickupIncluded(details)
-		? `Incluye la recogida en hoteles de ${includedPickupZoneName}, y desde otras zonas se suma un cargo extra.`
-		: `La recogida en el hotel se paga aparte, desde ${formatPrice(lowestPickupFee(details))} por persona según tu zona.`;
-
-	return `${details.title} cuesta desde ${priceLabel(details)}. ${durationPhrases[details.durationCategory]} ${details.durationHours} horas, y ${scheduleSentence(details.days)}${port ?? ''}. ${pickup}`;
-}
-
 export interface TourFact {
 	label: string;
 	value: string;

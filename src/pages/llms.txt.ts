@@ -6,7 +6,7 @@ import { isGuidePublished } from '../data/guides/guide-content';
 import { guideHref, siloGuides, type Guide } from '../data/guides/guides';
 import { catalogIntro } from '../data/tours/catalog';
 import { routes } from '../data/site/routes';
-import { destinationTourDetails, tourAnswer, tourDetailsHref } from '../data/tours/tours';
+import { destinationTourDetails, tourDetailsHref, tourSeoDescription } from '../data/tours/tours';
 import { bookingBenefitSummary, bookingBenefits } from '../data/booking/booking-benefits';
 import { bookingStepSummary, bookingSteps } from '../data/booking/booking-steps';
 import { faqSummary, faqs } from '../data/booking/faq';
@@ -56,7 +56,7 @@ export const GET: APIRoute = async () => {
 		link('Todas las excursiones', routes.catalog, catalogIntro),
 		...destinations.flatMap((destination) => [
 			link(destination.name, destinationHref(destination), destinationAnswer(destination)),
-			...destinationTourDetails(destination).map((details) => `  ${link(details.title, tourDetailsHref(details), tourAnswer(details))}`),
+			...destinationTourDetails(destination).map((details) => `  ${link(details.title, tourDetailsHref(details), tourSeoDescription(details))}`),
 			...publishedGuides(destination.id).map((guide) => `  - Guía: ${guideLink(guide).slice(2)}`),
 		]),
 	];
