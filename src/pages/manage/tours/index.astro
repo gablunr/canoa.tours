@@ -1,0 +1,133 @@
+---
+import { MapPinned, Plus, Search } from '@lucide/astro';
+import ManageLayout from '../../../layouts/ManageLayout.astro';
+import ManagePageHeader from '../../../components/manage/ManagePageHeader.astro';
+import SiteStatus from '../../../components/manage/SiteStatus.astro';
+import TourList from '../../../components/manage/tours/TourList.astro';
+import NewTourDialog from '../../../components/manage/tours/NewTourDialog.astro';
+import { canOpenSection } from '../../../data/manage/sections';
+import { destinations } from '../../../data/tours/destinations';
+import { destinationPathPrefix, loadTourList, type TourStatus } from '../../../components/manage/tours/tour-list-data';
+import { supabaseAdmin } from '../../../lib/supabase/admin';
+import { glassButton, glassControl, glassGroup, glassOption, glassPanel, glassPrimaryButton } from '../../../components/manage/glass-classes';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'tours')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const isAdmin = Astro.locals.staffRole === 'admin';
+
+const statusTabs: { id: TourStatus; label: string; summary: string; emptyMessage: string }[] = [
+	{ id: 'active', label: 'A la venta', summary: 'Están en la web. Lo que cambies sale en unos minutos.', emptyMessage: 'Todavía no hay excursiones a la venta.' },
+	{ id: 'draft', label: 'Borradores', summary: 'Solo las ve el equipo hasta que las pongas a la venta.', emptyMessage: 'Las excursiones nuevas empiezan aquí hasta que las pongas a la venta.' },
+	{ id: 'archived', label: 'Archivadas', summary: 'Ya no salen en la web ni admiten reservas.', emptyMessage: 'Aquí quedan las excursiones que retires de la venta.' },
+];
+
+const list = await loadTourList(supabaseAdmin);
+
+const requestedStatus = Astro.url.searchParams.get('status');
+const defaultStatus: TourStatus = list.counts.active === 0 && list.counts.draft > 0 ? 'draft' : 'active';
+const activeTab = statusTabs.find((tab) => tab.id === requestedStatus) ?? statusTabs.find((tab) => tab.id === defaultStatus) ?? statusTabs[0];
+const groups = list.groups(activeTab.id);
+
+const destinationCount = list.activeDestinationCount;
+const headerDescription =
+	list.counts.active === 0
+		? 'Todavía no hay excursiones a la venta.'
+		: `${list.counts.active} a la venta en ${destinationCount} ${destinationCount === 1 ? 'destino' : 'destinos'}.`;
+
+const pathPrefixes = Object.fromEntries(destinations.map((destination) => [destination.id, destinationPathPrefix(destination)]));
+---
+
+<ManageLayout title="Excursiones" section="tours">
+	<div
+		class="grid gap-4"
+		data-tours-page
+		data-path-prefixes={JSON.stringify(pathPrefixes)}
+		data-tour-slugs={JSON.stringify(list.tourSlugs)}
+		data-guide-slugs={JSON.stringify(list.guideSlugs)}
+		data-copy-sources={JSON.stringify(list.copySources)}
+	>
+		<ManagePageHeader title="Excursiones" description={headerDescription}>
+			<SiteStatus />
+			{isAdmin && (
+				<button type="button" class:list={[glassPrimaryButton, 'w-full sm:w-auto']} data-new-tour-open>
+					<Plus size={15} stroke-width={2} aria-hidden="true" />
+					Nueva excursión
+				</button>
+			)}
+		</ManagePageHeader>
+
+		<div class="mt-2 flex animate-fade-up flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3" style="animation-delay: 100ms">
+			<nav aria-label="Estado" class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-auto']}>
+				{statusTabs.map((tab) => (
+					<a
+						href={`/manage/tours?status=${tab.id}`}
+						class:list={[glassOption, 'group/tab flex-1 sm:flex-none']}
+						aria-current={tab.id === activeTab.id ? 'page' : undefined}
+					>
+						{tab.label}
+						<span class="text-xs font-normal text-muted tabular-nums group-aria-[current=page]/tab:text-white/65">{list.counts[tab.id]}</span>
+					</a>
+				))}
+			</nav>
+			<div role="search" class="w-full sm:w-72">
+				<label class:list={[glassControl, 'relative h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent sm:h-12']}>
+					<span class="sr-only">Buscar excursiones</span>
+					<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+					<input
+						type="search"
+						maxlength="80"
+						placeholder="Buscar una excursión"
+						autocomplete="off"
+						class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 font-normal outline-none placeholder:text-muted disabled:opacity-50"
+						data-tour-search
+					/>
+				</label>
+			</div>
+		</div>
+
+		<p class="animate-fade-up px-1 text-sm text-secondary" style="animation-delay: 120ms">
+			<span data-tour-summary>{activeTab.summary}</span>
+			<span data-tour-results hidden>
+				<span data-tour-results-text></span>{' '}
+				<button type="button" class="cursor-pointer font-medium text-primary underline decoration-border-strong underline-offset-4 hover:decoration-primary" data-tour-search-clear>
+					Quitar búsqueda
+				</button>
+			</span>
+		</p>
+
+		{groups.length === 0 ? (
+			<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 160ms">
+				<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+					<MapPinned size={20} stroke-width={1.75} aria-hidden="true" />
+				</span>
+				<p class="mt-4 max-w-sm text-sm text-secondary">{activeTab.emptyMessage}</p>
+				{isAdmin && activeTab.id !== 'archived' && (
+					<button type="button" class:list={[glassButton, 'mt-5']} data-new-tour-open>
+						<Plus size={15} stroke-width={2} aria-hidden="true" />
+						Nueva excursión
+					</button>
+				)}
+			</div>
+		) : (
+			<TourList groups={groups} canReorder={isAdmin} />
+		)}
+
+		<div class:list={[glassPanel, 'flex flex-col items-center px-6 py-10 text-center sm:px-10']} data-tour-search-empty hidden>
+			<span class="liquid-glass flex size-12 items-center justify-center bg-ink-200/60 text-accent [--glass-drop-shadow:0_0_#0000]">
+				<Search size={20} stroke-width={1.75} aria-hidden="true" />
+			</span>
+			<p class="mt-4 max-w-sm text-sm text-secondary" data-tour-search-empty-text></p>
+			<button type="button" class:list={[glassButton, 'mt-5']} data-tour-search-clear>Quitar búsqueda</button>
+		</div>
+
+		{isAdmin && <NewTourDialog copySources={list.copySources} />}
+	</div>
+</ManageLayout>
+
+<script>
+	import { initToursPage } from '../../../scripts/manage/tours-list';
+
+	document.querySelectorAll<HTMLElement>('[data-tours-page]').forEach(initToursPage);
+</script>

@@ -1,0 +1,96 @@
+---
+import { Image } from 'astro:assets';
+import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Star } from '@lucide/astro';
+import type { TourListItem } from './tour-list-data';
+import { glassCircle } from '../glass-classes';
+
+interface Props {
+	tour: TourListItem;
+}
+
+const { tour } = Astro.props;
+const { missingCount } = tour;
+
+const chip = 'inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium whitespace-nowrap';
+const arrowButton = `${glassCircle} relative z-10 disabled:pointer-events-none disabled:opacity-40`;
+const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missingCount > 0;
+---
+
+<li
+	class="group/row relative flex items-center gap-3 rounded-[1.25rem] bg-white/55 p-2 pr-2.5 transition-colors duration-300 ease-smooth hover:bg-white/80 has-[[data-tour-link]:focus-visible]:ring-2 has-[[data-tour-link]:focus-visible]:ring-accent sm:gap-4 sm:bg-transparent sm:p-2.5 sm:pr-3 sm:hover:bg-ink-200/60"
+	data-tour-row
+	data-tour-id={tour.id}
+	data-search={tour.searchText}
+>
+	<span class="block aspect-[4/3] w-20 shrink-0 overflow-hidden rounded-[0.875rem] bg-ink-200/60 sm:w-28">
+		{tour.imageUrl ? (
+			<img src={tour.imageUrl} alt="" loading="lazy" decoding="async" width="112" height="84" class="size-full object-cover" />
+		) : tour.placeholder ? (
+			<Image src={tour.placeholder} alt="" width={224} height={168} loading="lazy" decoding="async" class="size-full object-cover" />
+		) : (
+			<span class="flex size-full items-center justify-center text-muted">
+				<ImageOff size={18} stroke-width={1.75} aria-hidden="true" />
+			</span>
+		)}
+	</span>
+
+	<div class="min-w-0 flex-1">
+		<h3 class="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.02em] text-pretty text-primary">
+			<a
+				href={`/manage/tours/${tour.id}`}
+				class="outline-none after:absolute after:inset-0 after:rounded-[1.25rem] group-data-[sorting]/panel:pointer-events-none"
+				data-tour-link
+			>
+				{tour.name}
+			</a>
+		</h3>
+		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">
+			{tour.facts.map((fact) => <span>{fact}</span>)}
+		</p>
+		{hasChips && (
+			<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+				{tour.mostBookedPosition !== null && (
+					<span class:list={[chip, 'bg-sun-soft text-sun-strong']}>
+						<Star size={12} stroke-width={2} aria-hidden="true" />
+						Más reservada {tour.mostBookedPosition}
+					</span>
+				)}
+				{tour.pendingOnWeb && (
+					<span class:list={[chip, 'bg-accent-soft text-accent-strong']}>
+						<CircleDot size={12} stroke-width={2} aria-hidden="true" />
+						Pendiente de salir en la web
+					</span>
+				)}
+				{missingCount > 0 && (
+					<span class:list={[chip, 'bg-white/80 text-secondary']}>
+						Faltan {missingCount} {missingCount === 1 ? 'dato' : 'datos'}
+					</span>
+				)}
+			</div>
+		)}
+	</div>
+
+	<div class="hidden shrink-0 flex-col gap-1.5 group-data-[sorting]/panel:flex sm:flex-row">
+		<button type="button" class={arrowButton} data-move="up" aria-label={`Subir «${tour.shortName}»`} title="Subir">
+			<ArrowUp size={15} stroke-width={1.75} aria-hidden="true" />
+		</button>
+		<button type="button" class={arrowButton} data-move="down" aria-label={`Bajar «${tour.shortName}»`} title="Bajar">
+			<ArrowDown size={15} stroke-width={1.75} aria-hidden="true" />
+		</button>
+	</div>
+
+	{tour.status === 'active' && (
+		<span class="shrink-0 group-data-[sorting]/panel:hidden">
+			<a
+				href={tour.path}
+				target="_blank"
+				rel="noopener"
+				class:list={[glassCircle, 'relative z-10']}
+				aria-label={`Ver «${tour.shortName}» en la web`}
+				title="Ver en la web"
+			>
+				<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
+			</a>
+		</span>
+	)}
+</li>

@@ -1,0 +1,62 @@
+---
+import Dialog from '../../ui/dialog/Dialog.astro';
+import DialogButton from '../../ui/dialog/DialogButton.astro';
+import SelectField from '../../ui/form/SelectField.astro';
+import TextField from '../../ui/form/TextField.astro';
+import { destinations } from '../../../data/tours/destinations';
+import { destinationPathPrefix, type TourCopySource } from './tour-list-data';
+
+interface Props {
+	copySources: Record<string, TourCopySource[]>;
+}
+
+const { copySources } = Astro.props;
+
+const blankCopyValue = 'blank';
+const firstDestination = destinations[0];
+const destinationOptions = destinations.map((destination) => ({ value: destination.id, label: destination.name }));
+const firstSources = copySources[firstDestination.id] ?? [];
+const copyOptions = [...firstSources.map((source) => ({ value: source.id, label: `Copia de ${source.name}` })), { value: blankCopyValue, label: 'En blanco' }];
+---
+
+<Dialog size="lg" aria-labelledby="nueva-excursion-titulo" data-new-tour-dialog>
+	<h2 id="nueva-excursion-titulo" class="text-xl font-semibold tracking-[-0.03em]">Nueva excursión</h2>
+	<p class="mt-2 text-sm leading-relaxed text-secondary">Empieza como borrador. La pones a la venta cuando esté lista.</p>
+
+	<form class="mt-6 grid gap-5" data-new-tour-form>
+		<SelectField label="Destino" name="destination" options={destinationOptions} value={firstDestination.id} required data-destination-select />
+		<TextField label="Nombre" name="name" required minlength={5} maxlength={120} autocomplete="off" hint="El título completo de la ficha." data-name-input />
+		<TextField label="Nombre corto" name="shortName" required minlength={2} maxlength={40} autocomplete="off" hint="Para menús y tablas." data-short-name-input />
+		<TextField
+			label="Dirección"
+			name="slug"
+			required
+			minlength={3}
+			maxlength={80}
+			pattern="[a-z0-9]+(-[a-z0-9]+)*"
+			title="Minúsculas, números y guiones, sin espacios ni tildes."
+			autocomplete="off"
+			autocapitalize="none"
+			spellcheck="false"
+			hint={`canoa.tours${destinationPathPrefix(firstDestination)}`}
+			data-slug-input
+		/>
+		<SelectField
+			label="Partir de"
+			name="copyFrom"
+			options={copyOptions}
+			value={firstSources[0]?.id ?? blankCopyValue}
+			required
+			data-blank-value={blankCopyValue}
+			hint="Copia textos, precios, horario y recogida. Las fotos no."
+			data-copy-select
+		/>
+
+		<p class="text-sm text-error" role="alert" data-new-tour-error hidden></p>
+
+		<div class="mt-2 grid gap-2.5 sm:grid-cols-2">
+			<DialogButton data-new-tour-close>Cancelar</DialogButton>
+			<DialogButton type="submit" variant="primary" data-new-tour-submit>Crear borrador</DialogButton>
+		</div>
+	</form>
+</Dialog>
