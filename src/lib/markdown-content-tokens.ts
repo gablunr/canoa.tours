@@ -7,6 +7,14 @@ const tokensFingerprint = Object.entries(contentTokens)
 	.map(([name, value]) => `${name}=${value}`)
 	.join(';');
 
+function decodeLinkUrl(url: string): string {
+	try {
+		return decodeURI(url);
+	} catch {
+		return url;
+	}
+}
+
 export const contentTokensPlugin = {
 	name: `content-tokens(${tokensFingerprint})`,
 	text(node, context) {
@@ -14,7 +22,7 @@ export const contentTokensPlugin = {
 		if (value !== node.value) context.setProperty(node, 'value', value);
 	},
 	link(node, context) {
-		const url = fillContentTokens(decodeURI(node.url));
+		const url = fillContentTokens(decodeLinkUrl(node.url));
 		if (url !== node.url) context.setProperty(node, 'url', url);
 	},
 } satisfies MdastPlugin;
