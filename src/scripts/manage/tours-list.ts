@@ -1,5 +1,4 @@
 import { actions } from 'astro:actions';
-import { initListPager } from './list-pager';
 import { actionErrorMessage, setBusy, showMessage, slugify, wireDialogClosing } from './form-helpers';
 
 interface CopySource {
@@ -11,8 +10,6 @@ interface ListView {
 	startSorting: (group: HTMLElement) => void;
 	stopSorting: () => void;
 }
-
-const toursPerPage = 10;
 
 const takenByTourMessage = 'Esa dirección ya la usa otra excursión. Elige otra.';
 const takenByGuideMessage = 'Esa dirección ya la usa una guía publicada. Elige otra.';
@@ -47,45 +44,32 @@ function initListView(root: HTMLElement): ListView {
 	const params = new URLSearchParams(window.location.search);
 	const knownDestinations = new Set(filterButtons.map((button) => button.dataset.destinationFilter ?? ''));
 	let destination = knownDestinations.has(params.get('destino') ?? '') ? (params.get('destino') ?? '') : '';
-	let page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
 	let sortingGroup: HTMLElement | null = null;
 
 	const syncUrl = () => {
 		const url = new URL(window.location.href);
 		if (destination) url.searchParams.set('destino', destination);
 		else url.searchParams.delete('destino');
-		if (page > 1) url.searchParams.set('pagina', String(page));
-		else url.searchParams.delete('pagina');
 		window.history.replaceState(window.history.state, '', url);
 	};
 
 	const apply = () => {
 		const typed = input?.value.trim() ?? '';
 		const term = sortingGroup ? '' : normalize(typed);
-		const matching: HTMLElement[] = [];
 		let total = 0;
+		let matchCount = 0;
 
 		groups.forEach((group) => {
 			const inDestination = sortingGroup ? group === sortingGroup : !destination || group.dataset.destinationId === destination;
-			group.querySelectorAll<HTMLElement>('[data-tour-row]').forEach((row) => {
-				total += 1;
-				if (inDestination && (!term || (row.dataset.search ?? '').includes(term))) matching.push(row);
-			});
-		});
-
-		const pageSize = sortingGroup ? Number.MAX_SAFE_INTEGER : toursPerPage;
-		const totalPages = Math.max(1, Math.ceil(matching.length / pageSize));
-		page = Math.min(page, totalPages);
-		const firstIndex = (page - 1) * pageSize;
-		const shown = new Set(matching.slice(firstIndex, firstIndex + pageSize));
-
-		groups.forEach((group) => {
 			let visibleInGroup = 0;
 			group.querySelectorAll<HTMLElement>('[data-tour-row]').forEach((row) => {
-				row.hidden = !shown.has(row);
-				if (shown.has(row)) visibleInGroup += 1;
+				total += 1;
+				const visible = inDestination && (!term || (row.dataset.search ?? '').includes(term));
+				row.hidden = !visible;
+				if (visible) visibleInGroup += 1;
 			});
 			group.hidden = visibleInGroup === 0;
+			matchCount += visibleInGroup;
 		});
 
 		filterButtons.forEach((button) => {
@@ -97,35 +81,23 @@ function initListView(root: HTMLElement): ListView {
 			destinationSelect.disabled = sortingGroup !== null;
 		}
 
-		if (listPanel) listPanel.hidden = shown.size === 0;
+		if (listPanel) listPanel.hidden = matchCount === 0;
 		if (results) results.hidden = !term;
-		if (resultsText) resultsText.textContent = `${matching.length} ${matching.length === 1 ? 'resultado' : 'resultados'} para «${typed}».`;
+		if (resultsText) resultsText.textContent = `${matchCount} ${matchCount === 1 ? 'resultado' : 'resultados'} para «${typed}».`;
 		if (emptyText) emptyText.textContent = `Ninguna excursión coincide con «${typed}».`;
-		if (emptyPanel) emptyPanel.hidden = !term || matching.length > 0 || total === 0;
+		if (emptyPanel) emptyPanel.hidden = !term || matchCount > 0 || total === 0;
 		if (input) input.disabled = sortingGroup !== null;
 
-		renderPager({ page, totalPages, matchCount: matching.length, firstShown: firstIndex + 1, lastShown: firstIndex + shown.size, hidden: sortingGroup !== null });
 		if (!sortingGroup) syncUrl();
 	};
-
-	const renderPager = initListPager(root.querySelector<HTMLElement>('[data-tour-pager]'), (nextPage) => {
-		page = nextPage;
-		apply();
-		const top = listPanel?.getBoundingClientRect().top ?? 0;
-		if (top < 0) listPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-	});
 
 	const clear = () => {
 		if (!input) return;
 		input.value = '';
-		page = 1;
 		apply();
 	};
 
-	input?.addEventListener('input', () => {
-		page = 1;
-		apply();
-	});
+	input?.addEventListener('input', apply);
 	root.querySelectorAll<HTMLButtonElement>('[data-tour-search-clear]').forEach((button) =>
 		button.addEventListener('click', () => {
 			clear();
@@ -135,13 +107,11 @@ function initListView(root: HTMLElement): ListView {
 	filterButtons.forEach((button) =>
 		button.addEventListener('click', () => {
 			destination = button.dataset.destinationFilter ?? '';
-			page = 1;
 			apply();
 		}),
 	);
 	destinationSelect?.addEventListener('change', () => {
 		destination = destinationSelect.value;
-		page = 1;
 		apply();
 	});
 

@@ -1,6 +1,5 @@
 ---
 import { Pencil, Plus, Search } from '@lucide/astro';
-import ListPager from '../ListPager.astro';
 import { glassButton, glassCircle, glassControl, surfacePanel } from '../glass-classes';
 import type { ZoneHotel } from './pickup-data';
 
@@ -68,7 +67,6 @@ const bookingLabel = (count: number) => `${count} ${count === 1 ? 'reserva' : 'r
 				))}
 			</ul>
 			<p class="px-1 py-3 text-sm text-secondary" data-hotel-search-empty hidden>Ningún hotel coincide con la búsqueda.</p>
-			<ListPager label="Páginas de hoteles" singular="hotel" plural="hoteles" class="mt-3" data-hotel-pager />
 		</Fragment>
 	)}
 </section>

@@ -1,7 +1,6 @@
 import { actions, isInputError } from 'astro:actions';
 import { initConfirmDialogs, type AskToConfirm } from './confirm-dialogs';
 import { actionErrorMessage, setBusy, showMessage, wireDialogClosing } from './form-helpers';
-import { initListPager } from './list-pager';
 import { requestSiteStatusRefresh } from './site-status';
 import { clearErrorOnInput, setFieldError, validateFields } from '../ui/form-validation';
 
@@ -12,7 +11,6 @@ interface KnownHotel {
 }
 
 const savedFeedbackMs = 2500;
-const hotelsPerPage = 10;
 const defaultTab = 'hotels';
 
 const unsavedForms = new Set<HTMLFormElement>();
@@ -78,30 +76,20 @@ function initHotelList(root: HTMLElement) {
 	const list = root.querySelector<HTMLElement>('[data-hotel-list]');
 	const rows = [...root.querySelectorAll<HTMLElement>('[data-hotel-row]')];
 	const emptyMessage = root.querySelector<HTMLElement>('[data-hotel-search-empty]');
-	let page = 1;
 
 	const apply = () => {
 		const query = input?.value.trim().toLocaleLowerCase('es') ?? '';
-		const matching = rows.filter((row) => !query || (row.dataset.searchName ?? '').includes(query));
-		const totalPages = Math.max(1, Math.ceil(matching.length / hotelsPerPage));
-		page = Math.min(page, totalPages);
-		const firstIndex = (page - 1) * hotelsPerPage;
-		const shown = new Set(matching.slice(firstIndex, firstIndex + hotelsPerPage));
-		rows.forEach((row) => (row.hidden = !shown.has(row)));
-		if (list) list.hidden = shown.size === 0;
-		if (emptyMessage) emptyMessage.hidden = matching.length > 0;
-		renderPager({ page, totalPages, matchCount: matching.length, firstShown: firstIndex + 1, lastShown: firstIndex + shown.size });
+		let matchCount = 0;
+		rows.forEach((row) => {
+			const matches = !query || (row.dataset.searchName ?? '').includes(query);
+			row.hidden = !matches;
+			if (matches) matchCount += 1;
+		});
+		if (list) list.hidden = matchCount === 0;
+		if (emptyMessage) emptyMessage.hidden = matchCount > 0;
 	};
 
-	const renderPager = initListPager(root.querySelector<HTMLElement>('[data-hotel-pager]'), (nextPage) => {
-		page = nextPage;
-		apply();
-	});
-
-	input?.addEventListener('input', () => {
-		page = 1;
-		apply();
-	});
+	input?.addEventListener('input', apply);
 	if (rows.length > 0) apply();
 }
 

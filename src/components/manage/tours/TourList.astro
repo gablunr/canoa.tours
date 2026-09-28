@@ -1,6 +1,5 @@
 ---
 import { ArrowUpDown, ExternalLink } from '@lucide/astro';
-import ListPager from '../ListPager.astro';
 import TourListRow from './TourListRow.astro';
 import type { TourListGroup } from './tour-list-data';
 import { glassChipButton, glassChipPrimaryButton, glassPanel } from '../glass-classes';
@@ -69,5 +68,3 @@ const tourCountLabel = (count: number) => `${count} ${count === 1 ? 'excursión'
 		</section>
 	))}
 </div>
-
-<ListPager label="Páginas de excursiones" singular="excursión" plural="excursiones" class="animate-fade-up" data-tour-pager />
