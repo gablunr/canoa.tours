@@ -22,7 +22,7 @@ export const bookingBenefits: BookingBenefit[] = [
 	{
 		id: 'weather-reschedule',
 		title: 'Si hace mal tiempo, cambiamos la fecha',
-		text: 'Si el clima impide salir, movemos tu excursión al siguiente día disponible, sin coste.',
+		text: 'Si el clima impide salir, movemos tu excursión al siguiente día disponible, sin costo.',
 	},
 	{
 		id: 'cancellation-insurance',

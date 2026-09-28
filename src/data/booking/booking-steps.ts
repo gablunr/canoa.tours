@@ -19,8 +19,8 @@ export const bookingSteps: BookingStep[] = [
 	},
 	{
 		id: 'get-pickup-time',
-		title: 'Recibe tu billete',
-		text: 'La confirmación te llega al momento por email. La hora de recogida la verás en tu billete.',
+		title: 'Recibe tu boleto',
+		text: 'La confirmación te llega al momento por email. La hora de recogida la verás en tu boleto.',
 	},
 	{
 		id: 'enjoy-tour',

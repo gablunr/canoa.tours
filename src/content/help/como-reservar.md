@@ -14,11 +14,11 @@ updatedAt: 2026-09-27
 
 ## Después de reservar
 
-La confirmación te llega al momento por email con tu billete. La hora exacta de recogida te la confirmamos después y la verás en el billete, así que tenlo a mano el día del tour.
+La confirmación te llega al momento por email con tu boleto. La hora exacta de recogida te la confirmamos después y la verás en el boleto, así que tenlo a mano el día del tour.
 
 Si contrataste el seguro, cancelas o cambias la fecha tú mismo desde el enlace del email o desde [tu cuenta](</account>).
 
-Si el mal tiempo obliga a mover tu excursión, te enviamos un billete nuevo con la fecha nueva.
+Si el mal tiempo obliga a mover tu excursión, te enviamos un boleto nuevo con la fecha nueva.
 
 ## Por qué no se puede pagar todo el día del tour
 

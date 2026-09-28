@@ -16,7 +16,7 @@ Si nos escribes por WhatsApp o por email, tenemos los datos que tú nos envíes.
 
 ## Para qué los usamos
 
-- Gestionar tu reserva: confirmarla, enviarte el billete, organizar la recogida y avisarte de cualquier cambio.
+- Gestionar tu reserva: confirmarla, enviarte el boleto, organizar la recogida y avisarte de cualquier cambio.
 - Cobrar lo que pagas al reservar y, solo si pagaste el depósito y no te presentas sin seguro de cancelación, el saldo pendiente.
 - Responder a tus dudas y atender cancelaciones y cambios.
 - Saber qué campañas nos traen reservas, sin usarlas para seguirte por otros sitios.

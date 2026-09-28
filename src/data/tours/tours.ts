@@ -277,7 +277,7 @@ export function tourFaqs(details: TourDetails): QuestionAndAnswer[] {
 
 export const weatherFaq: QuestionAndAnswer = {
 	question: '¿Qué pasa si hace mal tiempo?',
-	answer: `Si el clima no deja salir, movemos la excursión al siguiente día disponible sin coste. Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) también puedes cancelar hasta ${cancellationNoticeLabel} antes y te devolvemos el 100 %.`,
+	answer: `Si el clima no deja salir, movemos la excursión al siguiente día disponible sin costo. Con el seguro de cancelación (${cancellationInsurancePriceLabel} por persona) también puedes cancelar hasta ${cancellationNoticeLabel} antes y te devolvemos el 100 %.`,
 };
 
 export function tourOffers(details: TourDetails, url: string): OfferOptions[] {

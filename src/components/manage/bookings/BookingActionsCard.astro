@@ -34,7 +34,7 @@ const emailChoices = [
 	{ value: 'tour_reminder', label: 'Recordatorio del tour' },
 ];
 
-const zoneLabel = (zone: PickupZoneOption) => `${zone.name}, ${zone.feePerPerson > 0 ? `${formatMoney(zone.feePerPerson)} por persona` : 'sin coste'}`;
+const zoneLabel = (zone: PickupZoneOption) => `${zone.name}, ${zone.feePerPerson > 0 ? `${formatMoney(zone.feePerPerson)} por persona` : 'sin costo'}`;
 
 const actionButtons = [
 	{ show: canComplete, dialog: 'mark-completed', label: 'Marcar realizada', icon: CircleCheck },

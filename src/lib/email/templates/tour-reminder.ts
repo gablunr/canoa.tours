@@ -18,6 +18,6 @@ export function tourReminderEmail(details: BookingDetails, links: { ticketUrl: s
 		],
 		detailsAfter: pickupPendingNotice(details),
 		cta: { label: 'Ver mi reserva', url: links.ticketUrl },
-		closing: ['Lleva bañador, protector solar y ganas de pasarlo bien.'],
+		closing: ['Lleva traje de baño, protector solar y ganas de pasarla bien.'],
 	});
 }

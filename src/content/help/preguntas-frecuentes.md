@@ -38,7 +38,7 @@ A Isla Saona se embarca en el puerto de {{saonaPort}}, a unos {{saonaDistance}} 
 
 ### ¿A qué hora me recogen?
 
-Depende del tour y de dónde esté tu hotel. Te confirmamos la hora exacta después de reservar y la verás en tu billete.
+Depende del tour y de dónde esté tu hotel. Te confirmamos la hora exacta después de reservar y la verás en tu boleto.
 
 ## Embarazadas y accesibilidad
 
@@ -54,7 +54,7 @@ Sí: los dos tours a Santo Domingo, Samaná 3 Maravillas, la Saona VIP 4 Playas 
 
 ### ¿Qué pasa si llueve el día de mi excursión?
 
-Si el mal tiempo obliga a suspender el tour (según los avisos de la ONAMET, la oficina de meteorología del país), la excursión pasa a la siguiente fecha en que se pueda hacer y te enviamos un billete nuevo. Si tienes el seguro de cancelación y no puedes ir en la fecha nueva, puedes cancelar y te devolvemos el 100 % de lo pagado. Sin seguro, la reserva se queda en la fecha nueva y no hay reembolso.
+Si el mal tiempo obliga a suspender el tour (según los avisos de la ONAMET, la oficina de meteorología del país), la excursión pasa a la siguiente fecha en que se pueda hacer y te enviamos un boleto nuevo. Si tienes el seguro de cancelación y no puedes ir en la fecha nueva, puedes cancelar y te devolvemos el 100 % de lo pagado. Sin seguro, la reserva se queda en la fecha nueva y no hay reembolso.
 
 ### ¿Puedo cancelar o cambiar la fecha?
 

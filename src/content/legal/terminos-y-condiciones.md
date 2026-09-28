@@ -20,7 +20,7 @@ En la ficha de cada excursión indicamos los días de salida, la duración, qué
 
 ## Reserva y contrato
 
-Eliges la fecha, cuántas personas van y tu hotel, y ves el precio exacto antes de pagar. La reserva queda hecha cuando pagas online, el depósito o el total, y te llega la confirmación por email con tu billete. Si el pago no se completa, no hay reserva ni plaza apartada.
+Eliges la fecha, cuántas personas van y tu hotel, y ves el precio exacto antes de pagar. La reserva queda hecha cuando pagas online, el depósito o el total, y te llega la confirmación por email con tu boleto. Si el pago no se completa, no hay reserva ni plaza apartada.
 
 Las plazas se confirman en el momento de pagar. Si las últimas se ocupan mientras pagas, te devolvemos todo lo que pagaste y te avisamos por email.
 
@@ -36,7 +36,7 @@ Los pagos online los procesa Stripe. Si pagas solo el depósito, guardamos tu ta
 
 La recogida depende de la zona de tu hotel. En algunas excursiones y zonas tiene un cargo aparte, que se suma al precio antes de pagar. Puedes consultar tu zona en [zonas de recogida](<{{pickupZonesHref}}>).
 
-La hora exacta de recogida te la confirmamos después de reservar y la verás en tu billete. Tienes que estar en el punto de recogida a esa hora. Si no estás y el transporte tiene que seguir su ruta, se considera que no te presentaste.
+La hora exacta de recogida te la confirmamos después de reservar y la verás en tu boleto. Tienes que estar en el punto de recogida a esa hora. Si no estás y el transporte tiene que seguir su ruta, se considera que no te presentaste.
 
 ## Seguro de cancelación
 
@@ -60,7 +60,7 @@ Lo haces tú desde el enlace de tu reserva, que va en el email de confirmación,
 
 ## Mal tiempo y causas ajenas
 
-Si el clima o una orden de las autoridades impiden hacer la excursión, cambiamos la fecha sin coste. Con seguro, si la fecha nueva no te viene bien, puedes cancelar y te devolvemos lo que pagaste por la excursión. Sin seguro, la reserva pasa a la fecha nueva y no hay reembolso.
+Si el clima o una orden de las autoridades impiden hacer la excursión, cambiamos la fecha sin costo. Con seguro, si la fecha nueva no te viene bien, puedes cancelar y te devolvemos lo que pagaste por la excursión. Sin seguro, la reserva pasa a la fecha nueva y no hay reembolso.
 
 Si somos nosotros quienes cancelamos la excursión por cualquier otro motivo, te devolvemos todo lo que pagaste.
 
