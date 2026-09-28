@@ -88,6 +88,7 @@ export async function assertSlugFreeOfGuides(slug: string) {
 
 const maxUploadBytes = 10 * 1024 * 1024;
 const imageExtensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const sharpFormats: Record<string, string> = { 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp' };
 const mediaBucket = 'media';
 const rotatedOrientations = new Set([5, 6, 7, 8]);
 const recentUploadMs = 60 * 60 * 1000;
@@ -169,9 +170,10 @@ async function updateDraftKey(tourId: string, destination: Destination, slug: st
 	if (error) failWithDbError(error);
 }
 
-async function imageSize(buffer: Buffer) {
+async function imageSize(buffer: Buffer, declaredType: string) {
 	try {
 		const metadata = await sharp(buffer).metadata();
+		if (metadata.format !== sharpFormats[declaredType]) return null;
 		if (!metadata.width || !metadata.height) return null;
 		const rotated = rotatedOrientations.has(metadata.orientation ?? 1);
 		return rotated ? { width: metadata.height, height: metadata.width } : { width: metadata.width, height: metadata.height };
@@ -326,7 +328,7 @@ export const tours = {
 			await requireTourRow(id);
 
 			const buffer = Buffer.from(await image.arrayBuffer());
-			const size = await imageSize(buffer);
+			const size = await imageSize(buffer, image.type);
 			if (!size) throw new ActionError({ code: 'BAD_REQUEST', message: 'No pudimos leer la foto. Prueba con otra.' });
 
 			const path = `${tourImagePrefix(id)}${Date.now()}.${imageExtensions[image.type]}`;
