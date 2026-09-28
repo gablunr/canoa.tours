@@ -72,7 +72,12 @@ const pickerFilters = [
 					<ClientPagination label="Páginas de tus reservas" class="lg:ml-auto" />
 				</div>
 
-				<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tus excursiones realizadas" aria-live="polite" data-picker-options></ul>
+				<ul
+					class="grid gap-3 transition-opacity duration-300 ease-smooth aria-busy:opacity-60 sm:grid-cols-2 lg:grid-cols-3"
+					aria-label="Tus excursiones realizadas"
+					aria-live="polite"
+					data-picker-options
+				></ul>
 
 				<p class={pickerMessage} data-picker-filter-empty hidden></p>
 			</div>
