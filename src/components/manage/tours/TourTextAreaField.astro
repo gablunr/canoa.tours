@@ -1,0 +1,45 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { fieldError, fieldHint, fieldLabel, fieldOptional, fieldTextArea } from '../form/field-classes';
+
+interface Props extends Omit<HTMLAttributes<'textarea'>, 'id' | 'class' | 'name' | 'value'> {
+	label: string;
+	name: string;
+	value?: string | null;
+	hint?: string;
+	optional?: boolean;
+	counter?: boolean;
+}
+
+const { label, name, value, hint, optional = false, counter = false, maxlength, rows = 3, ...attributes } = Astro.props;
+
+const textareaId = `field-${name}`;
+const hintId = `${textareaId}-hint`;
+const errorId = `${textareaId}-error`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+const text = value ?? '';
+---
+
+<div data-field class="min-w-0">
+	<label for={textareaId} class={fieldLabel}>
+		{label}
+		{counter ? (
+			<span class="text-xs font-normal text-muted tabular-nums">
+				<span data-count-for={textareaId}>{text.length}</span>{maxlength ? `/${maxlength}` : ''}
+			</span>
+		) : (
+			optional && <span class={fieldOptional}>Opcional</span>
+		)}
+	</label>
+	<textarea
+		{...attributes}
+		id={textareaId}
+		name={name}
+		rows={rows}
+		maxlength={maxlength}
+		aria-describedby={describedBy}
+		class:list={[fieldTextArea, 'mt-1.5']}
+	>{text}</textarea>
+	{hint && <p id={hintId} class={fieldHint}>{hint}</p>}
+	<p id={errorId} data-field-error class={fieldError} hidden></p>
+</div>

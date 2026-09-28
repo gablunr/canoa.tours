@@ -1,7 +1,7 @@
 ---
 import ListEditor from '../form/ListEditor.astro';
-import TextAreaField from '../../ui/form/TextAreaField.astro';
 import TourEditorCard from './TourEditorCard.astro';
+import TourTextAreaField from './TourTextAreaField.astro';
 import TourTextField from './TourTextField.astro';
 import type { TourEditorData } from './tour-editor-data';
 import { saleMinimums, tourLimits } from '../../../lib/tours/tour-schema';
@@ -35,7 +35,7 @@ const { content } = data.editable;
 		autocomplete="off"
 		hint="Para menús, tablas y tarjetas."
 	/>
-	<TextAreaField
+	<TourTextAreaField
 		label="Resumen"
 		name="summary"
 		value={content.summary}
