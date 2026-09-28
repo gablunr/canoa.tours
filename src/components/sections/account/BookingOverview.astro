@@ -2,6 +2,7 @@
 import { ArrowUpRight } from '@lucide/astro';
 import { bookingTourDetails, formatTourDay } from '../../../lib/account/bookings';
 import type { BookingDetails } from '../../../lib/booking/booking-details';
+import { tourDetailsHref } from '../../../data/tours/tours';
 import { peopleSummary, pickupSummary } from '../../../lib/email/templates/layout';
 
 interface Props {
@@ -9,7 +10,8 @@ interface Props {
 }
 
 const { details } = Astro.props;
-const bring = details.status === 'confirmed' ? (bookingTourDetails(details.productKey)?.bring ?? []) : [];
+const liveTour = bookingTourDetails(details.productKey);
+const bring = details.status === 'confirmed' ? (liveTour?.bring ?? []) : [];
 
 const facts = [
 	{ label: 'Fecha', value: formatTourDay(details.tourDate) },
@@ -24,9 +26,9 @@ const facts = [
 <section aria-labelledby="tu-excursion" class="rounded-[2rem] bg-surface p-6 sm:p-8">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h2 id="tu-excursion" class="text-lg font-semibold tracking-[-0.02em] text-primary">Tu excursión</h2>
-		{details.tourPath !== '/' && (
+		{liveTour && (
 			<a
-				href={details.tourPath}
+				href={tourDetailsHref(liveTour)}
 				class="liquid-glass inline-flex h-9 shrink-0 items-center gap-1.5 bg-ink-200/55 pr-3 pl-4 text-[13px] font-medium text-secondary backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 ease-smooth outline-none hover:bg-ink-200/80 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent"
 			>
 				Ver la excursión
