@@ -166,6 +166,15 @@ export async function refundDeposit(
 	return { refundId: refund.id, amount: refund.amount / 100 };
 }
 
+export async function refundDepositSafely(bookingId: string, amount: number, reason: string) {
+	try {
+		return await refundDeposit(bookingId, amount, reason);
+	} catch (error) {
+		console.error('deposit_refund_failed', { bookingId, amount, error });
+		return null;
+	}
+}
+
 async function createBalancePaymentLink(details: BookingDetails, origin: string, stripeCustomerId: string | null): Promise<string> {
 	const metadata = { booking_id: details.id, booking_code: details.code, kind: 'no_show_charge' };
 	const bookingTicketUrl = ticketUrl(origin, details.code);

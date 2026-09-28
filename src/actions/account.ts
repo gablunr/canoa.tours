@@ -6,7 +6,7 @@ import { avatarFolder } from '../lib/account/avatar';
 import { customerIdForUser, findOwnedBooking, isBookingOwner } from '../lib/account/bookings';
 import { loadBookingDetails, type BookingDetails } from '../lib/booking/booking-details';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
-import { refundDeposit } from '../lib/booking/payments';
+import { refundDepositSafely } from '../lib/booking/payments';
 import { canCustomerCancel, canCustomerChangeDate } from '../lib/booking/self-service';
 import { verifyBookingToken } from '../lib/booking/tokens';
 import { sendBookingEmail } from '../lib/email/booking-emails';
@@ -171,7 +171,7 @@ export const account = {
 			if (error) failWithDbError(error);
 
 			const amountToRefund = roundMoney(Math.max(0, details.depositAmount - details.insuranceTotal));
-			const refundResult = amountToRefund > 0 ? await refundDeposit(details.id, amountToRefund, reason) : null;
+			const refundResult = amountToRefund > 0 ? await refundDepositSafely(details.id, amountToRefund, reason) : null;
 			const refundFailed = amountToRefund > 0 && !refundResult;
 
 			if (refundFailed) {

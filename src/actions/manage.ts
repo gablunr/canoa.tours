@@ -2,7 +2,7 @@ import { ActionError, defineAction } from 'astro:actions';
 import { z } from 'astro/zod';
 import { loadBookingDetails, type BookingDetails } from '../lib/booking/booking-details';
 import { bookingErrorMessage, dbErrorCode } from '../lib/booking/errors';
-import { chargeNoShowBalance, refundDeposit } from '../lib/booking/payments';
+import { chargeNoShowBalance, refundDepositSafely } from '../lib/booking/payments';
 import { triggerRebuild } from '../lib/deploy-hook';
 import { sendBookingEmail } from '../lib/email/booking-emails';
 import { requireStaff } from '../lib/manage/guards';
@@ -262,7 +262,7 @@ export const manage = {
 			if (error) failWithDbError(error);
 
 			const amountToRefund = refundAmountFor(details, refund);
-			const refundResult = amountToRefund > 0 ? await refundDeposit(details.id, amountToRefund, reason) : null;
+			const refundResult = amountToRefund > 0 ? await refundDepositSafely(details.id, amountToRefund, reason) : null;
 			const refundFailed = amountToRefund > 0 && !refundResult;
 			const refundAmount = refundResult?.amount ?? 0;
 
