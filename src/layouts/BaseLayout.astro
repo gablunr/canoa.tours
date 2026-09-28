@@ -7,21 +7,14 @@ type Props = SeoProps;
 
 const seo = Astro.props;
 
-const criticalFonts = [
-	'InterDisplay-Light',
-	'InterDisplay-Regular',
-	'InterDisplay-Medium',
-	'InterDisplay-SemiBold',
-	'Inter-Regular',
-	'Inter-Medium',
-];
+const pageHeaderFonts = ['InterDisplay-SemiBold', 'InterDisplay-Regular', 'Inter-Regular'];
 ---
 
 <html lang={siteLanguage}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		{criticalFonts.map((font) => (
+		{pageHeaderFonts.map((font) => (
 			<link rel="preload" href={`/fonts/inter/${font}.woff2`} as="font" type="font/woff2" crossorigin />
 		))}
 		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
