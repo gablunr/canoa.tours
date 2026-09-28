@@ -1,4 +1,5 @@
 const movedPages: Record<string, string> = {
+	'/index.html': '/',
 	'/fiesta-punta-cana/coco-bongo-punta-cana': '/fiesta-punta-cana/que-saber-antes-de-ir-a-coco-bongo',
 	'/samana/samana-desde-punta-cana': '/samana/como-es-un-dia-en-samana',
 };
