@@ -172,7 +172,9 @@ const checklistGroups: { title: string; items: ChecklistItem[]; kind: 'required'
 				) : (
 					<p class="text-sm text-primary">{editable.operations.dailyCapacity} plazas al día</p>
 				)}
-				<a href="/manage/capacity" class="w-fit text-sm font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Cupo de días concretos</a>
+				{isAdmin && (
+					<a href="/manage/capacity" class="w-fit text-sm font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">Cupo de días concretos</a>
+				)}
 			</div>
 		</details>
 
