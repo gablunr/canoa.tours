@@ -32,15 +32,44 @@ export async function bookingIdsAlreadyEmailed(bookingIds: string[], kind: strin
 	return new Set((data ?? []).map((event) => event.booking_id));
 }
 
+async function claimBookingEmail(bookingId: string, kind: BookingEmailKind): Promise<boolean> {
+	const { error } = await supabaseAdmin.from('booking_email_claims').insert({ booking_id: bookingId, kind });
+	if (!error) return true;
+	if (error.code === '23505') return false;
+	throw error;
+}
+
+async function releaseBookingEmailClaim(bookingId: string, kind: BookingEmailKind) {
+	const { error } = await supabaseAdmin.from('booking_email_claims').delete().eq('booking_id', bookingId).eq('kind', kind);
+	if (error) console.error('booking_email_claim_not_released', { bookingId, kind, error });
+}
+
+async function sendBookingEmailWithRetry(kind: BookingEmailKind, bookingId: string, origin: string) {
+	try {
+		await sendBookingEmail(kind, bookingId, { origin });
+	} catch {
+		await sendBookingEmail(kind, bookingId, { origin });
+	}
+}
+
 export async function sendBookingEmails(bookingIds: string[], kind: BookingEmailKind, origin: string) {
 	let sent = 0;
 	let failed = 0;
 	for (const bookingId of bookingIds) {
 		try {
-			await sendBookingEmail(kind, bookingId, { origin });
+			if (!(await claimBookingEmail(bookingId, kind))) continue;
+		} catch (error) {
+			failed += 1;
+			console.error(`cron email ${kind} not claimed for ${bookingId}`, error);
+			continue;
+		}
+
+		try {
+			await sendBookingEmailWithRetry(kind, bookingId, origin);
 			sent += 1;
 		} catch (error) {
 			failed += 1;
+			await releaseBookingEmailClaim(bookingId, kind);
 			console.error(`cron email ${kind} failed for ${bookingId}`, error);
 		}
 	}

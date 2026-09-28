@@ -5,6 +5,8 @@ import { supabaseAdmin } from '../../../lib/supabase/admin';
 
 export const prerender = false;
 
+const reviewRequestRetryDays = 3;
+
 export const GET: APIRoute = async ({ request, url }) => {
 	if (!isAuthorizedCron(request)) return unauthorizedCronResponse();
 
@@ -12,7 +14,12 @@ export const GET: APIRoute = async ({ request, url }) => {
 	if (completeError) console.error('complete past bookings failed', completeError);
 
 	const yesterday = localDate(-1);
-	const { data, error } = await supabaseAdmin.from('bookings').select('id').eq('tour_date', yesterday).eq('status', 'completed');
+	const { data, error } = await supabaseAdmin
+		.from('bookings')
+		.select('id')
+		.gte('tour_date', localDate(-reviewRequestRetryDays))
+		.lte('tour_date', yesterday)
+		.eq('status', 'completed');
 	if (error) {
 		console.error('review requests query failed', error);
 		return Response.json({ error: 'query_failed' }, { status: 500 });
