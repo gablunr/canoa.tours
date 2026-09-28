@@ -60,7 +60,7 @@ export const footerGroups: NavGroup[] = [
 	{ title: 'Las más reservadas', links: mostBookedLinks },
 	{ title: 'Ayuda', links: helpLinks },
 	{ title: company.brandName, links: companyLinks },
-];
+].filter((group) => group.links.length > 0);
 
 export const privacyPolicyHref = '/aviso-de-privacidad';
 

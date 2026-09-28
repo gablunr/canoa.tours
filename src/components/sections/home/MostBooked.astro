@@ -6,6 +6,13 @@ import { formatPrice } from '../../../lib/format';
 import { mostBookedHref, mostBookedTours } from '../../../data/tours/most-booked';
 import seaTurtle from '../../../assets/images/home/sea-turtle.png';
 
+const gridColumns: Record<number, string> = {
+	1: 'sm:mx-auto sm:max-w-sm',
+	2: 'sm:grid-cols-2 lg:mx-auto lg:max-w-3xl',
+	3: 'sm:grid-cols-2 lg:grid-cols-3 lg:mx-auto lg:max-w-5xl',
+	4: 'sm:grid-cols-2 lg:grid-cols-4',
+};
+
 const turtleSides = [
 	'left-[calc((100%-100vw)/2)] -translate-x-1/2 -scale-x-100',
 	'right-[calc((100%-100vw)/2)] translate-x-1/2',
@@ -37,7 +44,7 @@ const turtleSides = [
 						/>
 					))}
 
-					<ul class="grid gap-5 max-sm:px-5 sm:grid-cols-2 lg:grid-cols-4">
+					<ul class:list={['grid gap-5 max-sm:px-5', gridColumns[mostBookedTours.length]]}>
 						{mostBookedTours.map((item) => (
 							<li data-reveal>
 								<TourCard
