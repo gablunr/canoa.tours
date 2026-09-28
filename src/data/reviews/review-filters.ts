@@ -1,7 +1,9 @@
 import { routes } from '../site/routes';
 import type { TourDetails } from '../tours/tours';
 
-export const reviewPageSize = 4;
+export const reviewPageSize = 12;
+
+export const latestTourReviewCount = 4;
 
 export interface ReviewRatingFilter {
 	value: string;

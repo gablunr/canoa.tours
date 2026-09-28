@@ -5,7 +5,7 @@ import RatingBadge from '../../ui/RatingBadge.astro';
 import UnderlineLink from '../../ui/UnderlineLink.astro';
 import ReviewCard from '../../ui/cards/ReviewCard.astro';
 import { reviewStats, reviewsForTour } from '../../../data/reviews/reviews';
-import { reviewListHref, reviewPageSize } from '../../../data/reviews/review-filters';
+import { latestTourReviewCount, reviewListHref } from '../../../data/reviews/review-filters';
 import { reviewFormAnchor } from '../../../data/reviews/reviews-page';
 import type { TourDetails } from '../../../data/tours/tours';
 import { routes } from '../../../data/site/routes';
@@ -17,7 +17,7 @@ interface Props {
 const { details } = Astro.props;
 
 const tourReviews = reviewsForTour(details);
-const latestReviews = tourReviews.slice(0, reviewPageSize);
+const latestReviews = tourReviews.slice(0, latestTourReviewCount);
 const allReviewsHref = tourReviews.length > latestReviews.length ? reviewListHref({ tour: details }) : null;
 const stats = reviewStats(tourReviews);
 const reviewFormHref = `${routes.reviews}#${reviewFormAnchor}`;

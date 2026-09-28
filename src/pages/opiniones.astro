@@ -12,8 +12,7 @@ export const prerender = false;
 const request = readReviewPageRequest(Astro.url.searchParams);
 const reviewPage = await loadReviewPage(request.filters, request.page ?? 1);
 if (request.page !== null && request.page !== reviewPage.page) {
-	const pageMayExistLater = request.page > reviewPage.page;
-	return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page), pageMayExistLater ? 302 : 301);
+	return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
@@ -22,12 +21,13 @@ const filtered = hasActiveReviewFilters(reviewPage.filters);
 const title =
 	reviewPage.page > 1 ? `Opiniones sobre nuestras excursiones, página ${reviewPage.page}` : 'Opiniones de clientes sobre nuestras excursiones';
 const intro = reviewsIntroFor(reviewPage.totalCount > 0);
+const description = reviewPage.page > 1 ? `${intro} Página ${reviewPage.page} de ${reviewPage.totalPages}.` : intro;
 const canonicalPath = filtered ? undefined : reviewPageHref(reviewPage.filters, reviewPage.page);
 ---
 
 <Layout
 	title={title}
-	description={intro}
+	description={description}
 	breadcrumbs={[{ name: reviewsLink.label, path: reviewsLink.href }]}
 	noindex={filtered}
 	canonicalPath={canonicalPath}
