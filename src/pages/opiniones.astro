@@ -4,7 +4,6 @@ import PageHeader from '../components/sections/page/PageHeader.astro';
 import ReviewsPage from '../components/sections/reviews/ReviewsPage.astro';
 import EdgeWaves from '../components/ui/EdgeWaves.astro';
 import { reviewsLink } from '../data/site/navigation';
-import { routes } from '../data/site/routes';
 import { reviewsIntroFor } from '../data/reviews/reviews-page';
 import { hasActiveReviewFilters, loadReviewPage, readReviewPageRequest, reviewPageHref } from '../lib/reviews/review-page';
 
@@ -12,7 +11,7 @@ export const prerender = false;
 
 const request = readReviewPageRequest(Astro.url.searchParams);
 const reviewPage = await loadReviewPage(request.filters, request.page ?? 1);
-if (request.page !== null && request.page !== reviewPage.page) return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page));
+if (request.page !== null && request.page !== reviewPage.page) return Astro.redirect(reviewPageHref(reviewPage.filters, reviewPage.page), 301);
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
 
@@ -20,7 +19,7 @@ const filtered = hasActiveReviewFilters(reviewPage.filters);
 const baseTitle = 'Opiniones de clientes sobre nuestras excursiones';
 const title = reviewPage.page > 1 ? `${baseTitle}, página ${reviewPage.page}` : baseTitle;
 const intro = reviewsIntroFor(reviewPage.totalCount > 0);
-const canonicalPath = filtered ? routes.reviews : reviewPageHref(reviewPage.filters, reviewPage.page);
+const canonicalPath = filtered ? undefined : reviewPageHref(reviewPage.filters, reviewPage.page);
 ---
 
 <Layout
