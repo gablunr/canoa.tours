@@ -1,7 +1,7 @@
 ---
-import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Star } from '@lucide/astro';
+import { ArrowDown, ArrowUp, CircleDot, ExternalLink, ImageOff, Pencil, Star } from '@lucide/astro';
 import type { TourListItem } from './tour-list-data';
-import { glassCircle, glassTile } from '../glass-classes';
+import { glassButton, glassCircle, glassTile } from '../glass-classes';
 
 interface Props {
 	tour: TourListItem;
@@ -11,14 +11,14 @@ const { tour } = Astro.props;
 const { missingCount } = tour;
 
 const chip = 'inline-flex h-5 items-center gap-1 rounded-full px-2 text-[11px] font-medium whitespace-nowrap';
-const arrowButton = `${glassCircle} relative z-10 disabled:pointer-events-none disabled:opacity-40`;
+const arrowButton = `${glassCircle} disabled:pointer-events-none disabled:opacity-40`;
 const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missingCount > 0;
 ---
 
 <li
 	class:list={[
 		glassTile,
-		'group/row relative flex items-center gap-3 p-1.5 pr-2 transition-colors duration-300 ease-smooth hover:bg-ink-300/65 has-[[data-tour-link]:focus-visible]:ring-2 has-[[data-tour-link]:focus-visible]:ring-accent sm:pr-2.5',
+		'group/row flex items-center gap-3 p-1.5 pr-2 sm:pr-2.5',
 	]}
 	data-tour-row
 	data-tour-id={tour.id}
@@ -35,14 +35,8 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 	</span>
 
 	<div class="min-w-0 flex-1">
-		<h3 class="truncate text-sm leading-snug font-semibold tracking-[-0.015em] text-primary">
-			<a
-				href={`/manage/tours/${tour.id}`}
-				class="outline-none after:absolute after:inset-0 after:rounded-[1.25rem] group-data-[sorting]/panel:pointer-events-none"
-				data-tour-link
-			>
-				{tour.name}
-			</a>
+		<h3 class="line-clamp-2 text-sm leading-snug sm:line-clamp-1 font-semibold tracking-[-0.015em] text-primary">
+			{tour.name}
 		</h3>
 		<p class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted">
 			{tour.facts.map((fact, index) => <span class:list={[index > 1 && 'max-sm:hidden', index === 0 && 'font-medium text-secondary']}>{fact}</span>)}
@@ -79,18 +73,22 @@ const hasChips = tour.mostBookedPosition !== null || tour.pendingOnWeb || missin
 		</button>
 	</div>
 
-	{tour.status === 'active' && (
-		<span class="shrink-0 group-data-[sorting]/panel:hidden max-sm:hidden">
+	<div class="flex shrink-0 items-center gap-1.5 group-data-[sorting]/panel:hidden">
+		{tour.status === 'active' && (
 			<a
 				href={tour.path}
 				target="_blank"
 				rel="noopener"
-				class:list={[glassCircle, 'relative z-10']}
+				class:list={[glassCircle, 'max-sm:hidden']}
 				aria-label={`Ver «${tour.shortName}» en la web`}
 				title="Ver en la web"
 			>
 				<ExternalLink size={15} stroke-width={1.75} aria-hidden="true" />
 			</a>
-		</span>
-	)}
+		)}
+		<a href={`/manage/tours/${tour.id}`} class:list={[glassButton, 'h-8 px-3.5 sm:h-9']} aria-label={`Editar «${tour.shortName}»`}>
+			<Pencil size={14} stroke-width={1.75} aria-hidden="true" />
+			Editar
+		</a>
+	</div>
 </li>
