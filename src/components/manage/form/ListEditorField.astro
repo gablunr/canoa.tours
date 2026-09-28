@@ -1,0 +1,35 @@
+---
+import { fieldInput, fieldLabel, fieldOptional, fieldTextArea } from './field-classes';
+
+interface Props {
+	field: string;
+	label: string;
+	type?: 'text' | 'time';
+	multiline?: boolean;
+	optional?: boolean;
+	placeholder?: string;
+	maxlength?: number;
+	rows?: number;
+}
+
+const { field, label, type = 'text', multiline = false, optional = false, placeholder, maxlength, rows = 2 } = Astro.props;
+---
+
+<label class="block min-w-0">
+	<span class={fieldLabel}>
+		{label}
+		{optional && <span class={fieldOptional}>Opcional</span>}
+	</span>
+	{multiline ? (
+		<textarea data-list-field={field} rows={rows} maxlength={maxlength} placeholder={placeholder} class:list={[fieldTextArea, 'mt-1.5']}></textarea>
+	) : (
+		<input
+			type={type}
+			data-list-field={field}
+			autocomplete="off"
+			maxlength={type === 'text' ? maxlength : undefined}
+			placeholder={placeholder}
+			class:list={[fieldInput, 'mt-1.5', type === 'time' && 'max-w-36']}
+		/>
+	)}
+</label>

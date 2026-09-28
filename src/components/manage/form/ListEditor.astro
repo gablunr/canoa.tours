@@ -1,0 +1,125 @@
+---
+import { ArrowDown, ArrowUp, Plus, X } from '@lucide/astro';
+import { glassChipButton, glassCircle } from '../glass-classes';
+import { fieldError, fieldHint, fieldInput, fieldOptional } from './field-classes';
+
+type ListItem = Record<string, string | null | undefined>;
+
+interface Props {
+	name: string;
+	label: string;
+	itemLabel: string;
+	items?: readonly string[] | readonly ListItem[];
+	hint?: string;
+	min?: number;
+	max?: number;
+	optional?: boolean;
+	suggestions?: readonly string[];
+	placeholder?: string;
+	maxlength?: number;
+	labelField?: string;
+}
+
+const {
+	name,
+	label,
+	itemLabel,
+	items = [],
+	hint,
+	min = 0,
+	max,
+	optional = false,
+	suggestions = [],
+	placeholder,
+	maxlength,
+	labelField,
+} = Astro.props;
+
+const isObjectMode = Astro.slots.has('item');
+const listId = `field-${name}`;
+const hintId = `${listId}-hint`;
+const errorId = `${listId}-error`;
+const datalistId = `${listId}-suggestions`;
+const describedBy = hint ? `${hintId} ${errorId}` : errorId;
+const hasSuggestions = !isObjectMode && suggestions.length > 0;
+
+const rowButton = [glassCircle, 'cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-ink-200/60 aria-disabled:hover:text-secondary'];
+const iconProps = { size: 16, 'stroke-width': 1.75, 'aria-hidden': 'true' } as const;
+---
+
+<fieldset
+	id={listId}
+	class="min-w-0 scroll-mt-24"
+	aria-describedby={describedBy}
+	data-field
+	data-list-editor
+	data-list-mode={isObjectMode ? 'object' : 'text'}
+	data-list-name={name}
+	data-item-label={itemLabel}
+	data-min={min}
+	data-max={max}
+	data-label-field={labelField}
+	data-list-items={JSON.stringify(items)}
+>
+	<legend class="text-[13px] font-medium text-primary">
+		{label}
+		{optional && <span class:list={[fieldOptional, 'ml-2']}>Opcional</span>}
+	</legend>
+	{hint && <p id={hintId} class={fieldHint}>{hint}</p>}
+
+	<ol data-list-rows class:list={['mt-3 grid', isObjectMode ? 'gap-3' : 'gap-2']}></ol>
+
+	<template data-list-template>
+		{isObjectMode ? (
+			<li data-list-row class="rounded-2xl border border-border p-3 sm:p-4">
+				<div class="flex items-center justify-between gap-3">
+					<span data-list-position class="text-[13px] font-semibold text-primary"></span>
+					<div class="flex shrink-0 items-center gap-1">
+						<button type="button" data-list-action="up" class:list={rowButton}><ArrowUp {...iconProps} /></button>
+						<button type="button" data-list-action="down" class:list={rowButton}><ArrowDown {...iconProps} /></button>
+						<button type="button" data-list-action="remove" class:list={rowButton}><X {...iconProps} /></button>
+					</div>
+				</div>
+				<div data-list-row-fields role="group" class="mt-3 grid gap-3">
+					<slot name="item" />
+				</div>
+			</li>
+		) : (
+			<li data-list-row class="flex items-center gap-2">
+				<input
+					type="text"
+					data-list-field="value"
+					autocomplete="off"
+					maxlength={maxlength}
+					placeholder={placeholder}
+					list={hasSuggestions ? datalistId : undefined}
+					class:list={[fieldInput, 'min-w-0 flex-1']}
+				/>
+				<div class="flex shrink-0 items-center gap-1">
+					<button type="button" data-list-action="up" class:list={rowButton}><ArrowUp {...iconProps} /></button>
+					<button type="button" data-list-action="down" class:list={rowButton}><ArrowDown {...iconProps} /></button>
+					<button type="button" data-list-action="remove" class:list={rowButton}><X {...iconProps} /></button>
+				</div>
+			</li>
+		)}
+	</template>
+
+	{hasSuggestions && (
+		<datalist id={datalistId}>
+			{suggestions.map((suggestion) => <option value={suggestion} />)}
+		</datalist>
+	)}
+
+	<button type="button" data-list-action="add" class:list={[glassChipButton, 'mt-3 w-fit']}>
+		<Plus size={14} stroke-width={2} aria-hidden="true" />
+		Añadir {itemLabel}
+	</button>
+	<p id={errorId} data-field-error class={fieldError} hidden></p>
+	<p data-list-status class="sr-only" aria-live="polite"></p>
+</fieldset>
+
+<script>
+	import { initListEditors } from '../../../scripts/manage/list-editor';
+
+	initListEditors(document);
+</script>
