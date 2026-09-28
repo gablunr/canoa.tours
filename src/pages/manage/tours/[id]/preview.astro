@@ -1,0 +1,32 @@
+---
+import { ArrowLeft } from '@lucide/astro';
+import TourPage from '../../../../components/sections/tour/TourPage.astro';
+import { loadTourRow } from '../../../../components/manage/tours/tour-editor-data';
+import { tourStatusLabels } from '../../../../components/manage/tours/tour-editor-sections';
+import { glassButtonPrimary, glassGroup } from '../../../../components/manage/glass-classes';
+import { canOpenSection } from '../../../../data/manage/sections';
+import { destinations } from '../../../../data/tours/destinations';
+import { tourRowToDetails } from '../../../../lib/tours/tour-rows';
+
+export const prerender = false;
+
+if (!canOpenSection(Astro.locals.staffRole, 'tours')) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const row = await loadTourRow(Astro.params.id);
+if (!row) return new Response(null, { status: 404, statusText: 'Not Found' });
+
+const details = tourRowToDetails(row, { destinations });
+const statusLabel = row.status === 'active' ? 'Vista previa de lo guardado' : `Vista previa, ${tourStatusLabels[row.status].toLowerCase()}`;
+---
+
+<TourPage details={details} preview>
+	<div slot="notice" class="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
+		<div class:list={[glassGroup, 'pointer-events-auto flex items-center gap-3 rounded-full py-1.5 pr-1.5 pl-4']}>
+			<p class="text-[13px] font-medium text-primary">{statusLabel}</p>
+			<a href={`/manage/tours/${row.id}`} class={glassButtonPrimary}>
+				<ArrowLeft size={15} stroke-width={1.75} aria-hidden="true" />
+				Volver al editor
+			</a>
+		</div>
+	</div>
+</TourPage>

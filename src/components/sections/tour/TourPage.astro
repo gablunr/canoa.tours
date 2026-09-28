@@ -24,9 +24,10 @@ import { faqSchema, pageNodeIds, reference, tripItinerarySchema } from '../../..
 
 interface Props {
 	details: TourDetails;
+	preview?: boolean;
 }
 
-const { details } = Astro.props;
+const { details, preview = false } = Astro.props;
 const href = tourDetailsHref(details);
 const url = canonicalUrl(href);
 const faqs = tourFaqs(details);
@@ -48,6 +49,7 @@ const trip = { ...(await tripNode(details)), mainEntityOfPage: reference(pageNod
 		{ name: details.destination.name, path: destinationHref(details.destination) },
 		{ name: details.title, path: href },
 	]}
+	noindex={preview}
 >
 	<LiquidWarpFilter />
 	<article data-tour>
@@ -58,7 +60,7 @@ const trip = { ...(await tripNode(details)), mainEntityOfPage: reference(pageNod
 					<TourHighlights details={details} />
 					<TourFacts details={details} />
 				</div>
-				<aside id="reservar" aria-label="Reservar" class="scroll-mt-20 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+				<aside id="reservar" aria-label="Reservar" class:list={['scroll-mt-20 lg:col-start-2 lg:row-span-2 lg:row-start-1', preview && 'opacity-60']} inert={preview}>
 					<div data-booking-sticky class="lg:sticky lg:top-24">
 						<TourBooking details={details} />
 					</div>
@@ -76,7 +78,8 @@ const trip = { ...(await tripNode(details)), mainEntityOfPage: reference(pageNod
 	</article>
 	<TourSiblings details={details} />
 	<SiloGuides destination={details.destination} id="tour-guides-title" class="pb-8" />
-	<TourBookingBar details={details} />
+	{!preview && <TourBookingBar details={details} />}
+	<slot name="notice" />
 </Layout>
 
 <script>
