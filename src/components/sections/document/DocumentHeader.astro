@@ -3,9 +3,10 @@ import { formatUpdatedDate, readingMinutes, updatedIsoDate, type DocumentEntry }
 
 interface Props {
 	entry: DocumentEntry;
+	composedText?: string;
 }
 
-const { entry } = Astro.props;
+const { entry, composedText } = Astro.props;
 const { title, description } = entry.data;
 ---
 
@@ -35,7 +36,7 @@ const { title, description } = entry.data;
 			</div>
 			<div>
 				<dt class="text-muted">Lectura</dt>
-				<dd class="mt-1 font-medium text-primary">{readingMinutes(entry)} min</dd>
+				<dd class="mt-1 font-medium text-primary">{readingMinutes(entry, composedText)} min</dd>
 			</div>
 		</dl>
 	</div>

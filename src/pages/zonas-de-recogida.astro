@@ -41,6 +41,25 @@ const paidEverywhereSentence =
 
 const zones = publishedPickupZones.map((zone) => ({ zone, extraCharge: extraChargeText(zone) }));
 const zoneSections = publishedPickupZones.map((zone) => ({ slug: zone.slug, text: zone.name }));
+
+const tableHeadings = ['Zona', '¿Hay cargo extra?'];
+const exactPriceSentence = 'El precio exacto de la recogida desde tu zona está en la ficha de cada tour.';
+const hotelListLabel = 'Hoteles de la zona:';
+const onlyHotelSentence = (hotelName: string) => `El único hotel de la zona es el ${hotelName}.`;
+
+const hotelsText = (zone: PublishedPickupZone) => {
+	if (zone.hotels.length === 1) return [onlyHotelSentence(zone.hotels[0].name)];
+	if (zone.hotels.length > 1) return [hotelListLabel, ...zone.hotels.map((hotel) => hotel.name)];
+	return [];
+};
+
+const composedText = [
+	...tableHeadings,
+	...zones.flatMap(({ zone, extraCharge }) => [zone.name, extraCharge]),
+	exactPriceSentence,
+	paidEverywhereSentence,
+	...publishedPickupZones.flatMap((zone) => [zone.name, zone.description ?? '', ...hotelsText(zone)]),
+].join(' ');
 ---
 
 <Layout
@@ -50,14 +69,15 @@ const zoneSections = publishedPickupZones.map((zone) => ({ slug: zone.slug, text
 	modifiedAt={helpDocument.data.updatedAt}
 >
 	<article data-document>
-		<DocumentHeader entry={helpDocument} />
+		<DocumentHeader entry={helpDocument} composedText={composedText} />
 		<DocumentBody entry={helpDocument} relatedTitle="Más ayuda" relatedLinks={helpLinks} extraSections={zoneSections}>
 			<div class="document-content">
 				<table>
 					<thead>
 						<tr>
-							<th>Zona</th>
-							<th>¿Hay cargo extra?</th>
+							{tableHeadings.map((heading) => (
+								<th>{heading}</th>
+							))}
 						</tr>
 					</thead>
 					<tbody>
@@ -69,16 +89,16 @@ const zoneSections = publishedPickupZones.map((zone) => ({ slug: zone.slug, text
 						))}
 					</tbody>
 				</table>
-				<p>El precio exacto de la recogida desde tu zona está en la ficha de cada tour.{paidEverywhereSentence}</p>
+				<p>{exactPriceSentence}{paidEverywhereSentence}</p>
 
 				{publishedPickupZones.map((zone) => (
 					<>
 						<h2 id={zone.slug}>{zone.name}</h2>
 						{zone.description && <p>{zone.description}</p>}
-						{zone.hotels.length === 1 && <p>El único hotel de la zona es el {zone.hotels[0].name}.</p>}
+						{zone.hotels.length === 1 && <p>{onlyHotelSentence(zone.hotels[0].name)}</p>}
 						{zone.hotels.length > 1 && (
 							<>
-								<p>Hoteles de la zona:</p>
+								<p>{hotelListLabel}</p>
 								<div class="hotel-list">
 									<ul>
 										{zone.hotels.map((hotel) => (

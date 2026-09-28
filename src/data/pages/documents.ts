@@ -9,4 +9,4 @@ export const formatUpdatedDate = (entry: DocumentEntry) => formatLongDate(entry.
 
 export const updatedIsoDate = (entry: DocumentEntry) => toIsoDate(entry.data.updatedAt);
 
-export const readingMinutes = (entry: DocumentEntry) => estimateReadingMinutes(entry.body);
+export const readingMinutes = (entry: DocumentEntry, composedText = '') => estimateReadingMinutes(`${entry.body ?? ''} ${composedText}`);
