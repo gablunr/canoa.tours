@@ -18,34 +18,42 @@ const feeInput =
 	'h-9 w-full rounded-full border border-border-strong bg-background pr-3 pl-10 text-base text-primary tabular-nums transition-colors duration-300 ease-smooth hover:border-muted focus:border-primary focus:outline-none disabled:opacity-40 aria-invalid:border-error sm:text-sm';
 ---
 
-<section aria-labelledby="recogida-zona-titulo" class:list={[surfacePanel, 'animate-fade-up p-5 sm:p-6']} style="animation-delay: 200ms">
-	<div class="flex flex-wrap items-baseline justify-between gap-2">
-		<h2 id="recogida-zona-titulo" class="text-base font-semibold tracking-[-0.02em] text-primary">Recogida desde esta zona</h2>
-		<p class="text-xs text-muted tabular-nums">{servedCount} de {tourCount} excursiones</p>
-	</div>
-	<p class="mt-1 text-sm text-secondary">Lo que paga cada persona por recogerla aquí.</p>
+<section aria-label="Tarifas de recogida" class:list={[surfacePanel, 'p-4 sm:p-5']}>
+	<p class="text-sm text-secondary">Lo que paga cada persona por recogerla aquí. Se recoge en {servedCount} de {tourCount} excursiones.</p>
 
 	{tourCount === 0 ? (
-		<p class="mt-5 text-sm text-secondary">Todavía no hay excursiones.</p>
+		<p class="mt-4 text-sm text-secondary">Todavía no hay excursiones.</p>
 	) : (
-		<form class="mt-2" data-fees-form data-zone-id={zoneId} novalidate>
+		<form class="mt-3" data-fees-form data-zone-id={zoneId} novalidate>
+			{canEdit && (
+				<div class="flex items-center gap-3 border-b border-border pb-2 text-xs font-medium text-muted" aria-hidden="true">
+					<span class="flex-1">Excursión</span>
+					<span class="w-12 text-center">Recoge</span>
+					<span class="w-24 sm:w-28">Por persona</span>
+				</div>
+			)}
 			{groups.map((group) => (
-				<fieldset class="mt-4 first:mt-3">
-					<legend class="text-[13px] font-semibold text-primary">{group.destinationName}</legend>
+				<fieldset class="mt-3">
+					<legend class="text-xs font-semibold text-secondary">{group.destinationName}</legend>
 					<ul class="mt-1 divide-y divide-border">
 						{group.tours.map((tour) => (
-							<li class="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4" data-fee-row data-product-id={tour.productId}>
-								<p class="min-w-0 text-sm text-primary">
+							<li class="flex items-center gap-3 py-2" data-fee-row data-product-id={tour.productId}>
+								<p class="line-clamp-2 min-w-0 flex-1 text-sm leading-snug text-primary">
 									{tour.name}
 									{tour.isDraft && <span class="ml-1.5 inline-flex h-5 items-center rounded-full bg-ink-100 px-2 align-middle text-xs font-medium text-muted">Borrador</span>}
 								</p>
 								{canEdit ? (
-									<div class="flex shrink-0 items-center gap-3">
-										<label class="flex cursor-pointer items-center gap-2 text-[13px] whitespace-nowrap text-secondary">
-											<input type="checkbox" class="size-4 cursor-pointer accent-primary" checked={tour.served} data-fee-served aria-describedby={`tarifa-${tour.productId}`} />
-											Recogemos aquí
-										</label>
-										<div class="relative w-28">
+									<Fragment>
+										<span class="flex w-12 shrink-0 justify-center">
+											<input
+												type="checkbox"
+												class="size-5 cursor-pointer accent-primary"
+												checked={tour.served}
+												aria-label={`Recogemos aquí para ${tour.name}`}
+												data-fee-served
+											/>
+										</span>
+										<div class="relative w-24 shrink-0 sm:w-28">
 											<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted" aria-hidden="true">US$</span>
 											<input
 												id={`tarifa-${tour.productId}`}
@@ -61,7 +69,7 @@ const feeInput =
 												data-fee-amount
 											/>
 										</div>
-									</div>
+									</Fragment>
 								) : (
 									<p class:list={['shrink-0 text-sm tabular-nums', tour.served ? 'text-primary' : 'text-muted']}>{feeLabel(tour.fee)}</p>
 								)}

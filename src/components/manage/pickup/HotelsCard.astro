@@ -1,6 +1,7 @@
 ---
-import { Plus, Search } from '@lucide/astro';
-import { glassButton, glassChipButton, glassControl, surfacePanel } from '../glass-classes';
+import { Pencil, Plus, Search } from '@lucide/astro';
+import ListPager from '../ListPager.astro';
+import { glassButton, glassCircle, glassControl, surfacePanel } from '../glass-classes';
 import type { ZoneHotel } from './pickup-data';
 
 interface Props {
@@ -8,44 +9,38 @@ interface Props {
 }
 
 const { hotels } = Astro.props;
-const hiddenCount = hotels.filter((hotel) => !hotel.active).length;
 const bookingLabel = (count: number) => `${count} ${count === 1 ? 'reserva' : 'reservas'}`;
 ---
 
-<section aria-labelledby="hoteles-titulo" class:list={[surfacePanel, 'animate-fade-up p-5 sm:p-6']} style="animation-delay: 160ms" data-hotels-card>
-	<div class="flex flex-wrap items-center justify-between gap-3">
-		<div>
-			<h2 id="hoteles-titulo" class="text-base font-semibold tracking-[-0.02em] text-primary">Hoteles</h2>
-			<p class="mt-0.5 text-xs text-muted tabular-nums">
-				{hotels.length} {hotels.length === 1 ? 'hotel' : 'hoteles'}{hiddenCount > 0 && `, ${hiddenCount} ${hiddenCount === 1 ? 'oculto' : 'ocultos'}`}
-			</p>
-		</div>
-		<button type="button" class={glassButton} data-add-hotels-open>
-			<Plus size={15} stroke-width={2} aria-hidden="true" />
-			Añadir hoteles
-		</button>
-	</div>
-
-	{hotels.length === 0 ? (
-		<p class="mt-5 text-sm text-secondary">Esta zona todavía no tiene hoteles.</p>
-	) : (
-		<Fragment>
-			<label class:list={[glassControl, 'relative mt-4 h-11 w-full hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent']}>
+<section aria-label="Hoteles" class:list={[surfacePanel, 'p-3 sm:p-4']} data-hotels-card>
+	<div class="flex gap-2">
+		{hotels.length > 0 && (
+			<label class:list={[glassControl, 'relative h-11 min-w-0 flex-1 hover:bg-ink-200/85 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent']}>
 				<span class="sr-only">Buscar hoteles</span>
 				<Search size={16} stroke-width={1.75} class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />
 				<input
 					type="search"
 					maxlength="80"
-					placeholder="Buscar un hotel"
+					placeholder="Buscar"
 					autocomplete="off"
 					class="h-full w-full min-w-0 rounded-full bg-transparent pr-4 pl-11 text-base font-normal outline-none placeholder:text-muted sm:text-[13px]"
 					data-hotel-search
 				/>
 			</label>
+		)}
+		<button type="button" class:list={[glassButton, 'h-11 shrink-0', hotels.length === 0 && 'mr-auto']} data-add-hotels-open>
+			<Plus size={15} stroke-width={2} aria-hidden="true" />
+			Añadir
+		</button>
+	</div>
 
-			<ul class="mt-3 divide-y divide-border">
+	{hotels.length === 0 ? (
+		<p class="px-1 pt-4 pb-1 text-sm text-secondary">Esta zona todavía no tiene hoteles.</p>
+	) : (
+		<Fragment>
+			<ul class="mt-2 divide-y divide-border" data-hotel-list>
 				{hotels.map((hotel) => (
-					<li class="flex items-center justify-between gap-3 py-2.5" data-hotel-row data-search-name={hotel.name.toLocaleLowerCase('es')}>
+					<li class="flex items-center justify-between gap-3 py-2 pl-1" data-hotel-row data-search-name={hotel.name.toLocaleLowerCase('es')}>
 						<div class="min-w-0">
 							<p class:list={['truncate text-sm', hotel.active ? 'text-primary' : 'text-muted']}>{hotel.name}</p>
 							{(!hotel.active || hotel.bookingCount > 0) && (
@@ -57,8 +52,9 @@ const bookingLabel = (count: number) => `${count} ${count === 1 ? 'reserva' : 'r
 						</div>
 						<button
 							type="button"
-							class:list={[glassChipButton, 'shrink-0']}
+							class:list={[glassCircle, 'shrink-0']}
 							aria-label={`Editar ${hotel.name}`}
+							title="Editar"
 							data-hotel-edit
 							data-hotel-id={hotel.id}
 							data-hotel-name={hotel.name}
@@ -66,12 +62,13 @@ const bookingLabel = (count: number) => `${count} ${count === 1 ? 'reserva' : 'r
 							data-hotel-active={String(hotel.active)}
 							data-hotel-bookings={hotel.bookingCount}
 						>
-							Editar
+							<Pencil size={15} stroke-width={1.75} aria-hidden="true" />
 						</button>
 					</li>
 				))}
 			</ul>
-			<p class="mt-3 text-sm text-secondary" data-hotel-search-empty hidden>Ningún hotel coincide con la búsqueda.</p>
+			<p class="px-1 py-3 text-sm text-secondary" data-hotel-search-empty hidden>Ningún hotel coincide con la búsqueda.</p>
+			<ListPager label="Páginas de hoteles" singular="hotel" plural="hoteles" class="mt-3" data-hotel-pager />
 		</Fragment>
 	)}
 </section>

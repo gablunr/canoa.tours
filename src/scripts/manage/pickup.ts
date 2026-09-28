@@ -1,6 +1,7 @@
 import { actions, isInputError } from 'astro:actions';
 import { initConfirmDialogs, type AskToConfirm } from './confirm-dialogs';
 import { actionErrorMessage, setBusy, showMessage, wireDialogClosing } from './form-helpers';
+import { initListPager } from './list-pager';
 import { requestSiteStatusRefresh } from './site-status';
 import { clearErrorOnInput, setFieldError, validateFields } from '../ui/form-validation';
 
@@ -11,6 +12,8 @@ interface KnownHotel {
 }
 
 const savedFeedbackMs = 2500;
+const hotelsPerPage = 10;
+const defaultTab = 'hotels';
 
 const unsavedForms = new Set<HTMLFormElement>();
 
@@ -70,19 +73,79 @@ function zoneHref(slug: string | undefined) {
 	return slug ? `/manage/pickup?zone=${encodeURIComponent(slug)}` : '/manage/pickup';
 }
 
-function initHotelSearch(root: HTMLElement) {
+function initHotelList(root: HTMLElement) {
 	const input = root.querySelector<HTMLInputElement>('[data-hotel-search]');
-	const rows = root.querySelectorAll<HTMLElement>('[data-hotel-row]');
+	const list = root.querySelector<HTMLElement>('[data-hotel-list]');
+	const rows = [...root.querySelectorAll<HTMLElement>('[data-hotel-row]')];
 	const emptyMessage = root.querySelector<HTMLElement>('[data-hotel-search-empty]');
+	let page = 1;
+
+	const apply = () => {
+		const query = input?.value.trim().toLocaleLowerCase('es') ?? '';
+		const matching = rows.filter((row) => !query || (row.dataset.searchName ?? '').includes(query));
+		const totalPages = Math.max(1, Math.ceil(matching.length / hotelsPerPage));
+		page = Math.min(page, totalPages);
+		const firstIndex = (page - 1) * hotelsPerPage;
+		const shown = new Set(matching.slice(firstIndex, firstIndex + hotelsPerPage));
+		rows.forEach((row) => (row.hidden = !shown.has(row)));
+		if (list) list.hidden = shown.size === 0;
+		if (emptyMessage) emptyMessage.hidden = matching.length > 0;
+		renderPager({ page, totalPages, matchCount: matching.length, firstShown: firstIndex + 1, lastShown: firstIndex + shown.size });
+	};
+
+	const renderPager = initListPager(root.querySelector<HTMLElement>('[data-hotel-pager]'), (nextPage) => {
+		page = nextPage;
+		apply();
+	});
+
 	input?.addEventListener('input', () => {
-		const query = input.value.trim().toLocaleLowerCase('es');
-		let visibleCount = 0;
-		rows.forEach((row) => {
-			const visible = !query || (row.dataset.searchName ?? '').includes(query);
-			row.hidden = !visible;
-			if (visible) visibleCount += 1;
+		page = 1;
+		apply();
+	});
+	if (rows.length > 0) apply();
+}
+
+function initTabs(root: HTMLElement) {
+	const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-pickup-tab]')];
+	const panels = [...root.querySelectorAll<HTMLElement>('[data-pickup-panel]')];
+	if (tabs.length === 0) return;
+
+	const select = (tab: HTMLButtonElement) => {
+		const id = tab.dataset.pickupTab ?? defaultTab;
+		tabs.forEach((candidate) => {
+			const selected = candidate === tab;
+			candidate.setAttribute('aria-selected', String(selected));
+			candidate.tabIndex = selected ? 0 : -1;
 		});
-		if (emptyMessage) emptyMessage.hidden = visibleCount > 0;
+		panels.forEach((panel) => (panel.hidden = panel.dataset.pickupPanel !== id));
+		const withTab = (href: string) => {
+			const url = new URL(href, location.origin);
+			if (id === defaultTab) url.searchParams.delete('tab');
+			else url.searchParams.set('tab', id);
+			return `${url.pathname}${url.search}`;
+		};
+		history.replaceState(history.state, '', withTab(location.href));
+		root.querySelectorAll<HTMLAnchorElement>('[data-zone-link]').forEach((link) => (link.href = withTab(link.href)));
+		root.querySelectorAll<HTMLOptionElement>('[data-zone-select] option').forEach((option) => (option.value = withTab(option.value)));
+	};
+
+	tabs.forEach((tab, index) => {
+		tab.addEventListener('click', () => select(tab));
+		tab.addEventListener('keydown', (event) => {
+			const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+			const target = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : offset ? tabs[(index + offset + tabs.length) % tabs.length] : null;
+			if (!target) return;
+			event.preventDefault();
+			select(target);
+			target.focus();
+		});
+	});
+}
+
+function initZoneSelect(root: HTMLElement) {
+	const select = root.querySelector<HTMLSelectElement>('[data-zone-select]');
+	select?.addEventListener('change', () => {
+		location.href = select.value;
 	});
 }
 
@@ -169,12 +232,14 @@ function initReorder(root: HTMLElement) {
 		(focusTarget && !focusTarget.disabled ? focusTarget : button).focus();
 	});
 
-	root.querySelector<HTMLButtonElement>('[data-reorder-open]')?.addEventListener('click', () => {
-		list.replaceChildren(...initialOrder);
-		syncButtons();
-		showMessage(errorMessage, null);
-		dialog.showModal();
-	});
+	root.querySelectorAll<HTMLButtonElement>('[data-reorder-open]').forEach((button) =>
+		button.addEventListener('click', () => {
+			list.replaceChildren(...initialOrder);
+			syncButtons();
+			showMessage(errorMessage, null);
+			dialog.showModal();
+		}),
+	);
 
 	submitButton?.addEventListener('click', async () => {
 		showMessage(errorMessage, null);
@@ -444,7 +509,9 @@ export function initPickupPage(root: HTMLElement) {
 	window.addEventListener('beforeunload', (event) => {
 		if (unsavedForms.size > 0) event.preventDefault();
 	});
-	initHotelSearch(root);
+	initTabs(root);
+	initZoneSelect(root);
+	initHotelList(root);
 	initNewZone(root);
 	initReorder(root);
 	initZoneForm(root, askToConfirm);

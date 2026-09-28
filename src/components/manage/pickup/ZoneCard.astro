@@ -16,14 +16,11 @@ const bookingLabel = `${bookingCount} ${bookingCount === 1 ? 'reserva' : 'reserv
 const hotelLabel = `${zone.hotelCount} ${zone.hotelCount === 1 ? 'hotel' : 'hoteles'}`;
 ---
 
-<section aria-labelledby="zona-titulo" class:list={[surfacePanel, 'animate-fade-up p-5 sm:p-6']} style="animation-delay: 120ms">
-	<div class="flex flex-wrap items-baseline justify-between gap-2">
-		<h2 id="zona-titulo" class="text-base font-semibold tracking-[-0.02em] text-primary">Zona</h2>
-		<p class="text-xs text-muted tabular-nums">{hotelLabel}, {bookingLabel}</p>
-	</div>
+<section aria-label="Datos de la zona" class:list={[surfacePanel, 'p-4 sm:p-5']}>
+	<p class="text-xs text-muted tabular-nums">{hotelLabel}, {bookingLabel}</p>
 
 	{canEdit ? (
-		<form class="mt-4 grid gap-5" data-zone-form data-zone-id={zone.id} novalidate>
+		<form class="mt-3 grid gap-5" data-zone-form data-zone-id={zone.id} novalidate>
 			<TextField label="Nombre" name="zoneName" value={zone.name} required maxlength={80} autocomplete="off" />
 			<TextAreaField
 				label="Descripción"

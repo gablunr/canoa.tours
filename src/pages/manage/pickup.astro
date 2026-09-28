@@ -14,7 +14,7 @@ import ZoneFeesCard from '../../components/manage/pickup/ZoneFeesCard.astro';
 import ZoneList from '../../components/manage/pickup/ZoneList.astro';
 import { loadPickupCatalog, loadZoneDetails } from '../../components/manage/pickup/pickup-data';
 import { canOpenSection } from '../../data/manage/sections';
-import { glassButton, glassPanel } from '../../components/manage/glass-classes';
+import { glassButton, glassGroup, glassOption, glassPanel } from '../../components/manage/glass-classes';
 
 export const prerender = false;
 
@@ -26,6 +26,20 @@ const requestedZone = Astro.url.searchParams.get('zone');
 const selectedZone = zones.find((zone) => zone.slug === requestedZone) ?? zones[0] ?? null;
 const details = selectedZone ? await loadZoneDetails(selectedZone, hotels) : null;
 
+const pickupTabs = ['hotels', 'fees', 'zone'] as const;
+type PickupTab = (typeof pickupTabs)[number];
+const requestedTab = Astro.url.searchParams.get('tab');
+const activeTab: PickupTab = pickupTabs.find((tab) => tab === requestedTab) ?? 'hotels';
+const zoneHref = (slug: string) => `/manage/pickup?zone=${encodeURIComponent(slug)}${activeTab === 'hotels' ? '' : `&tab=${activeTab}`}`;
+
+const servedTourCount = details ? details.feeGroups.flatMap((group) => group.tours).filter((tour) => tour.served).length : 0;
+const tabs: { id: PickupTab; label: string; count: number | null }[] = [
+	{ id: 'hotels', label: 'Hoteles', count: details?.hotels.length ?? 0 },
+	{ id: 'fees', label: 'Tarifas', count: servedTourCount },
+	{ id: 'zone', label: 'Zona', count: null },
+];
+const tabOption = `${glassOption} group/tab flex-1 sm:flex-none aria-selected:bg-primary/90 aria-selected:text-white`;
+
 const zoneNameById = new Map(zones.map((zone) => [zone.id, zone.name]));
 const knownHotels = hotels.map((hotel) => ({ name: hotel.name, zoneId: hotel.zoneId, zoneName: zoneNameById.get(hotel.zoneId) ?? '' }));
 ---
@@ -36,14 +50,37 @@ const knownHotels = hotels.map((hotel) => ({ name: hotel.name, zoneId: hotel.zon
 			<SiteStatus />
 		</ManagePageHeader>
 
-		<div class="mt-2 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
-			<ZoneList zones={zones} selectedZoneId={selectedZone?.id ?? null} canEditZones={canEditZones} />
+		<div class="mt-1 grid gap-3 sm:mt-3 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-4">
+			<ZoneList zones={zones} selectedZoneId={selectedZone?.id ?? null} canEditZones={canEditZones} zoneHref={zoneHref} />
 
 			{selectedZone && details ? (
-				<div class="grid min-w-0 gap-4">
-					<ZoneCard zone={selectedZone} bookingCount={details.bookingCount} canEdit={canEditZones} />
-					<HotelsCard hotels={details.hotels} />
-					<ZoneFeesCard zoneId={selectedZone.id} groups={details.feeGroups} canEdit={canEditZones} />
+				<div class="grid min-w-0 animate-fade-up gap-3" style="animation-delay: 140ms" data-pickup-tabs>
+					<div role="tablist" aria-label={`Datos de ${selectedZone.name}`} class:list={[glassGroup, 'flex w-full gap-1 p-1.5 sm:w-fit']}>
+						{tabs.map((tab) => (
+							<button
+								type="button"
+								role="tab"
+								id={`pestana-${tab.id}`}
+								aria-controls={`panel-${tab.id}`}
+								aria-selected={tab.id === activeTab ? 'true' : 'false'}
+								tabindex={tab.id === activeTab ? undefined : -1}
+								class={tabOption}
+								data-pickup-tab={tab.id}
+							>
+								{tab.label}
+								{tab.count !== null && <span class="text-xs font-normal text-muted tabular-nums group-aria-selected/tab:text-white/65">{tab.count}</span>}
+							</button>
+						))}
+					</div>
+					<div role="tabpanel" id="panel-hotels" aria-labelledby="pestana-hotels" hidden={activeTab !== 'hotels'} data-pickup-panel="hotels">
+						<HotelsCard hotels={details.hotels} />
+					</div>
+					<div role="tabpanel" id="panel-fees" aria-labelledby="pestana-fees" hidden={activeTab !== 'fees'} data-pickup-panel="fees">
+						<ZoneFeesCard zoneId={selectedZone.id} groups={details.feeGroups} canEdit={canEditZones} />
+					</div>
+					<div role="tabpanel" id="panel-zone" aria-labelledby="pestana-zone" hidden={activeTab !== 'zone'} data-pickup-panel="zone">
+						<ZoneCard zone={selectedZone} bookingCount={details.bookingCount} canEdit={canEditZones} />
+					</div>
 				</div>
 			) : (
 				<div class:list={[glassPanel, 'flex animate-fade-up flex-col items-center px-6 py-10 text-center sm:px-10']} style="animation-delay: 120ms">
