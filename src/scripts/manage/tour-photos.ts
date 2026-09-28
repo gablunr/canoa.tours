@@ -35,6 +35,7 @@ const maxSide = 2400;
 const maxOriginalBytes = 25 * 1024 * 1024;
 const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const resizeQuality = 0.86;
+const reencodeAboveBytes = 4 * 1024 * 1024;
 const announceDelay = 100;
 
 const stateTexts: Record<PhotoState, string> = {
@@ -68,7 +69,8 @@ export async function resizeForUpload(file: File): Promise<File> {
 		return file;
 	}
 	const size = fitWithin(bitmap.width, bitmap.height, maxSide);
-	if (!size.scaled) {
+	const needsReencode = size.scaled || file.size > reencodeAboveBytes || file.type === 'image/png';
+	if (!needsReencode) {
 		bitmap.close();
 		return file;
 	}
@@ -161,6 +163,8 @@ export function initTourPhotos(root: HTMLElement, tourId: string): TourPhotos | 
 
 		const position = index + 1;
 		const isCover = index === 0;
+		const altLabel = item.querySelector<HTMLLabelElement>('[data-photo-alt-label]');
+		if (altLabel) altLabel.textContent = isCover ? 'Texto alternativo de la portada' : `Texto alternativo de la foto ${position}`;
 		const image = item.querySelector<HTMLImageElement>('[data-photo-image]');
 		if (image && image.src !== photo.url) image.src = photo.url;
 		const badge = item.querySelector<HTMLElement>('[data-photo-cover-badge]');
