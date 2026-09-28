@@ -2,6 +2,7 @@ import { actions, isInputError } from 'astro:actions';
 import { initConfirmDialogs, type AskToConfirm } from './confirm-dialogs';
 import { actionErrorMessage, setBusy, showMessage, wireDialogClosing } from './form-helpers';
 import { requestSiteStatusRefresh } from './site-status';
+import { normalizeSearchText } from '../../lib/search-text';
 import { clearErrorOnInput, setFieldError, validateFields } from '../ui/form-validation';
 
 interface KnownHotel {
@@ -78,7 +79,7 @@ function initHotelList(root: HTMLElement) {
 	const emptyMessage = root.querySelector<HTMLElement>('[data-hotel-search-empty]');
 
 	const apply = () => {
-		const query = input?.value.trim().toLocaleLowerCase('es') ?? '';
+		const query = normalizeSearchText(input?.value ?? '');
 		let matchCount = 0;
 		rows.forEach((row) => {
 			const matches = !query || (row.dataset.searchName ?? '').includes(query);

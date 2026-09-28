@@ -9,6 +9,7 @@ import { storedArray, type StoredGuideSection } from '../../../lib/guides/render
 import type { QuestionAndAnswer } from '../../../lib/seo/structured-data';
 import type { Database } from '../../../lib/supabase/database.types';
 import { publicMediaUrl, remoteImage } from '../../../lib/supabase/media';
+import { accentInsensitivePattern } from '../../../lib/search-text';
 
 export type GuideStatus = 'draft' | 'published';
 
@@ -72,11 +73,16 @@ export const tourSlugsBySilo: Record<string, string[]> = Object.fromEntries(
 
 const searchTerm = (query: string) => query.replace(/[%_*,()"\\]/g, ' ').replace(/\s+/g, ' ').trim();
 
+const titleOrSlugMatches = (term: string) => {
+	const pattern = accentInsensitivePattern(term);
+	return `title.imatch."${pattern}",slug.imatch."${pattern}"`;
+};
+
 export async function loadGuideCounts(supabase: Supabase, query: string): Promise<Record<GuideStatus, number>> {
 	const term = searchTerm(query);
 	const countFor = async (status: GuideStatus) => {
 		let request = supabase.from('guides').select('id', { count: 'exact', head: true }).eq('locale', 'es').eq('status', status);
-		if (term) request = request.or(`title.ilike.%${term}%,slug.ilike.%${term}%`);
+		if (term) request = request.or(titleOrSlugMatches(term));
 		const { count, error } = await request;
 		if (error) throw error;
 		return count ?? 0;
@@ -92,7 +98,7 @@ export async function loadGuideList(supabase: Supabase, status: GuideStatus, que
 		.select('id, status, title, slug, silo, image_path, featured, reading_minutes, updated_at, published_at')
 		.eq('locale', 'es')
 		.eq('status', status);
-	if (term) request = request.or(`title.ilike.%${term}%,slug.ilike.%${term}%`);
+	if (term) request = request.or(titleOrSlugMatches(term));
 	const { data, error } = await request
 		.order(status === 'published' ? 'published_at' : 'updated_at', { ascending: false })
 		.range(rangeStart, rangeStart + pageSize - 1);

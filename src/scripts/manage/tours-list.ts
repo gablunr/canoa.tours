@@ -1,5 +1,6 @@
 import { actions } from 'astro:actions';
 import { actionErrorMessage, setBusy, showMessage, slugify, wireDialogClosing } from './form-helpers';
+import { normalizeSearchText } from '../../lib/search-text';
 
 interface CopySource {
 	id: string;
@@ -13,14 +14,6 @@ interface ListView {
 
 const takenByTourMessage = 'Esa dirección ya la usa otra excursión. Elige otra.';
 const takenByGuideMessage = 'Esa dirección ya la usa una guía publicada. Elige otra.';
-
-const normalize = (text: string) =>
-	text
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(/[̀-ͯ]/g, '')
-		.replace(/\s+/g, ' ')
-		.trim();
 
 function readJson<Value>(value: string | undefined, fallback: Value): Value {
 	try {
@@ -55,7 +48,7 @@ function initListView(root: HTMLElement): ListView {
 
 	const apply = () => {
 		const typed = input?.value.trim() ?? '';
-		const term = sortingGroup ? '' : normalize(typed);
+		const term = sortingGroup ? '' : normalizeSearchText(typed);
 		let total = 0;
 		let matchCount = 0;
 

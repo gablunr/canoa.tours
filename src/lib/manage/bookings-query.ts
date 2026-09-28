@@ -5,6 +5,7 @@ import { formatMoney } from '../email/templates/layout';
 import { supabaseAdmin } from '../supabase/admin';
 import type { BookingStatus, Database } from '../supabase/types';
 import { pageRange } from './list-page';
+import { accentInsensitivePattern } from '../search-text';
 
 type Supabase = SupabaseClient<Database>;
 
@@ -86,7 +87,7 @@ export interface BookingListRow {
 const searchSafe = (text: string) => text.replace(/[,()"\\:%*]/g, ' ').replace(/\s+/g, ' ').trim();
 
 async function customerIdsMatching(supabase: Supabase, term: string): Promise<string[]> {
-	const { data, error } = await supabase.from('customers').select('id').ilike('email', `%${term}%`).limit(200);
+	const { data, error } = await supabase.from('customers').select('id').filter('email', 'imatch', accentInsensitivePattern(term)).limit(200);
 	if (error) throw error;
 	return (data ?? []).map((customer) => customer.id);
 }
@@ -117,7 +118,8 @@ export async function loadBookingsPage(supabase: Supabase, filters: BookingsFilt
 	const term = searchSafe(filters.q);
 	if (term) {
 		const customerIds = await customerIdsMatching(supabase, term);
-		const conditions = ['code', 'lead_name', 'lead_phone'].map((column) => `${column}.ilike."%${term}%"`);
+		const pattern = accentInsensitivePattern(term);
+		const conditions = ['code', 'lead_name', 'lead_phone'].map((column) => `${column}.imatch."${pattern}"`);
 		if (customerIds.length > 0) conditions.push(`customer_id.in.(${customerIds.join(',')})`);
 		query = query.or(conditions.join(','));
 	}

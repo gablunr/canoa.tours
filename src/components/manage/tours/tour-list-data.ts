@@ -5,6 +5,7 @@ import { currentBuildStartedAt, hasPendingChanges } from '../../../lib/manage/si
 import type { Database, Json } from '../../../lib/supabase/database.types';
 import { publicMediaUrl } from '../../../lib/supabase/media';
 import { missingForSale, type TourContent, type TourEditable, type TourOperations } from '../../../lib/tours/tour-schema';
+import { normalizeSearchText } from '../../../lib/search-text';
 
 type Supabase = SupabaseClient<Database>;
 
@@ -75,14 +76,6 @@ const tourColumns =
 	'*, product_translations(*), product_images(path, alt, width, height, position), product_prices(passenger_type, amount, min_age, max_age, valid_from, valid_to), product_schedules(start_time, pickup_to, return_at, weekdays, active), product_pickup_zones(zone_id, fee_per_person)';
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-
-export const normalizeSearchText = (text: string) =>
-	text
-		.toLowerCase()
-		.normalize('NFD')
-		.replace(/[̀-ͯ]/g, '')
-		.replace(/\s+/g, ' ')
-		.trim();
 
 export const destinationPathPrefix = (destination: Destination) => `${destinationHref(destination)}/`;
 

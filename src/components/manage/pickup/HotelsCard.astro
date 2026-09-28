@@ -2,6 +2,7 @@
 import { Pencil, Plus, Search } from '@lucide/astro';
 import { glassButton, glassCircle, glassControl, surfacePanel } from '../glass-classes';
 import type { ZoneHotel } from './pickup-data';
+import { normalizeSearchText } from '../../../lib/search-text';
 
 interface Props {
 	hotels: ZoneHotel[];
@@ -39,7 +40,7 @@ const bookingLabel = (count: number) => `${count} ${count === 1 ? 'reserva' : 'r
 		<Fragment>
 			<ul class="mt-2 divide-y divide-border" data-hotel-list>
 				{hotels.map((hotel) => (
-					<li class="flex items-center justify-between gap-3 py-2 pl-1" data-hotel-row data-search-name={hotel.name.toLocaleLowerCase('es')}>
+					<li class="flex items-center justify-between gap-3 py-2 pl-1" data-hotel-row data-search-name={normalizeSearchText(hotel.name)}>
 						<div class="min-w-0">
 							<p class:list={['truncate text-sm', hotel.active ? 'text-primary' : 'text-muted']}>{hotel.name}</p>
 							{(!hotel.active || hotel.bookingCount > 0) && (
