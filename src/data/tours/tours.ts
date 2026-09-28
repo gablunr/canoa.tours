@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import { formatPrice } from '../../lib/format';
+import type { SiteImage } from '../../lib/images';
 import type { OfferOptions, QuestionAndAnswer } from '../../lib/seo/structured-data';
 import { bookingPolicy, cancellationInsurancePriceLabel, cancellationNoticeLabel } from '../booking/booking-policy';
 import { departurePorts, distanceLabel } from './departure-ports';
@@ -60,12 +61,20 @@ export interface ItineraryStep {
 	text: string;
 }
 
+export interface TourImageEntry {
+	image: SiteImage;
+	alt: string;
+}
+
 export interface TourDetails {
 	destination: Destination;
 	tour: Tour;
+	productKey: string;
 	title: string;
+	shortName: string;
 	summary: string;
 	imageAlt: string;
+	images: TourImageEntry[];
 	highlights: string[];
 	price: number;
 	priceUnit: string;
@@ -91,10 +100,13 @@ export interface TourDetails {
 	pregnancyMaxMonths?: number;
 	wheelchair: boolean;
 	faqs: QuestionAndAnswer[];
+	bestFor: string;
+	includesSummary: string;
 	updatedAt: Date;
 }
 
-interface TourEntry extends Omit<TourDetails, 'destination' | 'tour' | 'updatedAt'> {
+interface TourEntry
+	extends Omit<TourDetails, 'destination' | 'tour' | 'productKey' | 'shortName' | 'images' | 'bestFor' | 'includesSummary' | 'updatedAt'> {
 	destinationId: DestinationId;
 	tourSlug: string;
 }
@@ -1227,7 +1239,17 @@ function entryFor(destination: Destination, tour: Tour) {
 export const tourDetails: TourDetails[] = destinations.flatMap((destination) =>
 	destination.tours.map((tour) => {
 		const { destinationId: _destinationId, tourSlug: _tourSlug, ...details } = entryFor(destination, tour);
-		return { destination, tour, ...details, updatedAt: provisionalUpdatedAt };
+		return {
+			destination,
+			tour,
+			productKey: `${destination.id}/${tour.slug}`,
+			shortName: tour.name,
+			images: [],
+			bestFor: '',
+			includesSummary: '',
+			...details,
+			updatedAt: provisionalUpdatedAt,
+		};
 	}),
 );
 

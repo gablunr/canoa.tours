@@ -10,3 +10,5 @@ export async function remoteImage(src: string): Promise<RemoteImage> {
 }
 
 export const remoteMediaImage = (path: string) => remoteImage(publicMediaUrl(path));
+
+export const storedMediaImage = (path: string, width: number, height: number): RemoteImage => ({ remote: true, src: publicMediaUrl(path), width, height });
