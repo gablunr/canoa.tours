@@ -17,7 +17,6 @@ const pageHeaderFonts = ['InterDisplay-SemiBold', 'InterDisplay-Regular', 'Inter
 		{pageHeaderFonts.map((font) => (
 			<link rel="preload" href={`/fonts/inter/${font}.woff2`} as="font" type="font/woff2" crossorigin />
 		))}
-		<script is:inline>document.documentElement.classList.add('fonts-loading');</script>
 		<script is:inline>
 			(function () {
 				var navigation = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : undefined;
@@ -54,24 +53,6 @@ const pageHeaderFonts = ['InterDisplay-SemiBold', 'InterDisplay-Regular', 'Inter
 			import { initReveal } from '../scripts/ui/reveal';
 
 			initReveal();
-		</script>
-		<script is:inline>
-			(function () {
-				var root = document.documentElement;
-				var reveal = function () {
-					root.classList.remove('fonts-loading');
-				};
-				if (!document.fonts || !document.fonts.load) return reveal();
-				Promise.all([
-					document.fonts.load('300 1em "Inter Display"'),
-					document.fonts.load('400 1em "Inter Display"'),
-					document.fonts.load('500 1em "Inter Display"'),
-					document.fonts.load('600 1em "Inter Display"'),
-					document.fonts.load('400 1em "Inter"'),
-					document.fonts.load('500 1em "Inter"'),
-				]).then(reveal, reveal);
-				setTimeout(reveal, 1500);
-			})();
 		</script>
 	</body>
 </html>
