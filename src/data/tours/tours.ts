@@ -1248,7 +1248,7 @@ export const siblingTourDetails = (details: TourDetails) => destinationTourDetai
 
 export const tourDetailsHref = (details: TourDetails) => tourHref(details.destination, details.tour);
 
-export const tourProductKey = (details: TourDetails) => `${details.destination.id}/${details.tour.slug}`;
+export const tourProductKey = (details: TourDetails) => details.productKey;
 
 export const tourPhoto = (details: TourDetails): SiteImage | undefined => details.images[0]?.image ?? destinationImage(details.destination);
 

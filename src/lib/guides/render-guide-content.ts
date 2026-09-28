@@ -1,6 +1,6 @@
 import type { GuideBlock, GuideContent, GuideTour } from '../../data/guides/guide-content';
 import { fillContentTokens } from '../../data/guides/content-tokens';
-import { destinations } from '../../data/tours/destinations';
+import { tourDetails } from '../../data/tours/tours';
 import type { QuestionAndAnswer } from '../seo/structured-data';
 import { inlineMarkdown } from './inline-markdown';
 
@@ -37,10 +37,9 @@ function renderBlock(block: StoredGuideBlock): GuideBlock {
 
 function guideTour(productKey: string | null, note: string | null): GuideTour | undefined {
 	if (!productKey || !note) return undefined;
-	const [destinationId, tourSlug] = productKey.split('/');
-	const destination = destinations.find((candidate) => candidate.id === destinationId);
-	if (!destination || !tourSlug) return undefined;
-	return { destinationId: destination.id, tourSlug, note: plainText(note) };
+	const details = tourDetails.find((candidate) => candidate.productKey === productKey);
+	if (!details) return undefined;
+	return { destinationId: details.destination.id, tourSlug: details.tour.slug, note: plainText(note) };
 }
 
 export function renderGuideContent(source: GuideContentSource): GuideContent {

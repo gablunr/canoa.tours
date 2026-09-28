@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { findTourDetails, tourPhoto, type TourDetails } from '../../data/tours/tours';
-import type { DestinationId } from '../../data/tours/destinations';
+import { tourDetails, tourPhoto, type TourDetails } from '../../data/tours/tours';
 import type { SiteImage } from '../images';
 import { loadBookingDetails, shortTime, spanishTranslation, tourPathFor, type BookingDetails } from '../booking/booking-details';
 import { supabaseAdmin } from '../supabase/admin';
@@ -57,15 +56,7 @@ export function suggestedAuthorName(fullName: string) {
 	return rest.length > 0 ? `${first} ${rest.at(-1)?.charAt(0).toUpperCase()}.` : first;
 }
 
-export function bookingTourDetails(productKey: string): TourDetails | undefined {
-	const [destinationId, tourSlug] = productKey.split('/');
-	if (!destinationId || !tourSlug) return undefined;
-	try {
-		return findTourDetails(destinationId as DestinationId, tourSlug);
-	} catch {
-		return undefined;
-	}
-}
+export const bookingTourDetails = (productKey: string): TourDetails | undefined => tourDetails.find((details) => details.productKey === productKey);
 
 export function bookingPhoto(productKey: string): SiteImage | undefined {
 	const tour = bookingTourDetails(productKey);

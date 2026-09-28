@@ -32,7 +32,7 @@ const child = details.childPrice;
 const childLabel = childPriceLabel(details);
 const daysLabel = scheduleLabel(details.days);
 const perGroup = details.pricePer === 'group';
-const productKey = `${details.destination.id}/${details.tour.slug}`;
+const productKey = details.productKey;
 const supportHref = whatsapp
 	? whatsappMessageHref(whatsapp, `Hola, quiero reservar ${details.title}.`)
 	: `mailto:${company.email}`;
