@@ -1,5 +1,6 @@
 ---
-import { Picture } from 'astro:assets';
+import { getImage } from 'astro:assets';
+import type { ImageOutputFormat } from 'astro';
 import type { HTMLAttributes } from 'astro/types';
 import { imageSource, type SiteImage } from '../../../lib/images';
 
@@ -19,6 +20,15 @@ const { title, image, imageAlt, imageClass = 'object-center', sizes, compact = f
 
 const coverSizes = sizes ?? `(max-aspect-ratio: ${image.width}/${image.height}) ${Math.ceil((image.width / image.height) * 100)}vh, 100vw`;
 const widths = [...new Set([640, 960, 1280, 1920, 2560].map((width) => Math.min(width, image.width)))];
+const heroSource = imageSource(image);
+const modernFormats: ImageOutputFormat[] = ['avif', 'webp'];
+const fallbackWidth = Math.min(1600, image.width);
+const fallbackHeight = Math.round((image.height * fallbackWidth) / image.width);
+
+const [modernImages, fallbackImage] = await Promise.all([
+	Promise.all(modernFormats.map((format) => getImage({ ...heroSource, format, widths }))),
+	getImage({ ...heroSource, width: fallbackWidth, height: fallbackHeight, format: 'jpg', priority: true }),
+]);
 ---
 
 <section
@@ -30,16 +40,18 @@ const widths = [...new Set([640, 960, 1280, 1920, 2560].map((width) => Math.min(
 			: 'min-h-[max(36rem,70svh)] [--hero-space:calc(3.125rem+max(8vw,13svh))] md:[--hero-space:calc(3.625rem+max(8vw,13svh))]',
 	]}
 >
-	<Picture
-		{...imageSource(image)}
-		alt={imageAlt}
-		formats={['avif', 'webp']}
-		widths={widths}
-		sizes={coverSizes}
-		priority
-		pictureAttributes={{ class: 'absolute inset-0 -z-20' }}
-		class:list={['size-full object-cover brightness-85 saturate-110 contrast-105', imageClass]}
-	/>
+	<picture class="absolute inset-0 -z-20">
+		{modernImages.map((modernImage) => (
+			<source srcset={modernImage.srcSet.attribute} type={`image/${modernImage.options.format}`} sizes={coverSizes} />
+		))}
+		<img
+			src={fallbackImage.src}
+			{...fallbackImage.attributes}
+			alt={imageAlt}
+			sizes={coverSizes}
+			class:list={['size-full object-cover brightness-85 saturate-110 contrast-105', imageClass]}
+		/>
+	</picture>
 	<div class="film-grain absolute inset-0 -z-20 opacity-90" aria-hidden="true"></div>
 	{dim && <div class="absolute inset-0 -z-10 bg-primary/40" aria-hidden="true"></div>}
 	<div
