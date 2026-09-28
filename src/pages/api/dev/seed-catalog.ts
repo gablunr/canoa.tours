@@ -1,8 +1,25 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { getEntry } from 'astro:content';
-import { pickupZones, tourDetails, weekdays, type PickupZone, type PickupZoneId, type TourDetails, type Weekday } from '../../../data/tours/tours';
+import sharp from 'sharp';
+import { fillContentTokens } from '../../../data/guides/content-tokens';
+import { pillarContents } from '../../../data/pillars';
+import { destinations } from '../../../data/tours/destinations';
+import { mostBookedTours } from '../../../data/tours/most-booked';
+import { pickupZones, tourDetails, weekdays, type PickupZone, type TourDetails } from '../../../data/tours/tours';
 import { supabaseAdmin } from '../../../lib/supabase/admin';
-import type { Enums } from '../../../lib/supabase/types';
+import {
+	toContentPayload,
+	toImagesPayload,
+	toOperationsPayload,
+	tourContentSchema,
+	tourImagesSchema,
+	tourOperationsSchema,
+	type TourContentInput,
+	type TourImage,
+	type TourOperationsInput,
+} from '../../../lib/tours/tour-schema';
 
 export const prerender = false;
 
@@ -10,17 +27,27 @@ const supplier = { slug: 'caribe-activo', name: 'Caribe Activo' };
 const defaultDailyCapacity = 100;
 const catalogLocale = 'es';
 const pickupZonesEntryId = 'zonas-de-recogida';
-
-interface SeedPrice {
-	passenger_type: Enums<'passenger_type'>;
-	amount: number;
-	min_age: number | null;
-	max_age: number | null;
-}
+const mediaBucket = 'media';
+const tourPhotosDirectory = 'src/assets/images/placeholders/tours';
 
 interface SeedHotel {
 	name: string;
-	zoneId: PickupZoneId;
+	zoneSlug: string;
+}
+
+interface SeedZone {
+	zone: PickupZone;
+	description: string;
+	hotels: SeedHotel[];
+}
+
+interface StoredProduct {
+	id: string;
+	key: string;
+	pricing_mode: 'per_person' | 'per_group';
+	max_group_size: number | null;
+	daily_capacity: number;
+	infants_occupy_seat: boolean;
 }
 
 type QueryResult<T> = { data: T; error: { message: string } | null };
@@ -35,204 +62,269 @@ function assertSucceeded({ error }: { error: { message: string } | null }) {
 	if (error) throw new Error(error.message);
 }
 
-const productKey = (details: TourDetails) => `${details.destination.id}/${details.tour.slug}`;
+const productKey = (details: TourDetails) => details.productKey;
 
-const isoWeekday = (day: Weekday) => weekdays.indexOf(day) + 1;
+const isoWeekday = (day: (typeof weekdays)[number]) => weekdays.indexOf(day) + 1;
 
-function maxGroupSize(details: TourDetails) {
+function groupSizeFromPriceUnit(details: TourDetails) {
 	if (details.pricePer !== 'group') return null;
 	const match = details.priceUnit.match(/hasta (\d+)/);
 	if (!match) throw new Error(`No se encuentra el tamaño máximo del grupo en «${details.priceUnit}» (${productKey(details)})`);
 	return Number(match[1]);
 }
 
-function seedPrices(details: TourDetails): SeedPrice[] {
-	const basePrice: SeedPrice = {
-		passenger_type: details.pricePer === 'group' ? 'group' : 'adult',
-		amount: details.price,
-		min_age: null,
-		max_age: null,
+const pregnancyValue = (details: TourDetails) => (details.pregnancy === 'not-allowed' ? 'not_allowed' : details.pregnancy);
+
+const durationValue = (details: TourDetails) =>
+	details.durationCategory === 'full-day' ? 'full_day' : details.durationCategory === 'half-day' ? 'half_day' : 'night';
+
+function pillarCopy(details: TourDetails) {
+	const copy = pillarContents[details.destination.id].tours[details.tour.slug];
+	if (!copy) throw new Error(`Falta el texto de la pilar para ${productKey(details)}`);
+	return copy;
+}
+
+function contentInput(details: TourDetails): TourContentInput {
+	const copy = pillarCopy(details);
+	return {
+		name: details.title,
+		shortName: details.tour.name,
+		slug: details.tour.slug,
+		destinationSlug: details.destination.slug,
+		summary: details.summary,
+		ageNote: details.ageNote ?? '',
+		imageAlt: details.imageAlt,
+		highlights: details.highlights,
+		includes: details.includes,
+		excludes: details.excludes,
+		bring: details.bring,
+		itinerary: details.itinerary.map((step) => ({ time: step.time ?? '', title: step.title, text: step.text })),
+		faqs: details.faqs.map((faq) => ({ question: faq.question, answer: faq.answer })),
+		bestFor: copy.bestFor,
+		includesSummary: copy.includesSummary,
+		minAge: details.minAge ?? null,
+		pregnancy: pregnancyValue(details),
+		pregnancyMaxMonths: details.pregnancy === 'limited' ? (details.pregnancyMaxMonths ?? null) : null,
+		wheelchair: details.wheelchair,
 	};
-	if (!details.childPrice) return [basePrice];
-	const { amount, fromAge, toAge } = details.childPrice;
-	return [basePrice, { passenger_type: 'child', amount, min_age: fromAge, max_age: toAge }];
 }
 
-function parseHotels(markdown: string, zones: PickupZone[]): SeedHotel[] {
-	const hotelsByName = new Map<string, SeedHotel>();
-	for (const section of markdown.split(/^## /m).slice(1)) {
-		const [heading = '', ...lines] = section.split('\n');
-		const zone = zones.find((candidate) => candidate.name === heading.trim());
-		if (!zone) continue;
-		const content = lines.join('\n');
-		for (const [, listBody = ''] of content.matchAll(/<div class="hotel-list">([\s\S]*?)<\/div>/g)) {
-			for (const line of listBody.split('\n')) {
-				const hotelName = line.match(/^\s*-\s+(.+?)\s*$/)?.[1];
-				if (hotelName) hotelsByName.set(hotelName, { name: hotelName, zoneId: zone.id });
+function operationsInput(details: TourDetails, stored: StoredProduct, zoneIdBySlug: Map<string, string>): TourOperationsInput {
+	const perGroup = details.pricePer === 'group';
+	return {
+		pricingMode: perGroup ? 'per_group' : 'per_person',
+		maxGroupSize: perGroup ? (stored.max_group_size ?? groupSizeFromPriceUnit(details)) : null,
+		dailyCapacity: stored.daily_capacity,
+		infantsOccupySeat: stored.infants_occupy_seat,
+		depositValue: details.deposit,
+		priceUnit: details.priceUnit,
+		meetingPoint: details.meetingPoint,
+		durationCategory: durationValue(details),
+		durationHours: details.durationHours,
+		departurePort: details.port ?? null,
+		schedule: {
+			startTime: details.pickupFrom,
+			pickupTo: details.pickupTo,
+			returnAt: details.returnAt,
+			weekdays: details.days.map(isoWeekday).sort((first, second) => first - second),
+		},
+		prices: {
+			base: details.price,
+			child: details.childPrice ? { amount: details.childPrice.amount, minAge: details.childPrice.fromAge, maxAge: details.childPrice.toAge } : null,
+		},
+		pickupFees: pickupZones.map((zone) => {
+			const zoneId = zoneIdBySlug.get(zone.id);
+			if (!zoneId) throw new Error(`No existe la zona ${zone.id}`);
+			return { zoneId, fee: details.pickupFees[zone.id] };
+		}),
+	};
+}
+
+function validated<T>(label: string, result: { success: true; data: T } | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } }): T {
+	if (result.success) return result.data;
+	const issues = result.error.issues.map((issue) => `${issue.path.map(String).join('.')}: ${issue.message}`).join('; ');
+	throw new Error(`${label} no pasa la validación: ${issues}`);
+}
+
+function parsePickupZones(markdown: string, zones: PickupZone[]): SeedZone[] {
+	return markdown
+		.split(/^## /m)
+		.slice(1)
+		.flatMap((section) => {
+			const [heading = '', ...lines] = section.split('\n');
+			const zone = zones.find((candidate) => candidate.name === heading.trim());
+			if (!zone) return [];
+			const content = lines.join('\n');
+			const hotels = new Map<string, SeedHotel>();
+			for (const [, listBody = ''] of content.matchAll(/<div class="hotel-list">([\s\S]*?)<\/div>/g)) {
+				for (const line of listBody.split('\n')) {
+					const hotelName = line.match(/^\s*-\s+(.+?)\s*$/)?.[1];
+					if (hotelName) hotels.set(hotelName, { name: hotelName, zoneSlug: zone.id });
+				}
 			}
-		}
-		const onlyHotelName = content.match(/El único hotel de la zona es el ([^.\n]+)\./)?.[1]?.trim();
-		if (onlyHotelName) hotelsByName.set(onlyHotelName, { name: onlyHotelName, zoneId: zone.id });
-	}
-	return [...hotelsByName.values()];
+			const onlyHotelName = content.match(/El único hotel de la zona es el ([^.\n]+)\./)?.[1]?.trim();
+			if (onlyHotelName) hotels.set(onlyHotelName, { name: onlyHotelName, zoneSlug: zone.id });
+			const prose = content
+				.split(/\n\s*\n/)
+				.map((paragraph) => paragraph.trim())
+				.filter((paragraph) => paragraph.length > 0)
+				.filter((paragraph) => !paragraph.startsWith('<') && !paragraph.startsWith('- ') && !paragraph.startsWith('Hoteles de la zona') && !paragraph.startsWith('El único hotel'));
+			return [{ zone, description: fillContentTokens(prose.join('\n\n')), hotels: [...hotels.values()] }];
+		});
 }
 
-async function seedCatalog() {
+async function uploadTourPhoto(details: TourDetails, productId: string): Promise<TourImage | null> {
+	const source = path.join(process.cwd(), tourPhotosDirectory, details.destination.slug, `${details.tour.slug}.jpg`);
+	const file = await readFile(source).catch(() => null);
+	if (!file) return null;
+	const metadata = await sharp(file).metadata();
+	const width = metadata.autoOrient?.width ?? metadata.width;
+	const height = metadata.autoOrient?.height ?? metadata.height;
+	if (!width || !height) throw new Error(`No se pueden leer las medidas de ${source}`);
+	const storagePath = `products/${productId}/${Date.now()}.jpg`;
+	assertSucceeded(await supabaseAdmin.storage.from(mediaBucket).upload(storagePath, file, { contentType: 'image/jpeg', upsert: false }));
+	return { path: storagePath, alt: details.imageAlt, width, height };
+}
+
+async function seedCatalog(userId: string) {
+	const staff = unwrap(await supabaseAdmin.from('staff').select('role').eq('user_id', userId).maybeSingle());
+	if (staff.role !== 'admin') throw new Error('El usuario tiene que ser administrador');
+
 	const { id: supplierId } = unwrap(
-		await supabaseAdmin.from('suppliers').upsert(supplier, { onConflict: 'slug' }).select('id').single(),
+		await supabaseAdmin.from('suppliers').upsert(supplier, { onConflict: 'slug', ignoreDuplicates: false }).select('id').single(),
 	);
 
+	const helpEntry = await getEntry('help', pickupZonesEntryId);
+	if (!helpEntry?.body) throw new Error(`No se encuentra el contenido de ${pickupZonesEntryId}`);
+	const seedZones = parsePickupZones(helpEntry.body, pickupZones);
+	if (seedZones.length !== pickupZones.length) throw new Error('Falta la sección de alguna zona en zonas-de-recogida.md');
+
+	assertSucceeded(
+		await supabaseAdmin
+			.from('pickup_zones')
+			.upsert(pickupZones.map((zone, position) => ({ slug: zone.id, name: zone.name, position })), { onConflict: 'slug', ignoreDuplicates: true }),
+	);
+	const zones = unwrap(await supabaseAdmin.from('pickup_zones').select('id, slug, description'));
+	const zoneIdBySlug = new Map(zones.map((zone) => [zone.slug, zone.id]));
+	let zoneDescriptions = 0;
+	for (const { zone, description } of seedZones) {
+		const stored = zones.find((candidate) => candidate.slug === zone.id);
+		if (!stored || stored.description === description) continue;
+		assertSucceeded(await supabaseAdmin.from('pickup_zones').update({ description }).eq('id', stored.id));
+		zoneDescriptions += 1;
+	}
+
+	assertSucceeded(
+		await supabaseAdmin.from('products').upsert(
+			tourDetails.map((details) => ({
+				key: productKey(details),
+				supplier_id: supplierId,
+				destination_slug: details.destination.slug,
+				status: 'active' as const,
+				pricing_mode: details.pricePer === 'group' ? ('per_group' as const) : ('per_person' as const),
+				max_group_size: groupSizeFromPriceUnit(details),
+				deposit_type: 'fixed' as const,
+				deposit_value: details.deposit,
+				daily_capacity: defaultDailyCapacity,
+				currency: 'USD',
+			})),
+			{ onConflict: 'key', ignoreDuplicates: true },
+		),
+	);
 	const products = unwrap(
 		await supabaseAdmin
 			.from('products')
-			.upsert(
-				tourDetails.map((details) => ({
-					key: productKey(details),
-					supplier_id: supplierId,
-					destination_slug: details.destination.slug,
-					status: 'active' as const,
-					pricing_mode: details.pricePer === 'group' ? ('per_group' as const) : ('per_person' as const),
-					max_group_size: maxGroupSize(details),
-					min_age: details.minAge ?? null,
-					deposit_type: 'fixed' as const,
-					deposit_value: details.deposit,
-					daily_capacity: defaultDailyCapacity,
-					currency: 'USD',
-				})),
-				{ onConflict: 'key' },
-			)
-			.select('id, key'),
+			.select('id, key, pricing_mode, max_group_size, daily_capacity, infants_occupy_seat, images:product_images(path)')
+			.in('key', tourDetails.map(productKey)),
 	);
-	const productIdByKey = new Map(products.map((product) => [product.key, product.id]));
-	const productIdFor = (details: TourDetails) => {
-		const productId = productIdByKey.get(productKey(details));
-		if (!productId) throw new Error(`No se ha guardado el producto ${productKey(details)}`);
-		return productId;
+	const productFor = (details: TourDetails) => {
+		const product = products.find((candidate) => candidate.key === productKey(details));
+		if (!product) throw new Error(`No existe el producto ${productKey(details)}`);
+		return product;
 	};
 
 	assertSucceeded(
 		await supabaseAdmin.from('product_translations').upsert(
-			tourDetails.map((details) => ({
-				product_id: productIdFor(details),
-				locale: catalogLocale,
-				slug: details.tour.slug,
-				name: details.title,
-			})),
-			{ onConflict: 'product_id,locale' },
+			tourDetails.map((details) => ({ product_id: productFor(details).id, locale: catalogLocale, slug: details.tour.slug, name: details.title })),
+			{ onConflict: 'product_id,locale', ignoreDuplicates: true },
 		),
 	);
 
-	const zones = unwrap(
-		await supabaseAdmin
-			.from('pickup_zones')
-			.upsert(
-				pickupZones.map((zone, position) => ({ slug: zone.id, name: zone.name, position })),
-				{ onConflict: 'slug' },
-			)
-			.select('id, slug'),
-	);
-	const zoneIdBySlug = new Map(zones.map((zone) => [zone.slug, zone.id]));
-	const zoneIdFor = (zoneSlug: PickupZoneId) => {
-		const zoneId = zoneIdBySlug.get(zoneSlug);
-		if (!zoneId) throw new Error(`No se ha guardado la zona ${zoneSlug}`);
-		return zoneId;
-	};
-
-	const productPickupZones = tourDetails.flatMap((details) =>
-		pickupZones.map((zone) => ({
-			product_id: productIdFor(details),
-			zone_id: zoneIdFor(zone.id),
-			fee_per_person: details.pickupFees[zone.id],
-		})),
-	);
-	assertSucceeded(await supabaseAdmin.from('product_pickup_zones').upsert(productPickupZones, { onConflict: 'product_id,zone_id' }));
-
-	let deletedSchedules = 0;
-	let prices = 0;
+	let uploadedImages = 0;
 	for (const details of tourDetails) {
-		const productId = productIdFor(details);
-		const bookings = unwrap(await supabaseAdmin.from('bookings').select('schedule_id').eq('product_id', productId));
-		const bookedScheduleIds = new Set(bookings.map((booking) => booking.schedule_id));
-
-		const { id: scheduleId } = unwrap(
-			await supabaseAdmin
-				.from('product_schedules')
-				.upsert(
-					{
-						product_id: productId,
-						label: null,
-						start_time: details.pickupFrom,
-						pickup_to: details.pickupTo,
-						return_at: details.returnAt,
-						weekdays: details.days.map(isoWeekday).sort((first, second) => first - second),
-						active: true,
-					},
-					{ onConflict: 'product_id,start_time' },
-				)
-				.select('id')
-				.single(),
-		);
-
-		const schedules = unwrap(await supabaseAdmin.from('product_schedules').select('id').eq('product_id', productId));
-		const staleScheduleIds = schedules.map((schedule) => schedule.id).filter((id) => id !== scheduleId && !bookedScheduleIds.has(id));
-		if (staleScheduleIds.length > 0) {
-			assertSucceeded(await supabaseAdmin.from('product_schedules').delete().in('id', staleScheduleIds));
-			deletedSchedules += staleScheduleIds.length;
-		}
-
-		const desiredPrices = seedPrices(details);
-		if (bookings.length === 0) {
-			assertSucceeded(await supabaseAdmin.from('product_prices').delete().eq('product_id', productId));
-			assertSucceeded(
-				await supabaseAdmin.from('product_prices').insert(desiredPrices.map((price) => ({ ...price, product_id: productId }))),
-			);
-		} else {
-			for (const price of desiredPrices) {
-				const updated = unwrap(
-					await supabaseAdmin
-						.from('product_prices')
-						.update({ amount: price.amount, min_age: price.min_age, max_age: price.max_age })
-						.eq('product_id', productId)
-						.eq('passenger_type', price.passenger_type)
-						.select('id'),
-				);
-				if (updated.length === 0) {
-					assertSucceeded(await supabaseAdmin.from('product_prices').insert({ ...price, product_id: productId }));
-				}
-			}
-		}
-		prices += desiredPrices.length;
-	}
-
-	const helpEntry = await getEntry('help', pickupZonesEntryId);
-	if (!helpEntry?.body) throw new Error(`No se encuentra el contenido de ${pickupZonesEntryId}`);
-	const hotels = parseHotels(helpEntry.body, pickupZones);
-	if (hotels.length > 0) {
+		const product = productFor(details);
+		const content = validated(`El contenido de ${product.key}`, tourContentSchema.safeParse(contentInput(details)));
+		const operations = validated(`La operación de ${product.key}`, tourOperationsSchema.safeParse(operationsInput(details, product, zoneIdBySlug)));
+		const photo = product.images.length === 0 ? await uploadTourPhoto(details, product.id) : null;
+		const images = photo ? validated(`Las fotos de ${product.key}`, tourImagesSchema.safeParse([photo])) : null;
+		if (photo) uploadedImages += 1;
 		assertSucceeded(
-			await supabaseAdmin.from('hotels').upsert(
-				hotels.map((hotel) => ({ name: hotel.name, zone_id: zoneIdFor(hotel.zoneId), active: true })),
-				{ onConflict: 'name' },
-			),
+			await supabaseAdmin.rpc('admin_save_tour', {
+				p_product_id: product.id,
+				p_user_id: userId,
+				p_content: toContentPayload(content),
+				p_operations: toOperationsPayload(operations),
+				...(images ? { p_images: toImagesPayload(images) } : {}),
+			}),
 		);
 	}
+
+	for (const destination of destinations) {
+		const productIds = destination.tours.map((tour) => {
+			const details = tourDetails.find((candidate) => candidate.destination.id === destination.id && candidate.tour.slug === tour.slug);
+			if (!details) throw new Error(`Falta la excursión ${destination.id}/${tour.slug}`);
+			return productFor(details).id;
+		});
+		assertSucceeded(
+			await supabaseAdmin.rpc('admin_reorder_tours', { p_user_id: userId, p_destination_slug: destination.slug, p_product_ids: productIds }),
+		);
+	}
+
+	for (const [index, item] of mostBookedTours.entries()) {
+		const details = tourDetails.find((candidate) => candidate.destination.id === item.destination.id && candidate.tour.slug === item.tour.slug);
+		if (!details) throw new Error(`Falta la más reservada ${item.destination.id}/${item.tour.slug}`);
+		assertSucceeded(await supabaseAdmin.rpc('admin_set_most_booked', { p_user_id: userId, p_product_id: productFor(details).id, p_position: index + 1 }));
+	}
+
+	const expectedHotels = seedZones.flatMap((seedZone) => seedZone.hotels);
+	assertSucceeded(
+		await supabaseAdmin.from('hotels').upsert(
+			expectedHotels.map((hotel) => ({ name: hotel.name, zone_id: zoneIdBySlug.get(hotel.zoneSlug) ?? '', active: true })),
+			{ onConflict: 'name', ignoreDuplicates: true },
+		),
+	);
+	const storedHotels = unwrap(await supabaseAdmin.from('hotels').select('name, active, zone:pickup_zones(slug)'));
+	const hotelMismatches = [
+		...expectedHotels.flatMap((hotel) => {
+			const stored = storedHotels.find((candidate) => candidate.name === hotel.name);
+			if (!stored) return [`Falta ${hotel.name}`];
+			if (stored.zone?.slug !== hotel.zoneSlug) return [`${hotel.name} está en ${stored.zone?.slug} y no en ${hotel.zoneSlug}`];
+			if (!stored.active) return [`${hotel.name} está desactivado`];
+			return [];
+		}),
+		...storedHotels.filter((stored) => !expectedHotels.some((hotel) => hotel.name === stored.name)).map((stored) => `${stored.name} no está en el md`),
+	];
 
 	return {
-		suppliers: 1,
 		products: products.length,
-		translations: tourDetails.length,
-		schedules: tourDetails.length,
-		deletedSchedules,
-		prices,
-		pickupZones: zones.length,
-		productPickupZones: productPickupZones.length,
-		hotels: hotels.length,
+		savedTours: tourDetails.length,
+		uploadedImages,
+		zoneDescriptions,
+		reorderedDestinations: destinations.length,
+		mostBooked: mostBookedTours.length,
+		hotelsInMarkdown: expectedHotels.length,
+		hotelsInDatabase: storedHotels.length,
+		hotelMismatches,
 	};
 }
 
-export const POST: APIRoute = async () => {
+export const POST: APIRoute = async ({ request }) => {
 	if (!import.meta.env.DEV) return new Response(null, { status: 404 });
 	try {
-		return Response.json(await seedCatalog());
+		const body: unknown = await request.json().catch(() => ({}));
+		const userId = typeof body === 'object' && body !== null && 'userId' in body && typeof body.userId === 'string' ? body.userId : '';
+		if (!userId) return Response.json({ error: 'Falta userId' }, { status: 400 });
+		return Response.json(await seedCatalog(userId));
 	} catch (error) {
 		return Response.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
 	}
