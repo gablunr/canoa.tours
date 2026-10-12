@@ -1,0 +1,14 @@
+---
+import PageSection from '../page/PageSection.astro';
+import { company, companyIdentity } from '../../../data/site/company';
+---
+
+<PageSection id="about-company-title" title="La empresa">
+	<div data-reveal class="grid max-w-3xl gap-4 text-[17px] leading-relaxed text-pretty text-secondary max-lg:mx-auto max-lg:text-center">
+		<p>{companyIdentity(company)} La fundó {company.founder}, y todo el equipo trabaja desde allí.</p>
+		<p>
+			Desde aquí vendemos las excursiones y atendemos tus reservas. En el día del tour, el transporte, las embarcaciones y los guías corren a cargo de
+			operadores locales de República Dominicana que trabajan con nosotros, y {company.legalName} responde ante ti por tu reserva.
+		</p>
+	</div>
+</PageSection>

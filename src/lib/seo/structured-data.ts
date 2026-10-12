@@ -75,7 +75,9 @@ export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaN
 		'@type': company.schemaType,
 		'@id': organizationId,
 		name: company.name,
-		...(company.brandName !== company.name && { alternateName: company.brandName }),
+		legalName: company.legalName,
+		foundingDate: company.foundingDate,
+		founder: { '@type': 'Person', name: company.founder },
 		description: company.description,
 		url: absoluteUrl('/'),
 		logo: imageObject(absoluteUrl('/#logo'), logo),
@@ -83,7 +85,9 @@ export function organizationSchema(logo: LogoImage, image: SocialImage): SchemaN
 		email: company.email,
 		...(phone && { telephone: phone.number }),
 		paymentAccepted: 'Tarjeta de crédito o débito',
-		...(office && { address: postalAddress(office) }),
+		address: office
+			? postalAddress(office)
+			: { '@type': 'PostalAddress', addressLocality: company.headquarters.locality, addressCountry: company.headquarters.countryCode },
 		...(geo && { geo }),
 		...(office?.mapsUrl && { hasMap: office.mapsUrl }),
 		...(openingHours && {
@@ -105,7 +109,7 @@ export function websiteSchema(): SchemaNode {
 		'@id': websiteId,
 		url: absoluteUrl('/'),
 		name: company.brandName,
-		...(company.brandName !== company.name && { alternateName: company.name }),
+		alternateName: company.legalName,
 		inLanguage: siteLanguage,
 		publisher: organizationReference,
 	};

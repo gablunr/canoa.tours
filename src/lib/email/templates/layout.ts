@@ -163,7 +163,7 @@ function footerHtml(): string {
 ${logoHtml()}
 <p style="margin:20px 0 16px;font-family:${bodyFont};font-size:14px;line-height:1.6;color:${colors.mutedOnDark};">¿Tienes dudas? Escríbenos, te respondemos rápido.</p>
 ${contactRows}
-<p style="margin:24px 0 0;font-family:${bodyFont};font-size:12px;line-height:1.6;color:${colors.mutedOnDark};">© ${new Date().getFullYear()} ${escapeHtml(company.name)}. Excursiones en Punta Cana con recogida en tu hotel.</p>
+<p style="margin:24px 0 0;font-family:${bodyFont};font-size:12px;line-height:1.6;color:${colors.mutedOnDark};">© ${new Date().getFullYear()} ${escapeHtml(company.legalName)}. Excursiones en Punta Cana con recogida en tu hotel.</p>
 </td></tr>
 </table>`;
 }

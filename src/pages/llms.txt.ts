@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { company, officeAddress } from '../data/site/company';
+import { company, companyIdentity, officeAddress } from '../data/site/company';
 import { destinationHref, destinations } from '../data/tours/destinations';
 import { destinationAnswer } from '../data/pillars/pillar-page';
 import { isGuidePublished } from '../data/guides/guide-content';
@@ -66,7 +66,8 @@ export const GET: APIRoute = async () => {
 		'',
 		`> ${company.description}`,
 		'',
-		...(company.brandName !== company.name ? [`${company.brandName} es la marca de ${company.name}.`, ''] : []),
+		companyIdentity(company),
+		'',
 		...contactLines,
 		'',
 		...section('Excursiones por destino y actividad', destinationLines),

@@ -4,7 +4,7 @@ import {
 	cancellationNoticeLabel,
 	maxDateChangesLabel,
 } from '../booking/booking-policy';
-import { company } from '../site/company';
+import { company, companyIdentity } from '../site/company';
 import { departurePorts, distanceLabel } from '../tours/departure-ports';
 import { routes } from '../site/routes';
 
@@ -14,6 +14,8 @@ export const contentTokens: Readonly<Record<string, string>> = {
 	maxDateChanges: maxDateChangesLabel,
 	beachActivityPickupFee: beachActivityPickupFeeLabel,
 	email: company.email,
+	legalName: company.legalName,
+	companyIdentity: companyIdentity(company),
 	...Object.fromEntries(
 		Object.entries(departurePorts).flatMap(([key, port]) => [
 			[`${key}Port`, port.port],

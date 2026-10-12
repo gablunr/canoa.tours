@@ -37,9 +37,21 @@ export interface SocialProfile {
 
 export type PaymentMethod = 'visa' | 'mastercard' | 'paypal';
 
+export interface Headquarters {
+	locality: string;
+	country: string;
+	countryCode: string;
+}
+
 export interface Company {
 	name: string;
 	brandName: string;
+	legalName: string;
+	legalForm: string;
+	foundingDate: string;
+	foundingLabel: string;
+	founder: string;
+	headquarters: Headquarters;
 	schemaType: string;
 	description: string;
 	email: string;
@@ -62,12 +74,21 @@ export const officeAddress = (office: Office) =>
 export const company: Company = {
 	name: 'Canoa Tours',
 	brandName: 'Canoa Tours',
+	legalName: 'Canoa Tours SL',
+	legalForm: 'sociedad limitada',
+	foundingDate: '2025-01',
+	foundingLabel: 'enero de 2025',
+	founder: 'Gabriel Lunar',
+	headquarters: { locality: 'Madrid', country: 'España', countryCode: 'ES' },
 	schemaType: 'TravelAgency',
 	description:
-		'Canoa Tours es una agencia local de Punta Cana. Seleccionamos excursiones por la zona y las reservas online, con recogida en tu hotel.',
+		'Canoa Tours es una agencia de excursiones en Punta Cana. Seleccionamos excursiones por la zona y las reservas online, con recogida en tu hotel.',
 	email: 'hola@canoa.tours',
 	whatsapp: whatsappFrom('+44 7366 329699', '+447366329699'),
 	serviceAreas: [{ name: 'Punta Cana', kind: 'City' }],
 	socialProfiles: [],
 	paymentMethods: ['visa', 'mastercard', 'paypal'],
 };
+
+export const companyIdentity = (entity: Company) =>
+	`${entity.brandName} es la marca comercial de ${entity.legalName}, ${entity.legalForm} constituida en ${entity.headquarters.country} en ${entity.foundingLabel} y con sede en ${entity.headquarters.locality}.`;
