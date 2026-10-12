@@ -43,6 +43,8 @@ No guardamos el número de tu tarjeta. Lo recibe y lo guarda Stripe, que cumple 
 
 No usamos cookies de publicidad ni de analítica. Si inicias sesión en tu cuenta, usamos una cookie técnica para mantener la sesión abierta.
 
+Cuando cierras el aviso de cookies, guardamos en el almacenamiento local del navegador (localStorage) que ya lo viste, para no volver a mostrártelo.
+
 Mientras reservas, guardamos en el almacenamiento de sesión del navegador (sessionStorage) lo que llevas escrito en el formulario y los datos de la campaña por la que llegaste. Así no los pierdes si vuelves atrás desde el pago. Se borran solos al cerrar la pestaña.
 
 ## Cuánto tiempo los conservamos
