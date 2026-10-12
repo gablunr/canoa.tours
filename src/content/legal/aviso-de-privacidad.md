@@ -1,12 +1,12 @@
 ---
 title: Aviso de privacidad
 description: Qué datos personales te pedimos cuando reservas o nos escribes, para qué los usamos, con quién los compartimos y cómo ejercer tus derechos.
-updatedAt: 2026-09-27
+updatedAt: 2026-10-12
 ---
 
 ## Responsable de tus datos
 
-El responsable de tus datos es Canoa Tours. Para cualquier asunto de privacidad, escríbenos a [{{email}}](<mailto:{{email}}>).
+El responsable de tus datos es {{legalName}}. {{companyIdentity}} Para cualquier asunto de privacidad, escríbenos a [{{email}}](<mailto:{{email}}>).
 
 ## Datos que te pedimos
 

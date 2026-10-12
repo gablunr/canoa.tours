@@ -1,12 +1,12 @@
 ---
 title: Términos y condiciones
 description: 'Las condiciones para reservar y pagar online nuestras excursiones en Punta Cana: depósito, saldo, seguro de cancelación, cambios de fecha y responsabilidad.'
-updatedAt: 2026-09-27
+updatedAt: 2026-10-12
 ---
 
 ## Quién te presta el servicio
 
-Canoa Tours vende las excursiones de este sitio y responde ante ti por tu reserva. En el día del tour, el transporte, las embarcaciones y los guías pueden correr a cargo de un operador local que trabaja con nosotros, siempre con las condiciones que ves aquí.
+{{companyIdentity}} {{legalName}} es la titular de este sitio, vende sus excursiones y responde ante ti por tu reserva. En el día del tour, el transporte, las embarcaciones y los guías pueden correr a cargo de un operador local que trabaja con nosotros, siempre con las condiciones que ves aquí.
 
 Puedes escribirnos a [{{email}}](<mailto:{{email}}>) o por WhatsApp al [{{whatsapp}}](<{{whatsappHref}}>).
 
@@ -80,7 +80,7 @@ Tienes que seguir las indicaciones de los guías y avisarnos al reservar de cual
 
 ## Uso del sitio y propiedad intelectual
 
-Los textos, fotos, diseño y marca de este sitio son de Canoa Tours o se usan con permiso. No puedes copiarlos ni usarlos con fines comerciales sin nuestra autorización.
+Los textos, fotos, diseño y marca de este sitio son de {{legalName}} o se usan con permiso. No puedes copiarlos ni usarlos con fines comerciales sin nuestra autorización.
 
 ## Datos personales
 
