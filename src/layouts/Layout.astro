@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import CookieNotice from '../components/layout/CookieNotice.astro';
 import type { Props as SeoProps } from '../components/layout/Seo.astro';
 
 type Props = SeoProps & {
@@ -15,9 +16,12 @@ const { footerOverlapsPhoto, ...seo } = Astro.props;
 	<Header slot="header" />
 	<slot />
 	<Footer slot="footer" overlapsPhoto={footerOverlapsPhoto} />
+	<CookieNotice slot="footer" />
 </BaseLayout>
 
 <script>
 	import { captureUtm } from '../scripts/ui/utm';
+	import { initCookieNotice } from '../scripts/ui/cookie-notice';
 	captureUtm();
+	initCookieNotice();
 </script>

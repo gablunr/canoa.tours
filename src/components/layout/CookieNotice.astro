@@ -1,0 +1,18 @@
+---
+import Button from '../ui/Button.astro';
+import { privacyPolicyHref } from '../../data/site/navigation';
+---
+
+<section
+	hidden
+	data-cookie-notice
+	aria-label="Aviso de cookies"
+	class="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[60] mx-auto max-w-md rounded-2xl bg-notch p-5 text-white shadow-xl sm:inset-x-6 lg:right-auto lg:left-6 lg:mx-0"
+>
+	<p class="text-sm leading-relaxed text-ink-100">
+		Solo usamos una cookie técnica para mantener abierta tu sesión si entras en tu cuenta. No usamos cookies de publicidad ni de analítica. Tienes los detalles en el <a
+			href={privacyPolicyHref}
+			class="text-white underline underline-offset-2 hover:text-ink-100">aviso de privacidad</a>.
+	</p>
+	<Button variant="on-dark" size="sm" class="mt-4" data-cookie-notice-dismiss>Entendido</Button>
+</section>
