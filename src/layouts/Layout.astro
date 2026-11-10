@@ -3,6 +3,7 @@ import BaseLayout from './BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import CookieNotice from '../components/layout/CookieNotice.astro';
+import Analytics from '@vercel/analytics/astro';
 import type { Props as SeoProps } from '../components/layout/Seo.astro';
 
 type Props = SeoProps & {
@@ -17,6 +18,7 @@ const { footerOverlapsPhoto, ...seo } = Astro.props;
 	<slot />
 	<Footer slot="footer" overlapsPhoto={footerOverlapsPhoto} />
 	<CookieNotice slot="footer" />
+	<Analytics slot="footer" />
 </BaseLayout>
 
 <script>

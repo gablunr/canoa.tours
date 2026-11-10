@@ -1,7 +1,7 @@
 ---
 title: Aviso de privacidad
 description: Qué datos personales te pedimos cuando reservas o nos escribes, para qué los usamos, con quién los compartimos y cómo ejercer tus derechos.
-updatedAt: 2026-10-12
+updatedAt: 2026-11-10
 ---
 
 ## Responsable de tus datos
@@ -30,7 +30,7 @@ Compartimos lo necesario con el operador local que realiza la excursión (tu nom
 
 - Stripe, para procesar los pagos y, si pagas solo el depósito, guardar tu tarjeta.
 - Supabase, donde está la base de datos de reservas.
-- Vercel, que aloja este sitio.
+- Vercel, que aloja este sitio y cuenta las visitas.
 - Resend, que envía los emails de la reserva.
 
 Algunos de estos proveedores tratan los datos fuera de la República Dominicana, con sus propias medidas de seguridad.
@@ -42,6 +42,8 @@ No guardamos el número de tu tarjeta. Lo recibe y lo guarda Stripe, que cumple 
 ## Almacenamiento en tu navegador
 
 No usamos cookies de publicidad ni de analítica. Si inicias sesión en tu cuenta, usamos una cookie técnica para mantener la sesión abierta.
+
+Contamos las visitas con Vercel Web Analytics para saber qué páginas se leen más. No usa cookies ni guarda nada en tu navegador, y no sabe quién eres: solo vemos totales de visitas por página, país y tipo de dispositivo.
 
 Cuando cierras el aviso de cookies, guardamos en el almacenamiento local del navegador (localStorage) que ya lo viste, para no volver a mostrártelo.
 
