@@ -11,6 +11,8 @@ type PaymentStatus = 'pending' | 'succeeded' | 'failed';
 
 const checkoutSessionLifetimeSeconds = 31 * 60;
 
+const alwaysRequireCardAuthentication = { card: { request_three_d_secure: 'any' as const } };
+
 export async function recordPayment(input: {
 	bookingId: string;
 	providerRef: string;
@@ -98,6 +100,7 @@ export async function createCheckoutSession(input: {
 				description: `Reserva ${input.bookingCode}`,
 				metadata,
 			},
+			payment_method_options: alwaysRequireCardAuthentication,
 			metadata,
 			expires_at: Math.floor(Date.now() / 1000) + checkoutSessionLifetimeSeconds,
 			return_url: `${input.origin}/booking/confirmed?session_id={CHECKOUT_SESSION_ID}`,
@@ -198,6 +201,7 @@ async function createBalancePaymentLink(details: BookingDetails, origin: string,
 				},
 			],
 			payment_intent_data: { description: `Saldo pendiente de la reserva ${details.code}`, metadata },
+			payment_method_options: alwaysRequireCardAuthentication,
 			metadata,
 			success_url: bookingTicketUrl,
 			cancel_url: bookingTicketUrl,
